@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zenith.app.domain.model.DailyStats
 import com.zenith.app.domain.model.SubscriptionStatus
+import com.zenith.app.domain.model.Task
 import com.zenith.app.domain.repository.DailyStatsRepository
+import com.zenith.app.domain.repository.TaskRepository
 import com.zenith.app.ui.premium.PremiumManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,12 +25,15 @@ data class CalendarUiState(
     val isLoading: Boolean = true,
     val currentMonth: YearMonth = YearMonth.now(),
     val dailyStats: Map<LocalDate, DailyStats> = emptyMap(),
-    val selectedDate: LocalDate? = null
+    val selectedDate: LocalDate? = null,
+    val taskCountByDate: Map<LocalDate, Int> = emptyMap(),
+    val selectedDateTasks: List<Task> = emptyList()
 )
 
 @HiltViewModel
 class CalendarViewModel @Inject constructor(
     private val dailyStatsRepository: DailyStatsRepository,
+    private val taskRepository: TaskRepository,
     private val premiumManager: PremiumManager
 ) : ViewModel() {
 
@@ -61,9 +66,18 @@ class CalendarViewModel @Inject constructor(
             val startDate = yearMonth.atDay(1)
             val endDate = yearMonth.atEndOfMonth()
 
-            dailyStatsRepository.getStatsBetweenDates(startDate, endDate).collect { statsList ->
-                val statsMap = statsList.associateBy { it.date }
-                _uiState.update { it.copy(isLoading = false, dailyStats = statsMap) }
+            // Load daily stats
+            launch {
+                dailyStatsRepository.getStatsBetweenDates(startDate, endDate).collect { statsList ->
+                    val statsMap = statsList.associateBy { it.date }
+                    _uiState.update { it.copy(isLoading = false, dailyStats = statsMap) }
+                }
+            }
+
+            // Load task counts for the month
+            launch {
+                val taskCounts = taskRepository.getTaskCountByDateRange(startDate, endDate)
+                _uiState.update { it.copy(taskCountByDate = taskCounts) }
             }
         }
     }
@@ -80,10 +94,18 @@ class CalendarViewModel @Inject constructor(
 
     fun selectDate(date: LocalDate) {
         _uiState.update { it.copy(selectedDate = date) }
+        loadTasksForDate(date)
+    }
+
+    private fun loadTasksForDate(date: LocalDate) {
+        viewModelScope.launch {
+            val tasks = taskRepository.getTasksForDate(date)
+            _uiState.update { it.copy(selectedDateTasks = tasks) }
+        }
     }
 
     fun clearSelection() {
-        _uiState.update { it.copy(selectedDate = null) }
+        _uiState.update { it.copy(selectedDate = null, selectedDateTasks = emptyList()) }
     }
 
     fun startTrial() {

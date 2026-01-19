@@ -28,7 +28,8 @@ data class HomeUiState(
     val currentStreak: Int = 0,
     val todayScheduledTasks: List<Task> = emptyList(),
     val todayReviewTasks: List<ReviewTask> = emptyList(),
-    val weeklyData: List<DayStats> = emptyList()
+    val weeklyData: List<DayStats> = emptyList(),
+    val upcomingDeadlineTasks: List<Task> = emptyList()
 )
 
 @HiltViewModel
@@ -94,6 +95,14 @@ class HomeViewModel @Inject constructor(
                 val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
                 val weeklyData = dailyStatsRepository.getWeeklyData(weekStart)
                 _uiState.update { it.copy(weeklyData = weeklyData) }
+            }
+
+            // Load upcoming deadline tasks (next 7 days)
+            launch {
+                val endDate = today.plusDays(7)
+                taskRepository.getUpcomingDeadlineTasks(today, endDate).collect { tasks ->
+                    _uiState.update { it.copy(upcomingDeadlineTasks = tasks) }
+                }
             }
         }
     }

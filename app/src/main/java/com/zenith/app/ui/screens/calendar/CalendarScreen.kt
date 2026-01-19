@@ -16,10 +16,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zenith.app.domain.model.DailyStats
 import com.zenith.app.domain.model.PremiumFeature
+import com.zenith.app.domain.model.Task
 import com.zenith.app.ui.components.LockedFeatureCard
 import com.zenith.app.ui.components.ZenithCard
 import com.zenith.app.ui.components.ZenithTopBar
@@ -44,6 +48,7 @@ import com.zenith.app.ui.premium.PremiumUpsellDialog
 import com.zenith.app.ui.theme.AccentTeal
 import com.zenith.app.ui.theme.BackgroundDark
 import com.zenith.app.ui.theme.HeatmapColors
+import com.zenith.app.ui.theme.SurfaceVariantDark
 import com.zenith.app.ui.theme.TextPrimary
 import com.zenith.app.ui.theme.TextSecondary
 import java.time.LocalDate
@@ -51,6 +56,7 @@ import java.time.YearMonth
 
 @Composable
 fun CalendarScreen(
+    onStartTimer: (Long) -> Unit = {},
     viewModel: CalendarViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,6 +94,7 @@ fun CalendarScreen(
                         CalendarGrid(
                             yearMonth = uiState.currentMonth,
                             dailyStats = uiState.dailyStats,
+                            taskCountByDate = uiState.taskCountByDate,
                             selectedDate = uiState.selectedDate,
                             onDateClick = viewModel::selectDate
                         )
@@ -106,6 +113,7 @@ fun CalendarScreen(
                         CalendarGridSimple(
                             yearMonth = uiState.currentMonth,
                             dailyStats = uiState.dailyStats,
+                            taskCountByDate = uiState.taskCountByDate,
                             selectedDate = uiState.selectedDate,
                             onDateClick = viewModel::selectDate
                         )
@@ -123,7 +131,12 @@ fun CalendarScreen(
             // Selected date info
             uiState.selectedDate?.let { date ->
                 val stats = uiState.dailyStats[date]
-                SelectedDateInfo(date = date, stats = stats)
+                SelectedDateInfo(
+                    date = date,
+                    stats = stats,
+                    tasks = uiState.selectedDateTasks,
+                    onStartTimer = onStartTimer
+                )
             }
         }
     }
@@ -210,6 +223,7 @@ private fun WeekdayHeader(modifier: Modifier = Modifier) {
 private fun CalendarGrid(
     yearMonth: YearMonth,
     dailyStats: Map<LocalDate, DailyStats>,
+    taskCountByDate: Map<LocalDate, Int>,
     selectedDate: LocalDate?,
     onDateClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
@@ -241,12 +255,13 @@ private fun CalendarGrid(
             ) {
                 week.forEach { date ->
                     if (date != null) {
-                        val stats = dailyStats[date]
-                        val heatmapLevel = calculateHeatmapLevel(stats?.totalStudyMinutes ?: 0)
+                        val taskCount = taskCountByDate[date] ?: 0
+                        val taskHeatmapLevel = calculateTaskHeatmapLevel(taskCount)
 
                         DayCell(
                             date = date,
-                            heatmapColor = HeatmapColors[heatmapLevel],
+                            heatmapColor = HeatmapColors[taskHeatmapLevel],
+                            taskCount = taskCount,
                             isSelected = date == selectedDate,
                             isToday = date == LocalDate.now(),
                             onClick = { onDateClick(date) },
@@ -269,6 +284,7 @@ private fun CalendarGrid(
 private fun DayCell(
     date: LocalDate,
     heatmapColor: Color,
+    taskCount: Int,
     isSelected: Boolean,
     isToday: Boolean,
     onClick: () -> Unit,
@@ -290,12 +306,33 @@ private fun DayCell(
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = date.dayOfMonth.toString(),
-            style = MaterialTheme.typography.bodySmall,
-            color = if (heatmapColor == HeatmapColors[0]) TextSecondary else TextPrimary,
-            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = date.dayOfMonth.toString(),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (heatmapColor == HeatmapColors[0]) TextSecondary else TextPrimary,
+                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+            )
+            // Task dots (max 3)
+            if (taskCount > 0) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.padding(top = 1.dp)
+                ) {
+                    repeat(minOf(taskCount, 3)) {
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(AccentTeal)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -336,6 +373,8 @@ private fun HeatmapLegend(modifier: Modifier = Modifier) {
 private fun SelectedDateInfo(
     date: LocalDate,
     stats: DailyStats?,
+    tasks: List<Task>,
+    onStartTimer: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     ZenithCard(
@@ -373,6 +412,74 @@ private fun SelectedDateInfo(
                     modifier = Modifier.padding(top = 8.dp)
                 )
             }
+
+            // Task list for this date
+            if (tasks.isNotEmpty()) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                Text(
+                    text = "この日のタスク",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = TextPrimary
+                )
+                Column(
+                    modifier = Modifier.padding(top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    tasks.forEach { task ->
+                        SelectedDateTaskItem(
+                            task = task,
+                            onStartTimer = { onStartTimer(task.id) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SelectedDateTaskItem(
+    task: Task,
+    onStartTimer: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = SurfaceVariantDark
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onStartTimer() }
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = task.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = TextPrimary
+                )
+                task.scheduleLabel?.let { label ->
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                }
+            }
+            IconButton(
+                onClick = onStartTimer,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayArrow,
+                    contentDescription = "タイマー開始",
+                    tint = AccentTeal
+                )
+            }
         }
     }
 }
@@ -387,11 +494,22 @@ private fun calculateHeatmapLevel(minutes: Int): Int {
     }
 }
 
+private fun calculateTaskHeatmapLevel(taskCount: Int): Int {
+    return when {
+        taskCount == 0 -> 0
+        taskCount == 1 -> 1
+        taskCount == 2 -> 2
+        taskCount <= 4 -> 3
+        else -> 4
+    }
+}
+
 // 無料版用：グレースケールのシンプルなカレンダーグリッド
 @Composable
 private fun CalendarGridSimple(
     yearMonth: YearMonth,
     dailyStats: Map<LocalDate, DailyStats>,
+    taskCountByDate: Map<LocalDate, Int>,
     selectedDate: LocalDate?,
     onDateClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
@@ -421,10 +539,12 @@ private fun CalendarGridSimple(
                     if (date != null) {
                         val stats = dailyStats[date]
                         val hasStudied = stats?.hasStudied == true
+                        val taskCount = taskCountByDate[date] ?: 0
 
                         DayCellSimple(
                             date = date,
                             hasStudied = hasStudied,
+                            taskCount = taskCount,
                             isSelected = date == selectedDate,
                             isToday = date == LocalDate.now(),
                             onClick = { onDateClick(date) },
@@ -446,6 +566,7 @@ private fun CalendarGridSimple(
 private fun DayCellSimple(
     date: LocalDate,
     hasStudied: Boolean,
+    taskCount: Int,
     isSelected: Boolean,
     isToday: Boolean,
     onClick: () -> Unit,
@@ -473,11 +594,32 @@ private fun DayCellSimple(
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = date.dayOfMonth.toString(),
-            style = MaterialTheme.typography.bodySmall,
-            color = if (hasStudied) TextPrimary else TextSecondary,
-            fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = date.dayOfMonth.toString(),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (hasStudied) TextPrimary else TextSecondary,
+                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+            )
+            // Task dots (max 3)
+            if (taskCount > 0) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    modifier = Modifier.padding(top = 1.dp)
+                ) {
+                    repeat(minOf(taskCount, 3)) {
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(AccentTeal)
+                        )
+                    }
+                }
+            }
+        }
     }
 }

@@ -26,11 +26,16 @@ data class TasksUiState(
     val editingGroup: SubjectGroup? = null,
     val editingTask: Task? = null,
     val defaultWorkDurationMinutes: Int = 25,
-    // Schedule editing state
+    // Schedule editing state (for edit dialog)
     val editingScheduleType: ScheduleType = ScheduleType.NONE,
     val editingRepeatDays: Set<Int> = emptySet(),
     val editingDeadlineDate: LocalDate? = null,
-    val editingSpecificDate: LocalDate? = null
+    val editingSpecificDate: LocalDate? = null,
+    // Schedule adding state (for add dialog)
+    val addingScheduleType: ScheduleType = ScheduleType.NONE,
+    val addingRepeatDays: Set<Int> = emptySet(),
+    val addingDeadlineDate: LocalDate? = null,
+    val addingSpecificDate: LocalDate? = null
 )
 
 @HiltViewModel
@@ -110,7 +115,31 @@ class TasksViewModel @Inject constructor(
     }
 
     fun hideAddTaskDialog() {
-        _uiState.update { it.copy(showAddTaskDialog = false) }
+        _uiState.update {
+            it.copy(
+                showAddTaskDialog = false,
+                addingScheduleType = ScheduleType.NONE,
+                addingRepeatDays = emptySet(),
+                addingDeadlineDate = null,
+                addingSpecificDate = null
+            )
+        }
+    }
+
+    fun updateAddingScheduleType(type: ScheduleType) {
+        _uiState.update { it.copy(addingScheduleType = type) }
+    }
+
+    fun updateAddingRepeatDays(days: Set<Int>) {
+        _uiState.update { it.copy(addingRepeatDays = days) }
+    }
+
+    fun updateAddingDeadlineDate(date: LocalDate?) {
+        _uiState.update { it.copy(addingDeadlineDate = date) }
+    }
+
+    fun updateAddingSpecificDate(date: LocalDate?) {
+        _uiState.update { it.copy(addingSpecificDate = date) }
     }
 
     fun showEditTaskDialog(task: Task) {

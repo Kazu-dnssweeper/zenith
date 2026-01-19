@@ -66,6 +66,57 @@ class TaskRepositoryImpl @Inject constructor(
         taskDao.updateLastStudiedAt(taskId, studiedAt)
     }
 
+    override fun getUpcomingDeadlineTasks(startDate: LocalDate, endDate: LocalDate): Flow<List<Task>> {
+        val startDateStr = startDate.toString()
+        val endDateStr = endDate.toString()
+
+        return taskDao.getUpcomingDeadlineTasks(startDateStr, endDateStr).map { entities ->
+            entities.map { it.toDomainModel() }
+        }
+    }
+
+    override suspend fun getTasksForDate(date: LocalDate): List<Task> {
+        val dateStr = date.toString()
+        val dayOfWeek = date.dayOfWeek.value.toString()
+
+        return taskDao.getTasksForDate(dateStr, dayOfWeek).map { it.toDomainModel() }
+    }
+
+    override suspend fun getTaskCountByDateRange(startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Int> {
+        val startDateStr = startDate.toString()
+        val endDateStr = endDate.toString()
+        val result = mutableMapOf<LocalDate, Int>()
+
+        // 1. deadline/specificタスクをカウント（既存ロジック）
+        val counts = taskDao.getTaskCountByDateRange(startDateStr, endDateStr)
+        for (item in counts) {
+            item.date?.let { dateStr ->
+                try {
+                    val date = LocalDate.parse(dateStr)
+                    result[date] = (result[date] ?: 0) + item.count
+                } catch (e: Exception) {
+                    // Skip invalid dates
+                }
+            }
+        }
+
+        // 2. 繰り返しタスクをカウント（新規ロジック）
+        val repeatTasks = taskDao.getRepeatTasks()
+        var currentDate = startDate
+        while (!currentDate.isAfter(endDate)) {
+            val dayOfWeek = currentDate.dayOfWeek.value  // 1=月曜〜7=日曜
+            val repeatCount = repeatTasks.count { task ->
+                Task.parseRepeatDays(task.repeatDays).contains(dayOfWeek)
+            }
+            if (repeatCount > 0) {
+                result[currentDate] = (result[currentDate] ?: 0) + repeatCount
+            }
+            currentDate = currentDate.plusDays(1)
+        }
+
+        return result
+    }
+
     private fun TaskEntity.toDomainModel(): Task {
         return Task(
             id = id,

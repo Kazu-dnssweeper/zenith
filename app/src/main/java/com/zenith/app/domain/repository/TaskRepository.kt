@@ -24,4 +24,19 @@ interface TaskRepository {
      * 最終学習日時を更新
      */
     suspend fun updateLastStudiedAt(taskId: Long, studiedAt: LocalDateTime)
+
+    /**
+     * 期限が近いタスクを取得
+     */
+    fun getUpcomingDeadlineTasks(startDate: LocalDate, endDate: LocalDate): Flow<List<Task>>
+
+    /**
+     * 特定日のタスクを取得
+     */
+    suspend fun getTasksForDate(date: LocalDate): List<Task>
+
+    /**
+     * 日付範囲のタスク数を取得
+     */
+    suspend fun getTaskCountByDateRange(startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Int>
 }

@@ -19,6 +19,7 @@ import com.zenith.app.ui.components.ZenithCard
 import com.zenith.app.ui.components.ZenithTopBar
 import com.zenith.app.ui.screens.home.components.TodayReviewSection
 import com.zenith.app.ui.screens.home.components.TodayTasksSection
+import com.zenith.app.ui.screens.home.components.UpcomingDeadlinesSection
 import com.zenith.app.ui.screens.home.components.WeeklyMiniChart
 
 @Composable
@@ -143,6 +144,12 @@ fun HomeScreen(
                     tasks = uiState.todayScheduledTasks,
                     onStartTimer = onNavigateToTimer,
                     onNavigateToTasks = onNavigateToTasks
+                )
+
+                // Upcoming Deadlines Section
+                UpcomingDeadlinesSection(
+                    tasks = uiState.upcomingDeadlineTasks,
+                    onStartTimer = onNavigateToTimer
                 )
 
                 // Today's Review Section

@@ -48,7 +48,12 @@ interface TaskDao {
     @Query("""
         SELECT * FROM tasks
         WHERE isActive = 1 AND (
-            (scheduleType = 'repeat' AND repeatDays LIKE '%' || :dayOfWeek || '%')
+            (scheduleType = 'repeat' AND (
+                repeatDays = :dayOfWeek
+                OR repeatDays LIKE :dayOfWeek || ',%'
+                OR repeatDays LIKE '%,' || :dayOfWeek || ',%'
+                OR repeatDays LIKE '%,' || :dayOfWeek
+            ))
             OR (scheduleType = 'deadline' AND deadlineDate = :today)
             OR (scheduleType = 'specific' AND specificDate = :today)
         )
@@ -61,4 +66,63 @@ interface TaskDao {
      */
     @Query("UPDATE tasks SET lastStudiedAt = :studiedAt, updatedAt = :studiedAt WHERE id = :taskId")
     suspend fun updateLastStudiedAt(taskId: Long, studiedAt: java.time.LocalDateTime)
+
+    /**
+     * 期限が近いタスクを取得（今日より後〜指定日まで）
+     */
+    @Query("""
+        SELECT * FROM tasks
+        WHERE isActive = 1
+        AND scheduleType = 'deadline'
+        AND deadlineDate > :today
+        AND deadlineDate <= :endDate
+        ORDER BY deadlineDate ASC
+    """)
+    fun getUpcomingDeadlineTasks(today: String, endDate: String): Flow<List<TaskEntity>>
+
+    /**
+     * 特定日のタスクを取得
+     */
+    @Query("""
+        SELECT * FROM tasks
+        WHERE isActive = 1 AND (
+            (scheduleType = 'repeat' AND (
+                repeatDays = :dayOfWeek
+                OR repeatDays LIKE :dayOfWeek || ',%'
+                OR repeatDays LIKE '%,' || :dayOfWeek || ',%'
+                OR repeatDays LIKE '%,' || :dayOfWeek
+            ))
+            OR (scheduleType = 'deadline' AND deadlineDate = :date)
+            OR (scheduleType = 'specific' AND specificDate = :date)
+        )
+        ORDER BY name ASC
+    """)
+    suspend fun getTasksForDate(date: String, dayOfWeek: String): List<TaskEntity>
+
+    /**
+     * 日付範囲のタスク数を集計
+     */
+    @Query("""
+        SELECT deadlineDate as date, COUNT(*) as count FROM tasks
+        WHERE isActive = 1 AND scheduleType = 'deadline'
+        AND deadlineDate BETWEEN :startDate AND :endDate
+        GROUP BY deadlineDate
+        UNION ALL
+        SELECT specificDate as date, COUNT(*) as count FROM tasks
+        WHERE isActive = 1 AND scheduleType = 'specific'
+        AND specificDate BETWEEN :startDate AND :endDate
+        GROUP BY specificDate
+    """)
+    suspend fun getTaskCountByDateRange(startDate: String, endDate: String): List<DateTaskCount>
+
+    /**
+     * 繰り返しタスクを全て取得（カレンダー表示用）
+     */
+    @Query("SELECT * FROM tasks WHERE isActive = 1 AND scheduleType = 'repeat'")
+    suspend fun getRepeatTasks(): List<TaskEntity>
 }
+
+data class DateTaskCount(
+    val date: String?,
+    val count: Int
+)

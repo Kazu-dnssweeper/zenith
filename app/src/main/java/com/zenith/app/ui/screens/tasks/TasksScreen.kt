@@ -110,8 +110,18 @@ fun TasksScreen(
     if (uiState.showAddTaskDialog) {
         AddTaskDialog(
             defaultWorkDurationMinutes = uiState.defaultWorkDurationMinutes,
+            scheduleType = uiState.addingScheduleType,
+            repeatDays = uiState.addingRepeatDays,
+            deadlineDate = uiState.addingDeadlineDate,
+            specificDate = uiState.addingSpecificDate,
+            onScheduleTypeChange = viewModel::updateAddingScheduleType,
+            onRepeatDaysChange = viewModel::updateAddingRepeatDays,
+            onDeadlineDateChange = viewModel::updateAddingDeadlineDate,
+            onSpecificDateChange = viewModel::updateAddingSpecificDate,
             onDismiss = { viewModel.hideAddTaskDialog() },
-            onConfirm = { name, duration -> viewModel.addTask(name, duration) }
+            onConfirm = { name, duration, scheduleType, repeatDays, deadlineDate, specificDate ->
+                viewModel.addTask(name, duration, scheduleType, repeatDays, deadlineDate, specificDate)
+            }
         )
     }
 
@@ -630,8 +640,16 @@ private fun EditGroupDialog(
 @Composable
 private fun AddTaskDialog(
     defaultWorkDurationMinutes: Int,
+    scheduleType: ScheduleType,
+    repeatDays: Set<Int>,
+    deadlineDate: java.time.LocalDate?,
+    specificDate: java.time.LocalDate?,
+    onScheduleTypeChange: (ScheduleType) -> Unit,
+    onRepeatDaysChange: (Set<Int>) -> Unit,
+    onDeadlineDateChange: (java.time.LocalDate?) -> Unit,
+    onSpecificDateChange: (java.time.LocalDate?) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (String, Int?) -> Unit
+    onConfirm: (String, Int?, ScheduleType, Set<Int>, java.time.LocalDate?, java.time.LocalDate?) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var useCustomDuration by remember { mutableStateOf(false) }
@@ -641,7 +659,10 @@ private fun AddTaskDialog(
         onDismissRequest = onDismiss,
         title = { Text("タスクを追加") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -650,6 +671,22 @@ private fun AddTaskDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                HorizontalDivider()
+
+                // Schedule Section
+                ScheduleSection(
+                    scheduleType = scheduleType,
+                    repeatDays = repeatDays,
+                    deadlineDate = deadlineDate,
+                    specificDate = specificDate,
+                    onScheduleTypeChange = onScheduleTypeChange,
+                    onRepeatDaysChange = onRepeatDaysChange,
+                    onDeadlineDateChange = onDeadlineDateChange,
+                    onSpecificDateChange = onSpecificDateChange
+                )
+
+                HorizontalDivider()
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -724,7 +761,7 @@ private fun AddTaskDialog(
             TextButton(
                 onClick = {
                     val duration = if (useCustomDuration) workDuration.toInt() else null
-                    onConfirm(name, duration)
+                    onConfirm(name, duration, scheduleType, repeatDays, deadlineDate, specificDate)
                 },
                 enabled = name.isNotBlank()
             ) {
