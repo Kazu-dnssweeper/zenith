@@ -3,8 +3,8 @@ package com.zenith.app.data.encryption
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
-import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
+import timber.log.Timber
 import java.security.KeyStore
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -23,8 +23,6 @@ class EncryptionManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     companion object {
-        private const val TAG = "EncryptionManager"
-
         // KeyStore
         private const val ANDROID_KEYSTORE = "AndroidKeyStore"
         private const val KEY_ALIAS = "zenith_backup_key"
@@ -156,19 +154,11 @@ class EncryptionManager @Inject constructor(
 
     // ログヘルパー（ユニットテスト環境対応）
     private fun logDebug(message: String) {
-        try {
-            Log.d(TAG, message)
-        } catch (_: Exception) {
-            // ユニットテスト環境では無視
-        }
+        Timber.d(message)
     }
 
     private fun logError(message: String, e: Exception) {
-        try {
-            Log.e(TAG, message, e)
-        } catch (_: Exception) {
-            // ユニットテスト環境では無視
-        }
+        Timber.e(e, message)
     }
 }
 

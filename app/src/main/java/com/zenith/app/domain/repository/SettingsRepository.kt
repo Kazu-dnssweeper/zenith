@@ -9,4 +9,9 @@ interface SettingsRepository {
     suspend fun updatePomodoroSettings(settings: PomodoroSettings)
     suspend fun getSetting(key: String, defaultValue: String): String
     suspend fun setSetting(key: String, value: String)
+
+    // 許可アプリ設定
+    suspend fun getAllowedApps(): List<String>
+    suspend fun setAllowedApps(packages: List<String>)
+    fun getAllowedAppsFlow(): Flow<List<String>>
 }

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.zenith.app.domain.model.ReviewTask
+import com.zenith.app.ui.components.EmptySectionMessage
 import com.zenith.app.ui.components.ZenithCard
 import com.zenith.app.ui.theme.AccentSuccess
 import com.zenith.app.ui.theme.AccentTeal
@@ -44,8 +45,6 @@ fun TodayReviewSection(
     onToggleComplete: (Long, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (reviewTasks.isEmpty()) return
-
     val completedCount = reviewTasks.count { it.isCompleted }
     val totalCount = reviewTasks.size
 
@@ -70,21 +69,30 @@ fun TodayReviewSection(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-                Text(
-                    text = "$completedCount / $totalCount 完了",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (completedCount == totalCount) AccentSuccess else MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (reviewTasks.isNotEmpty()) {
+                    Text(
+                        text = "$completedCount / $totalCount 完了",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (completedCount == totalCount) AccentSuccess else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                reviewTasks.forEach { reviewTask ->
-                    ReviewTaskItem(
-                        reviewTask = reviewTask,
-                        onToggleComplete = { onToggleComplete(reviewTask.id, !reviewTask.isCompleted) }
-                    )
+            if (reviewTasks.isEmpty()) {
+                EmptySectionMessage(
+                    icon = Icons.Default.History,
+                    message = "今日の復習はありません"
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    reviewTasks.forEach { reviewTask ->
+                        ReviewTaskItem(
+                            reviewTask = reviewTask,
+                            onToggleComplete = { onToggleComplete(reviewTask.id, !reviewTask.isCompleted) }
+                        )
+                    }
                 }
             }
         }

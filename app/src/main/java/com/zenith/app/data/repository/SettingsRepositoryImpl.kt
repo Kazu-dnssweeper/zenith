@@ -6,8 +6,10 @@ import com.zenith.app.domain.model.PomodoroSettings
 import com.zenith.app.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -50,6 +52,10 @@ class SettingsRepositoryImpl @Inject constructor(
                 SettingsEntity.KEY_FOCUS_MODE_STRICT,
                 "false"
             ).toBoolean(),
+            autoLoopEnabled = getSetting(
+                SettingsEntity.KEY_AUTO_LOOP_ENABLED,
+                "false"
+            ).toBoolean(),
             reviewEnabled = getSetting(
                 SettingsEntity.KEY_REVIEW_ENABLED,
                 "true"
@@ -74,6 +80,7 @@ class SettingsRepositoryImpl @Inject constructor(
         setSetting(SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK, settings.cyclesBeforeLongBreak.toString())
         setSetting(SettingsEntity.KEY_FOCUS_MODE_ENABLED, settings.focusModeEnabled.toString())
         setSetting(SettingsEntity.KEY_FOCUS_MODE_STRICT, settings.focusModeStrict.toString())
+        setSetting(SettingsEntity.KEY_AUTO_LOOP_ENABLED, settings.autoLoopEnabled.toString())
         setSetting(SettingsEntity.KEY_REVIEW_ENABLED, settings.reviewEnabled.toString())
         setSetting(SettingsEntity.KEY_REVIEW_INTERVALS, json.encodeToString(settings.reviewIntervals))
         setSetting(SettingsEntity.KEY_NOTIFICATIONS_ENABLED, settings.notificationsEnabled.toString())
@@ -98,6 +105,7 @@ class SettingsRepositoryImpl @Inject constructor(
             cyclesBeforeLongBreak = settingsMap[SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK]?.value?.toIntOrNull() ?: 4,
             focusModeEnabled = settingsMap[SettingsEntity.KEY_FOCUS_MODE_ENABLED]?.value?.toBoolean() ?: true,
             focusModeStrict = settingsMap[SettingsEntity.KEY_FOCUS_MODE_STRICT]?.value?.toBoolean() ?: false,
+            autoLoopEnabled = settingsMap[SettingsEntity.KEY_AUTO_LOOP_ENABLED]?.value?.toBoolean() ?: false,
             reviewEnabled = settingsMap[SettingsEntity.KEY_REVIEW_ENABLED]?.value?.toBoolean() ?: true,
             reviewIntervals = parseReviewIntervals(
                 settingsMap[SettingsEntity.KEY_REVIEW_INTERVALS]?.value ?: SettingsEntity.DEFAULT_REVIEW_INTERVALS
@@ -109,8 +117,44 @@ class SettingsRepositoryImpl @Inject constructor(
     private fun parseReviewIntervals(jsonString: String): List<Int> {
         return try {
             json.decodeFromString<List<Int>>(jsonString)
-        } catch (e: Exception) {
+        } catch (e: SerializationException) {
+            Timber.w(e, "Failed to parse review intervals JSON: %s", jsonString)
             listOf(1, 3, 7, 14, 30, 60)
+        } catch (e: IllegalArgumentException) {
+            Timber.w(e, "Invalid review intervals format: %s", jsonString)
+            listOf(1, 3, 7, 14, 30, 60)
+        }
+    }
+
+    // 許可アプリ設定
+    override suspend fun getAllowedApps(): List<String> {
+        val jsonString = getSetting(
+            SettingsEntity.KEY_ALLOWED_APPS,
+            SettingsEntity.DEFAULT_ALLOWED_APPS
+        )
+        return parseAllowedApps(jsonString)
+    }
+
+    override suspend fun setAllowedApps(packages: List<String>) {
+        val jsonString = json.encodeToString(packages)
+        setSetting(SettingsEntity.KEY_ALLOWED_APPS, jsonString)
+    }
+
+    override fun getAllowedAppsFlow(): Flow<List<String>> {
+        return settingsDao.getSettingFlow(SettingsEntity.KEY_ALLOWED_APPS).map { value ->
+            parseAllowedApps(value ?: SettingsEntity.DEFAULT_ALLOWED_APPS)
+        }
+    }
+
+    private fun parseAllowedApps(jsonString: String): List<String> {
+        return try {
+            json.decodeFromString<List<String>>(jsonString)
+        } catch (e: SerializationException) {
+            Timber.w(e, "Failed to parse allowed apps JSON: %s", jsonString)
+            emptyList()
+        } catch (e: IllegalArgumentException) {
+            Timber.w(e, "Invalid allowed apps format: %s", jsonString)
+            emptyList()
         }
     }
 }

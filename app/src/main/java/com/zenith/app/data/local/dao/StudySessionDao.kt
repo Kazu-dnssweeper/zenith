@@ -59,4 +59,7 @@ interface StudySessionDao {
 
     @Query("SELECT * FROM study_sessions ORDER BY startedAt DESC")
     suspend fun getAll(): List<StudySessionEntity>
+
+    @Query("SELECT COUNT(*) FROM study_sessions")
+    suspend fun getSessionCount(): Int
 }

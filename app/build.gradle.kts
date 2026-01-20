@@ -23,16 +23,28 @@ android {
         // Google Play Billing 公開鍵（gradle.propertiesから取得）
         buildConfigField("String", "BILLING_PUBLIC_KEY",
             "\"${findProperty("BILLING_PUBLIC_KEY") ?: ""}\"")
+    }
 
-        javaCompileOptions {
-            annotationProcessorOptions {
-                arguments["room.schemaLocation"] = "$projectDir/schemas"
+    signingConfigs {
+        create("release") {
+            val props = project.properties
+            val storeFilePath = props["RELEASE_STORE_FILE"]?.toString()
+            if (!storeFilePath.isNullOrEmpty()) {
+                storeFile = file(storeFilePath)
             }
+            storePassword = props["RELEASE_STORE_PASSWORD"]?.toString() ?: ""
+            keyAlias = props["RELEASE_KEY_ALIAS"]?.toString() ?: ""
+            keyPassword = props["RELEASE_KEY_PASSWORD"]?.toString() ?: ""
         }
+    }
+
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -126,9 +138,24 @@ dependencies {
     implementation(libs.google.api.client.android)
     implementation(libs.google.api.services.drive)
 
+    // Logging
+    implementation(libs.timber)
+
     // Test
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    // Android Test (Espresso/Compose UI)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.espresso.intents)
+    androidTestImplementation(libs.androidx.test.uiautomator)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.hilt.android)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

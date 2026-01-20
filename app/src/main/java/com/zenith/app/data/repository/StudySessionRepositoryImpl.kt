@@ -75,6 +75,10 @@ class StudySessionRepositoryImpl @Inject constructor(
         )
     }
 
+    override suspend fun getSessionCount(): Int {
+        return studySessionDao.getSessionCount()
+    }
+
     private fun StudySessionEntity.toDomainModel(): StudySession {
         return StudySession(
             id = id,

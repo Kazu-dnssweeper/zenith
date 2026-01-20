@@ -23,11 +23,21 @@ billing = "7.0.0"
 playServicesAuth = "21.0.0"
 googleApiClientAndroid = "2.2.0"
 googleApiDrive = "v3-rev20231128-2.0.0"
+# Logging
+timber = "5.0.1"
+
 # Test
 junit = "4.13.2"
 mockk = "1.13.9"
 turbine = "1.0.0"
 coroutinesTest = "1.9.0"
+
+# Android Test (Espresso/Compose UI)
+espresso = "3.5.1"
+uiautomator = "2.2.0"
+testRunner = "1.5.2"
+testRules = "1.5.0"
+testCore = "1.5.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -94,11 +104,24 @@ google-play-services-auth = { group = "com.google.android.gms", name = "play-ser
 google-api-client-android = { group = "com.google.api-client", name = "google-api-client-android", version.ref = "googleApiClientAndroid" }
 google-api-services-drive = { group = "com.google.apis", name = "google-api-services-drive", version.ref = "googleApiDrive" }
 
+# Logging
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+
 # Test
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+
+# Android Test (Espresso/Compose UI)
+androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }
+androidx-test-espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "espresso" }
+androidx-test-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version.ref = "testRules" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "testCore" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

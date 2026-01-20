@@ -41,3 +41,8 @@
 
 # Glance Widget
 -keep class androidx.glance.** { *; }
+
+# Apache HTTP Client (used by Google API Client)
+-dontwarn org.apache.http.**
+-dontwarn javax.naming.**
+-dontwarn org.ietf.jgss.**

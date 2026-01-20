@@ -15,4 +15,5 @@ interface StudySessionRepository {
     suspend fun updateSession(session: StudySession)
     suspend fun deleteSession(session: StudySession)
     suspend fun finishSession(id: Long, durationMinutes: Int, cycles: Int, interrupted: Boolean)
+    suspend fun getSessionCount(): Int
 }

@@ -14,6 +14,7 @@ import android.view.WindowManager
 import android.widget.TextView
 import com.zenith.app.R
 import kotlinx.coroutines.flow.MutableStateFlow
+import timber.log.Timber
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -136,7 +137,7 @@ class LockOverlayService : Service() {
             windowManager?.addView(overlayView, layoutParams)
             _isOverlayShowing.value = true
         } catch (e: Exception) {
-            android.util.Log.e("LockOverlayService", "Failed to add overlay view", e)
+            Timber.e(e, "Failed to add overlay view")
         }
     }
 
@@ -145,7 +146,7 @@ class LockOverlayService : Service() {
             try {
                 windowManager?.removeView(view)
             } catch (e: Exception) {
-                android.util.Log.e("LockOverlayService", "Failed to remove overlay view", e)
+                Timber.e(e, "Failed to remove overlay view")
             }
         }
         overlayView = null

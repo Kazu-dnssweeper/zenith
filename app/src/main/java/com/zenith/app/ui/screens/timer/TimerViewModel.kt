@@ -9,6 +9,7 @@ import android.os.IBinder
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.zenith.app.domain.model.AllowedApp
 import com.zenith.app.domain.model.BgmTrack
 import com.zenith.app.domain.model.PomodoroSettings
 import com.zenith.app.domain.model.ReviewTask
@@ -19,7 +20,10 @@ import com.zenith.app.domain.repository.ReviewTaskRepository
 import com.zenith.app.domain.repository.SettingsRepository
 import com.zenith.app.domain.repository.StudySessionRepository
 import com.zenith.app.domain.repository.TaskRepository
+import com.zenith.app.util.InstalledAppsHelper
+import com.zenith.app.util.TimeConstants
 import com.zenith.app.service.BgmState
+import timber.log.Timber
 import com.zenith.app.service.TimerPhase
 import com.zenith.app.service.TimerService
 import com.zenith.app.service.TimerState
@@ -48,7 +52,11 @@ data class TimerUiState(
     val showFinishDialog: Boolean = false,
     val showCancelDialog: Boolean = false,
     val isServiceBound: Boolean = false,
-    val isSessionLockModeEnabled: Boolean = false
+    val isSessionLockModeEnabled: Boolean = false,
+    // 許可アプリ関連
+    val installedApps: List<AllowedApp> = emptyList(),
+    val defaultAllowedApps: Set<String> = emptySet(),
+    val isLoadingApps: Boolean = true
 )
 
 @HiltViewModel
@@ -60,7 +68,8 @@ class TimerViewModel @Inject constructor(
     private val studySessionRepository: StudySessionRepository,
     private val reviewTaskRepository: ReviewTaskRepository,
     private val premiumManager: PremiumManager,
-    private val bgmManager: BgmManager
+    private val bgmManager: BgmManager,
+    private val installedAppsHelper: InstalledAppsHelper
 ) : ViewModel() {
 
     private val taskId: Long = savedStateHandle.get<Long>("taskId") ?: 0L
@@ -152,13 +161,34 @@ class TimerViewModel @Inject constructor(
             // タスク固有の作業時間があればそれを使用、なければ設定のデフォルト値
             val workDurationMinutes = task?.workDurationMinutes ?: settings.workDurationMinutes
 
+            // 許可アプリ設定を読み込み
+            val defaultAllowedApps = settingsRepository.getAllowedApps().toSet()
+
+            val timeSeconds = workDurationMinutes * TimeConstants.SECONDS_PER_MINUTE
             _uiState.update {
                 it.copy(
                     task = task,
                     settings = settings,
                     totalCycles = settings.cyclesBeforeLongBreak,
-                    timeRemainingSeconds = workDurationMinutes * 60,
-                    totalTimeSeconds = workDurationMinutes * 60
+                    timeRemainingSeconds = timeSeconds,
+                    totalTimeSeconds = timeSeconds,
+                    defaultAllowedApps = defaultAllowedApps
+                )
+            }
+
+            // インストール済みアプリを非同期で読み込み
+            loadInstalledApps()
+        }
+    }
+
+    private fun loadInstalledApps() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingApps = true) }
+            val apps = installedAppsHelper.getInstalledUserApps()
+            _uiState.update {
+                it.copy(
+                    installedApps = apps,
+                    isLoadingApps = false
                 )
             }
         }
@@ -188,7 +218,12 @@ class TimerViewModel @Inject constructor(
         }
     }
 
-    fun startTimer(lockModeEnabled: Boolean = false, cycleCount: Int? = null) {
+    fun startTimer(
+        lockModeEnabled: Boolean = false,
+        cycleCount: Int? = null,
+        autoLoopEnabled: Boolean = false,
+        allowedApps: Set<String> = emptySet()
+    ) {
         val state = _uiState.value
         val settings = state.settings
         val task = state.task ?: return
@@ -219,7 +254,9 @@ class TimerViewModel @Inject constructor(
                 longBreak = settings.longBreakMinutes,
                 cycles = cycles,
                 focusModeEnabled = settings.focusModeEnabled,
-                focusModeStrict = lockModeEnabled
+                focusModeStrict = lockModeEnabled,
+                autoLoopEnabled = autoLoopEnabled,
+                allowedApps = allowedApps
             )
             bgmManager.onTimerStart()
         } else if (state.isPaused) {
@@ -327,8 +364,9 @@ class TimerViewModel @Inject constructor(
         super.onCleared()
         try {
             context.unbindService(serviceConnection)
-        } catch (e: Exception) {
-            // Service not bound
+        } catch (e: IllegalArgumentException) {
+            // Service was not bound - this is expected if the service wasn't connected
+            Timber.d("Service was not bound when attempting to unbind")
         }
     }
 }

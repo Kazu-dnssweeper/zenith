@@ -14,6 +14,8 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.zenith.app.R
 import com.zenith.app.ui.MainActivity
+import com.zenith.app.util.TimeConstants
+import com.zenith.app.util.TimerPhaseUtils
 import com.zenith.app.widget.ZenithWidgetStateHelper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,21 +30,36 @@ enum class TimerPhase {
     IDLE
 }
 
+/**
+ * Timer default values and constraints
+ */
+object TimerDefaults {
+    const val DEFAULT_WORK_MINUTES = 25
+    const val DEFAULT_SHORT_BREAK_MINUTES = 5
+    const val DEFAULT_LONG_BREAK_MINUTES = 15
+    const val DEFAULT_CYCLES = 4
+    const val MIN_CYCLES = 1
+    const val MAX_CYCLES = 10
+    const val MIN_WORK_MINUTES = 1
+    const val MAX_WORK_MINUTES = 180
+}
+
 data class TimerState(
     val phase: TimerPhase = TimerPhase.IDLE,
     val timeRemainingSeconds: Int = 0,
     val totalTimeSeconds: Int = 0,
     val currentCycle: Int = 1,
-    val totalCycles: Int = 4,
+    val totalCycles: Int = TimerDefaults.DEFAULT_CYCLES,
     val isRunning: Boolean = false,
     val isPaused: Boolean = false,
     val taskId: Long = 0,
     val taskName: String = "",
     val totalWorkMinutes: Int = 0,
-    val workDurationMinutes: Int = 25,
-    val shortBreakMinutes: Int = 5,
-    val longBreakMinutes: Int = 15,
-    val sessionCompleted: Boolean = false
+    val workDurationMinutes: Int = TimerDefaults.DEFAULT_WORK_MINUTES,
+    val shortBreakMinutes: Int = TimerDefaults.DEFAULT_SHORT_BREAK_MINUTES,
+    val longBreakMinutes: Int = TimerDefaults.DEFAULT_LONG_BREAK_MINUTES,
+    val sessionCompleted: Boolean = false,
+    val autoLoopEnabled: Boolean = false
 )
 
 @AndroidEntryPoint
@@ -66,6 +83,8 @@ class TimerService : Service() {
         const val EXTRA_CYCLES = "cycles"
         const val EXTRA_FOCUS_MODE_ENABLED = "focus_mode_enabled"
         const val EXTRA_FOCUS_MODE_STRICT = "focus_mode_strict"
+        const val EXTRA_AUTO_LOOP_ENABLED = "auto_loop_enabled"
+        const val EXTRA_ALLOWED_APPS = "allowed_apps"
 
         fun startTimer(
             context: Context,
@@ -76,7 +95,9 @@ class TimerService : Service() {
             longBreak: Int,
             cycles: Int,
             focusModeEnabled: Boolean = false,
-            focusModeStrict: Boolean = false
+            focusModeStrict: Boolean = false,
+            autoLoopEnabled: Boolean = false,
+            allowedApps: Set<String> = emptySet()
         ) {
             val intent = Intent(context, TimerService::class.java).apply {
                 action = ACTION_START
@@ -88,6 +109,8 @@ class TimerService : Service() {
                 putExtra(EXTRA_CYCLES, cycles)
                 putExtra(EXTRA_FOCUS_MODE_ENABLED, focusModeEnabled)
                 putExtra(EXTRA_FOCUS_MODE_STRICT, focusModeStrict)
+                putExtra(EXTRA_AUTO_LOOP_ENABLED, autoLoopEnabled)
+                putExtra(EXTRA_ALLOWED_APPS, allowedApps.toTypedArray())
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
@@ -152,14 +175,16 @@ class TimerService : Service() {
             ACTION_START -> {
                 val taskId = intent.getLongExtra(EXTRA_TASK_ID, 0)
                 val taskName = intent.getStringExtra(EXTRA_TASK_NAME) ?: ""
-                val workDuration = intent.getIntExtra(EXTRA_WORK_DURATION, 25)
-                val shortBreak = intent.getIntExtra(EXTRA_SHORT_BREAK, 5)
-                val longBreak = intent.getIntExtra(EXTRA_LONG_BREAK, 15)
-                val cycles = intent.getIntExtra(EXTRA_CYCLES, 4)
+                val workDuration = intent.getIntExtra(EXTRA_WORK_DURATION, TimerDefaults.DEFAULT_WORK_MINUTES)
+                val shortBreak = intent.getIntExtra(EXTRA_SHORT_BREAK, TimerDefaults.DEFAULT_SHORT_BREAK_MINUTES)
+                val longBreak = intent.getIntExtra(EXTRA_LONG_BREAK, TimerDefaults.DEFAULT_LONG_BREAK_MINUTES)
+                val cycles = intent.getIntExtra(EXTRA_CYCLES, TimerDefaults.DEFAULT_CYCLES)
                 val focusModeEnabled = intent.getBooleanExtra(EXTRA_FOCUS_MODE_ENABLED, false)
                 val focusModeStrict = intent.getBooleanExtra(EXTRA_FOCUS_MODE_STRICT, false)
+                val autoLoopEnabled = intent.getBooleanExtra(EXTRA_AUTO_LOOP_ENABLED, false)
+                val allowedApps = intent.getStringArrayExtra(EXTRA_ALLOWED_APPS)?.toSet() ?: emptySet()
 
-                startTimerInternal(taskId, taskName, workDuration, shortBreak, longBreak, cycles, focusModeEnabled, focusModeStrict)
+                startTimerInternal(taskId, taskName, workDuration, shortBreak, longBreak, cycles, focusModeEnabled, focusModeStrict, autoLoopEnabled, allowedApps)
             }
             ACTION_PAUSE -> pauseTimerInternal()
             ACTION_RESUME -> resumeTimerInternal()
@@ -172,6 +197,7 @@ class TimerService : Service() {
 
     private var focusModeEnabled = false
     private var focusModeStrict = false
+    private var currentAllowedApps: Set<String> = emptySet()
 
     private fun startTimerInternal(
         taskId: Long,
@@ -181,13 +207,16 @@ class TimerService : Service() {
         longBreak: Int,
         cycles: Int,
         focusMode: Boolean,
-        focusStrict: Boolean
+        focusStrict: Boolean,
+        autoLoop: Boolean = false,
+        allowedApps: Set<String> = emptySet()
     ) {
-        val totalSeconds = workDuration * 60
+        val totalSeconds = workDuration * TimeConstants.SECONDS_PER_MINUTE
 
         // Store focus mode settings
         focusModeEnabled = focusMode
         focusModeStrict = focusStrict
+        currentAllowedApps = allowedApps
 
         _timerState.value = TimerState(
             phase = TimerPhase.WORK,
@@ -203,12 +232,13 @@ class TimerService : Service() {
             workDurationMinutes = workDuration,
             shortBreakMinutes = shortBreak,
             longBreakMinutes = longBreak,
-            sessionCompleted = false
+            sessionCompleted = false,
+            autoLoopEnabled = autoLoop
         )
 
         // Start focus mode if enabled
         if (focusModeEnabled && FocusModeService.isServiceRunning.value) {
-            FocusModeService.startFocusMode(focusModeStrict)
+            FocusModeService.startFocusMode(focusModeStrict, currentAllowedApps)
         }
 
         // Show lock overlay for complete lock mode
@@ -261,11 +291,11 @@ class TimerService : Service() {
     private fun startCountDown() {
         countDownTimer?.cancel()
 
-        val remainingMillis = _timerState.value.timeRemainingSeconds * 1000L
+        val remainingMillis = _timerState.value.timeRemainingSeconds * TimeConstants.MILLIS_PER_SECOND
 
-        countDownTimer = object : CountDownTimer(remainingMillis, 1000) {
+        countDownTimer = object : CountDownTimer(remainingMillis, TimeConstants.MILLIS_PER_SECOND) {
             override fun onTick(millisUntilFinished: Long) {
-                val seconds = (millisUntilFinished / 1000).toInt()
+                val seconds = (millisUntilFinished / TimeConstants.MILLIS_PER_SECOND).toInt()
                 _timerState.value = _timerState.value.copy(timeRemainingSeconds = seconds)
                 updateNotification()
                 updateOverlayTime()
@@ -281,16 +311,11 @@ class TimerService : Service() {
         if (!focusModeEnabled || !focusModeStrict) return
 
         val state = _timerState.value
-        val minutes = state.timeRemainingSeconds / 60
-        val seconds = state.timeRemainingSeconds % 60
+        val minutes = state.timeRemainingSeconds / TimeConstants.SECONDS_PER_MINUTE
+        val seconds = state.timeRemainingSeconds % TimeConstants.SECONDS_PER_MINUTE
         val timeText = String.format("%02d:%02d", minutes, seconds)
 
-        val phaseText = when (state.phase) {
-            TimerPhase.WORK -> "作業中"
-            TimerPhase.SHORT_BREAK -> "休憩中"
-            TimerPhase.LONG_BREAK -> "長休憩中"
-            TimerPhase.IDLE -> "完了"
-        }
+        val phaseText = TimerPhaseUtils.getPhaseDisplayText(this, state.phase, state.sessionCompleted)
 
         LockOverlayService.updateOverlayTime(this, timeText, phaseText)
     }
@@ -304,18 +329,20 @@ class TimerService : Service() {
 
                 if (state.currentCycle >= state.totalCycles) {
                     // All cycles complete -> long break
+                    val longBreakSeconds = state.longBreakMinutes * TimeConstants.SECONDS_PER_MINUTE
                     _timerState.value = state.copy(
                         phase = TimerPhase.LONG_BREAK,
-                        timeRemainingSeconds = state.longBreakMinutes * 60,
-                        totalTimeSeconds = state.longBreakMinutes * 60,
+                        timeRemainingSeconds = longBreakSeconds,
+                        totalTimeSeconds = longBreakSeconds,
                         totalWorkMinutes = newWorkMinutes
                     )
                 } else {
                     // Short break
+                    val shortBreakSeconds = state.shortBreakMinutes * TimeConstants.SECONDS_PER_MINUTE
                     _timerState.value = state.copy(
                         phase = TimerPhase.SHORT_BREAK,
-                        timeRemainingSeconds = state.shortBreakMinutes * 60,
-                        totalTimeSeconds = state.shortBreakMinutes * 60,
+                        timeRemainingSeconds = shortBreakSeconds,
+                        totalTimeSeconds = shortBreakSeconds,
                         totalWorkMinutes = newWorkMinutes
                     )
                 }
@@ -326,10 +353,11 @@ class TimerService : Service() {
 
             TimerPhase.SHORT_BREAK -> {
                 // Next work cycle
+                val workSeconds = state.workDurationMinutes * TimeConstants.SECONDS_PER_MINUTE
                 _timerState.value = state.copy(
                     phase = TimerPhase.WORK,
-                    timeRemainingSeconds = state.workDurationMinutes * 60,
-                    totalTimeSeconds = state.workDurationMinutes * 60,
+                    timeRemainingSeconds = workSeconds,
+                    totalTimeSeconds = workSeconds,
                     currentCycle = state.currentCycle + 1
                 )
                 updateNotification()
@@ -338,20 +366,35 @@ class TimerService : Service() {
             }
 
             TimerPhase.LONG_BREAK -> {
-                // Session complete
-                _timerState.value = state.copy(
-                    phase = TimerPhase.IDLE,
-                    isRunning = false,
-                    sessionCompleted = true
-                )
+                if (state.autoLoopEnabled) {
+                    // 自動ループ: サイクル1から再開
+                    val workSeconds = state.workDurationMinutes * TimeConstants.SECONDS_PER_MINUTE
+                    _timerState.value = state.copy(
+                        phase = TimerPhase.WORK,
+                        timeRemainingSeconds = workSeconds,
+                        totalTimeSeconds = workSeconds,
+                        currentCycle = 1,
+                        totalWorkMinutes = 0  // 新しいループなのでリセット
+                    )
+                    updateNotification()
+                    updateWidgetState()
+                    startCountDown()
+                } else {
+                    // Session complete
+                    _timerState.value = state.copy(
+                        phase = TimerPhase.IDLE,
+                        isRunning = false,
+                        sessionCompleted = true
+                    )
 
-                // Stop focus mode and hide overlay
-                FocusModeService.stopFocusMode()
-                LockOverlayService.hideOverlay(this)
+                    // Stop focus mode and hide overlay
+                    FocusModeService.stopFocusMode()
+                    LockOverlayService.hideOverlay(this)
 
-                updateNotification()
-                updateWidgetState()
-                // Keep service running briefly to allow UI to read final state
+                    updateNotification()
+                    updateWidgetState()
+                    // Keep service running briefly to allow UI to read final state
+                }
             }
 
             TimerPhase.IDLE -> {}
@@ -362,10 +405,10 @@ class TimerService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "タイマー",
+                getString(R.string.notification_channel_name),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "ポモドーロタイマーの通知"
+                description = getString(R.string.notification_channel_description)
                 setShowBadge(false)
             }
             notificationManager?.createNotificationChannel(channel)
@@ -399,16 +442,11 @@ class TimerService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val minutes = state.timeRemainingSeconds / 60
-        val seconds = state.timeRemainingSeconds % 60
+        val minutes = state.timeRemainingSeconds / TimeConstants.SECONDS_PER_MINUTE
+        val seconds = state.timeRemainingSeconds % TimeConstants.SECONDS_PER_MINUTE
         val timeText = String.format("%02d:%02d", minutes, seconds)
 
-        val phaseText = when (state.phase) {
-            TimerPhase.WORK -> "作業中"
-            TimerPhase.SHORT_BREAK -> "休憩中"
-            TimerPhase.LONG_BREAK -> "長休憩中"
-            TimerPhase.IDLE -> if (state.sessionCompleted) "完了！" else "準備中"
-        }
+        val phaseText = TimerPhaseUtils.getPhaseDisplayText(this, state.phase, state.sessionCompleted)
 
         val title = if (state.taskName.isNotEmpty()) {
             "${state.taskName} - $phaseText"
@@ -416,24 +454,36 @@ class TimerService : Service() {
             phaseText
         }
 
+        val contentText = getString(
+            R.string.notification_cycle_format,
+            timeText,
+            state.currentCycle,
+            state.totalCycles
+        )
+
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(title)
-            .setContentText("$timeText (サイクル ${state.currentCycle}/${state.totalCycles})")
+            .setContentText(contentText)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
 
         if (state.phase != TimerPhase.IDLE) {
+            val pauseResumeText = if (state.isRunning) {
+                getString(R.string.notification_action_pause)
+            } else {
+                getString(R.string.notification_action_resume)
+            }
             builder.addAction(
                 if (state.isRunning) R.drawable.ic_launcher_foreground else R.drawable.ic_launcher_foreground,
-                if (state.isRunning) "一時停止" else "再開",
+                pauseResumeText,
                 pauseResumePendingIntent
             )
             builder.addAction(
                 R.drawable.ic_launcher_foreground,
-                "停止",
+                getString(R.string.notification_action_stop),
                 stopPendingIntent
             )
         }

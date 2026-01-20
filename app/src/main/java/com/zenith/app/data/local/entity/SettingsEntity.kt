@@ -19,6 +19,8 @@ data class SettingsEntity(
         // Focus mode settings
         const val KEY_FOCUS_MODE_ENABLED = "focus_mode_enabled"
         const val KEY_FOCUS_MODE_STRICT = "focus_mode_strict" // true = complete lock, false = emergency unlock allowed
+        const val KEY_AUTO_LOOP_ENABLED = "auto_loop_enabled" // Premium限定: 自動ループ
+        const val KEY_ALLOWED_APPS = "allowed_apps" // フォーカスモード中に許可するアプリ一覧
 
         // Review settings
         const val KEY_REVIEW_ENABLED = "review_enabled"
@@ -34,5 +36,6 @@ data class SettingsEntity(
         const val DEFAULT_LONG_BREAK = "15"
         const val DEFAULT_CYCLES = "4"
         const val DEFAULT_REVIEW_INTERVALS = "[1, 3, 7, 14, 30, 60]"
+        const val DEFAULT_ALLOWED_APPS = "[]"
     }
 }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -143,7 +144,7 @@ object ZenithWidgetStateHelper {
             try {
                 database?.close()
             } catch (e: Exception) {
-                android.util.Log.e("ZenithWidgetStateHelper", "Error closing database", e)
+                Timber.e(e, "Error closing database")
             } finally {
                 database = null
             }

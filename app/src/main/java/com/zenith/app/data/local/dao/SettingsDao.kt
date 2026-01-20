@@ -12,6 +12,9 @@ interface SettingsDao {
     @Query("SELECT value FROM settings WHERE `key` = :key")
     suspend fun getSettingValue(key: String): String?
 
+    @Query("SELECT value FROM settings WHERE `key` = :key")
+    fun getSettingFlow(key: String): Flow<String?>
+
     @Query("SELECT * FROM settings")
     fun getAllSettings(): Flow<List<SettingsEntity>>
 

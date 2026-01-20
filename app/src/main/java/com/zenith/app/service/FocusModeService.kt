@@ -4,7 +4,9 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Intent
 import android.view.accessibility.AccessibilityEvent
+import com.zenith.app.util.SystemPackages
 import kotlinx.coroutines.flow.MutableStateFlow
+import timber.log.Timber
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -28,22 +30,6 @@ class FocusModeService : AccessibilityService() {
 
         private val _allowedPackages = MutableStateFlow<Set<String>>(emptySet())
 
-        // List of packages that are always allowed (system apps)
-        private val SYSTEM_PACKAGES = setOf(
-            "com.android.systemui",
-            "com.android.launcher",
-            "com.android.launcher3",
-            "com.google.android.apps.nexuslauncher",
-            "com.sec.android.app.launcher", // Samsung launcher
-            "com.mi.android.globallauncher", // Xiaomi launcher
-            "com.huawei.android.launcher", // Huawei launcher
-            "com.oppo.launcher", // OPPO launcher
-            "com.android.settings",
-            "com.android.phone",
-            "com.android.dialer",
-            "com.android.emergency"
-        )
-
         @Volatile
         var instance: FocusModeService? = null
             private set
@@ -51,7 +37,7 @@ class FocusModeService : AccessibilityService() {
         fun startFocusMode(strictMode: Boolean = false, additionalAllowedPackages: Set<String> = emptySet()) {
             _isFocusModeActive.value = true
             _isStrictMode.value = strictMode
-            _allowedPackages.value = SYSTEM_PACKAGES + additionalAllowedPackages
+            _allowedPackages.value = SystemPackages.ALWAYS_ALLOWED + additionalAllowedPackages
         }
 
         fun stopFocusMode() {
@@ -116,9 +102,9 @@ class FocusModeService : AccessibilityService() {
             }
             startActivity(intent)
         } catch (e: ClassNotFoundException) {
-            android.util.Log.e("FocusModeService", "MainActivity class not found", e)
+            Timber.e(e, "MainActivity class not found")
         } catch (e: Exception) {
-            android.util.Log.e("FocusModeService", "Failed to launch MainActivity", e)
+            Timber.e(e, "Failed to launch MainActivity")
         }
     }
 

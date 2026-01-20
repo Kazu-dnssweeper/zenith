@@ -128,4 +128,17 @@
     <string name="timer_phase_break">休憩中</string>
     <string name="overlay_permission_required">完全ロックモードを使用するには「他のアプリの上に重ねて表示」権限が必要です</string>
     <string name="overlay_permission_grant">権限を設定</string>
+
+    <!-- Notification Strings -->
+    <string name="notification_phase_work">作業中</string>
+    <string name="notification_phase_short_break">休憩中</string>
+    <string name="notification_phase_long_break">長休憩中</string>
+    <string name="notification_phase_completed">完了！</string>
+    <string name="notification_phase_ready">準備中</string>
+    <string name="notification_cycle_format">%1$s (サイクル %2$d/%3$d)</string>
+    <string name="notification_action_pause">一時停止</string>
+    <string name="notification_action_resume">再開</string>
+    <string name="notification_action_stop">停止</string>
+    <string name="notification_channel_name">タイマー</string>
+    <string name="notification_channel_description">ポモドーロタイマーの通知</string>
 </resources>

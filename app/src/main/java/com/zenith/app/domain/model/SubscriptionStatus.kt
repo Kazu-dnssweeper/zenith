@@ -6,8 +6,10 @@ import java.time.LocalDateTime
 enum class SubscriptionType {
     FREE,
     MONTHLY,      // 月額 ¥480
-    YEARLY,       // 年額 ¥3,600
-    LIFETIME      // 買い切り ¥4,800
+    QUARTERLY,    // 3ヶ月 ¥1,200
+    HALF_YEARLY,  // 6ヶ月 ¥2,000
+    YEARLY,       // 年額 ¥3,000
+    LIFETIME      // 買い切り ¥4,000
 }
 
 data class SubscriptionStatus(

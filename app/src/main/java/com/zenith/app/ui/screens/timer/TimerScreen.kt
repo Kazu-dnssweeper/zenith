@@ -24,9 +24,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zenith.app.domain.model.BgmTrack
 import com.zenith.app.domain.model.PremiumFeature
 import com.zenith.app.service.LockOverlayService
+import com.zenith.app.service.TimerDefaults
 import com.zenith.app.service.TimerPhase
 import com.zenith.app.ui.components.PremiumBadge
 import com.zenith.app.ui.premium.PremiumUpsellDialog
+import com.zenith.app.ui.screens.timer.components.AllowedAppsSelectorBottomSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,6 +52,8 @@ fun TimerScreen(
     var showStrictModeBlockedDialog by remember { mutableStateOf(false) }
     var showOverlayPermissionDialog by remember { mutableStateOf(false) }
     var showPremiumUpsellDialog by remember { mutableStateOf(false) }
+    var showAutoLoopPremiumUpsell by remember { mutableStateOf(false) }
+    var showAllowedAppsSelector by remember { mutableStateOf(false) }
     // セッションごとの完全ロックモード選択（設定のデフォルト値で初期化）
     var sessionLockModeEnabled by remember(uiState.settings.focusModeStrict) {
         mutableStateOf(uiState.settings.focusModeStrict)
@@ -57,6 +61,14 @@ fun TimerScreen(
     // セッションごとのサイクル数選択（設定のデフォルト値で初期化）
     var sessionCycleCount by remember(uiState.totalCycles) {
         mutableStateOf(uiState.totalCycles)
+    }
+    // セッションごとの自動ループ選択（設定のデフォルト値で初期化）
+    var sessionAutoLoopEnabled by remember(uiState.settings.autoLoopEnabled) {
+        mutableStateOf(uiState.settings.autoLoopEnabled)
+    }
+    // セッションごとの許可アプリ選択（設定のデフォルト値で初期化）
+    var sessionAllowedApps by remember(uiState.defaultAllowedApps) {
+        mutableStateOf(uiState.defaultAllowedApps)
     }
 
     // 完全ロックモードが有効でタイマー実行中は停止できない
@@ -234,7 +246,7 @@ fun TimerScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             IconButton(
-                                onClick = { if (sessionCycleCount > 1) sessionCycleCount-- }
+                                onClick = { if (sessionCycleCount > TimerDefaults.MIN_CYCLES) sessionCycleCount-- }
                             ) {
                                 Icon(Icons.Default.Remove, contentDescription = "減らす")
                             }
@@ -244,7 +256,7 @@ fun TimerScreen(
                                 modifier = Modifier.padding(horizontal = 16.dp)
                             )
                             IconButton(
-                                onClick = { if (sessionCycleCount < 10) sessionCycleCount++ }
+                                onClick = { if (sessionCycleCount < TimerDefaults.MAX_CYCLES) sessionCycleCount++ }
                             ) {
                                 Icon(Icons.Default.Add, contentDescription = "増やす")
                             }
@@ -300,6 +312,101 @@ fun TimerScreen(
                                 text = "タイマー終了まで中断できません",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // 自動ループ選択（Premium機能）
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (isPremium) {
+                                    sessionAutoLoopEnabled = !sessionAutoLoopEnabled
+                                } else {
+                                    showFocusModeWarning = false
+                                    showAutoLoopPremiumUpsell = true
+                                }
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Checkbox(
+                            checked = sessionAutoLoopEnabled && isPremium,
+                            onCheckedChange = { checked ->
+                                if (isPremium) {
+                                    sessionAutoLoopEnabled = checked
+                                } else {
+                                    showFocusModeWarning = false
+                                    showAutoLoopPremiumUpsell = true
+                                }
+                            },
+                            enabled = isPremium
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "自動ループ",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isPremium) MaterialTheme.colorScheme.onSurface
+                                           else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (!isPremium) {
+                                    PremiumBadge()
+                                }
+                            }
+                            Text(
+                                text = "サイクル完了後も自動で次のサイクルを開始",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // 許可アプリ選択（完全ロックモードでない場合のみ表示）
+                    if (!sessionLockModeEnabled) {
+                        HorizontalDivider()
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showAllowedAppsSelector = true },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Apps,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Column {
+                                    Text(
+                                        text = "許可アプリ",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = if (sessionAllowedApps.isEmpty()) {
+                                            "ロックモード中に使用を許可するアプリ"
+                                        } else {
+                                            "${sessionAllowedApps.size}個選択中"
+                                        },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Icon(
+                                Icons.Default.ChevronRight,
+                                contentDescription = "選択",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -361,7 +468,9 @@ fun TimerScreen(
                         showFocusModeWarning = false
                         viewModel.startTimer(
                             lockModeEnabled = sessionLockModeEnabled,
-                            cycleCount = sessionCycleCount
+                            cycleCount = sessionCycleCount,
+                            autoLoopEnabled = sessionAutoLoopEnabled && isPremium,
+                            allowedApps = if (sessionLockModeEnabled) emptySet() else sessionAllowedApps
                         )
                     }
                 ) {
@@ -373,6 +482,19 @@ fun TimerScreen(
                     Text("キャンセル")
                 }
             }
+        )
+    }
+
+    // 許可アプリ選択ボトムシート
+    if (showAllowedAppsSelector) {
+        AllowedAppsSelectorBottomSheet(
+            installedApps = uiState.installedApps,
+            selectedPackages = sessionAllowedApps,
+            isLoading = uiState.isLoadingApps,
+            onSelectionChanged = { selectedPackages ->
+                sessionAllowedApps = selectedPackages
+            },
+            onDismiss = { showAllowedAppsSelector = false }
         )
     }
 
@@ -427,6 +549,23 @@ fun TimerScreen(
             },
             onUpgrade = {
                 showBgmPremiumUpsell = false
+                onNavigateToPremium()
+            },
+            trialAvailable = subscriptionStatus.canStartTrial
+        )
+    }
+
+    // 自動ループ用Premium機能アップグレードダイアログ
+    if (showAutoLoopPremiumUpsell) {
+        PremiumUpsellDialog(
+            feature = PremiumFeature.TIMER_AUTO_LOOP,
+            onDismiss = { showAutoLoopPremiumUpsell = false },
+            onStartTrial = {
+                viewModel.startTrial()
+                showAutoLoopPremiumUpsell = false
+            },
+            onUpgrade = {
+                showAutoLoopPremiumUpsell = false
                 onNavigateToPremium()
             },
             trialAvailable = subscriptionStatus.canStartTrial

@@ -12,6 +12,7 @@ import com.zenith.app.ui.screens.home.HomeScreen
 import com.zenith.app.ui.screens.backup.BackupScreen
 import com.zenith.app.ui.screens.premium.PremiumScreen
 import com.zenith.app.ui.screens.settings.SettingsScreen
+import com.zenith.app.ui.screens.settings.allowedapps.AllowedAppsScreen
 import com.zenith.app.ui.screens.stats.StatsScreen
 import com.zenith.app.ui.screens.tasks.TasksScreen
 import com.zenith.app.ui.screens.timer.TimerScreen
@@ -60,6 +61,17 @@ fun ZenithNavHost(
                 },
                 onNavigateToBackup = {
                     navController.navigate(Screen.Backup.route)
+                },
+                onNavigateToAllowedApps = {
+                    navController.navigate(Screen.AllowedApps.route)
+                }
+            )
+        }
+
+        composable(Screen.AllowedApps.route) {
+            AllowedAppsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

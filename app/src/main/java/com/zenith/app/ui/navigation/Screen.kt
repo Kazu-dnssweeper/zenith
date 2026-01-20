@@ -71,6 +71,13 @@ sealed class Screen(
         unselectedIcon = Icons.Outlined.Backup
     )
 
+    data object AllowedApps : Screen(
+        route = "allowed_apps",
+        title = "許可アプリ",
+        selectedIcon = Icons.Filled.Apps,
+        unselectedIcon = Icons.Outlined.Apps
+    )
+
     companion object {
         val bottomNavItems = listOf(Home, Tasks, Calendar, Stats, Settings)
     }

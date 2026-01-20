@@ -1,15 +1,18 @@
 package com.zenith.app.data.repository
 
 import com.google.gson.Gson
+import com.google.gson.JsonParseException
+import com.google.gson.JsonSyntaxException
 import com.google.gson.reflect.TypeToken
 import com.zenith.app.data.local.dao.DailyStatsDao
 import com.zenith.app.data.local.entity.DailyStatsEntity
 import com.zenith.app.domain.model.DailyStats
 import com.zenith.app.domain.repository.DailyStatsRepository
 import com.zenith.app.domain.repository.DayStats
+import com.zenith.app.util.DateUtils
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.time.DayOfWeek
+import timber.log.Timber
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -72,16 +75,13 @@ class DailyStatsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getWeeklyData(weekStart: LocalDate): List<DayStats> {
-        val dayLabels = listOf("月", "火", "水", "木", "金", "土", "日")
-        val weekEnd = weekStart.plusDays(6)
-
         return (0..6).map { dayOffset ->
             val date = weekStart.plusDays(dayOffset.toLong())
             val stats = dailyStatsDao.getByDate(date)
             val minutes = stats?.totalStudyMinutes ?: 0
 
             DayStats(
-                dayOfWeek = dayLabels[dayOffset],
+                dayOfWeek = DateUtils.WEEKDAY_LABELS[dayOffset],
                 date = date,
                 minutes = minutes
             )
@@ -89,10 +89,15 @@ class DailyStatsRepositoryImpl @Inject constructor(
     }
 
     private fun parseBreakdown(json: String): Map<String, Int> {
+        if (json.isBlank()) return emptyMap()
         return try {
             val type = object : TypeToken<Map<String, Int>>() {}.type
             gson.fromJson(json, type) ?: emptyMap()
-        } catch (e: Exception) {
+        } catch (e: JsonSyntaxException) {
+            Timber.w(e, "Invalid JSON format in breakdown: %s", json)
+            emptyMap()
+        } catch (e: JsonParseException) {
+            Timber.w(e, "Failed to parse breakdown JSON")
             emptyMap()
         }
     }

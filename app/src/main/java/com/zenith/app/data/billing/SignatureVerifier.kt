@@ -1,8 +1,8 @@
 package com.zenith.app.data.billing
 
 import android.util.Base64
-import android.util.Log
 import com.zenith.app.BuildConfig
+import timber.log.Timber
 import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.Signature
@@ -18,8 +18,6 @@ import javax.inject.Singleton
 class SignatureVerifier @Inject constructor() {
 
     companion object {
-        private const val TAG = "SignatureVerifier"
-
         /**
          * Google Play Console → 収益化の設定 → ライセンス から取得
          * Base64エンコードされたRSA公開鍵
@@ -83,21 +81,12 @@ class SignatureVerifier @Inject constructor() {
         }
     }
 
-    // ユニットテスト環境ではログが使用できないため、安全にラップ
     private fun logError(message: String) {
-        try {
-            Log.e(TAG, message)
-        } catch (_: Exception) {
-            // ユニットテスト環境では無視
-        }
+        Timber.e(message)
     }
 
     private fun logWarn(message: String) {
-        try {
-            Log.w(TAG, message)
-        } catch (_: Exception) {
-            // ユニットテスト環境では無視
-        }
+        Timber.w(message)
     }
 
     /**

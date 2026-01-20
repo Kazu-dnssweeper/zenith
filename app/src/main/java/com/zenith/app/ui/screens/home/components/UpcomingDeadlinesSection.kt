@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zenith.app.domain.model.Task
+import com.zenith.app.ui.components.EmptySectionMessage
 import com.zenith.app.ui.components.ZenithCard
 import com.zenith.app.ui.theme.AccentError
 import com.zenith.app.ui.theme.AccentTeal
@@ -48,8 +49,6 @@ fun UpcomingDeadlinesSection(
     onStartTimer: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (tasks.isEmpty()) return
-
     ZenithCard(modifier = modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -71,21 +70,30 @@ fun UpcomingDeadlinesSection(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-                Text(
-                    text = "${tasks.size}件",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (tasks.isNotEmpty()) {
+                    Text(
+                        text = "${tasks.size}件",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                tasks.forEach { task ->
-                    UpcomingDeadlineItem(
-                        task = task,
-                        onStartTimer = { onStartTimer(task.id) }
-                    )
+            if (tasks.isEmpty()) {
+                EmptySectionMessage(
+                    icon = Icons.Default.DateRange,
+                    message = "期限が近いタスクはありません"
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    tasks.forEach { task ->
+                        UpcomingDeadlineItem(
+                            task = task,
+                            onStartTimer = { onStartTimer(task.id) }
+                        )
+                    }
                 }
             }
         }

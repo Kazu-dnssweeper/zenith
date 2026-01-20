@@ -4,6 +4,10 @@ enum class PremiumFeature(
     val titleJa: String,
     val descriptionJa: String
 ) {
+    TIMER_AUTO_LOOP(
+        titleJa = "タイマー自動ループ",
+        descriptionJa = "ポモドーロサイクル完了後も自動で次のサイクルを開始します。"
+    ),
     COMPLETE_LOCK_MODE(
         titleJa = "完全ロックモード",
         descriptionJa = "タイマー終了まで他のアプリを使用できなくなり、集中力を最大限に高めます。"

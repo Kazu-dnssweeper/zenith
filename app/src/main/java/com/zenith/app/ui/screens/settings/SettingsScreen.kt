@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Remove
@@ -32,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zenith.app.ui.components.PremiumBadge
 import com.zenith.app.ui.components.PremiumStatusCard
 import com.zenith.app.ui.components.PremiumUpgradeCard
 import com.zenith.app.ui.components.ZenithCard
@@ -46,6 +48,7 @@ import com.zenith.app.ui.theme.TextSecondary
 fun SettingsScreen(
     onNavigateToPremium: () -> Unit = {},
     onNavigateToBackup: () -> Unit = {},
+    onNavigateToAllowedApps: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -255,13 +258,78 @@ fun SettingsScreen(
                     onCheckedChange = viewModel::toggleFocusMode
                 )
                 if (uiState.focusModeEnabled) {
-                    SettingsSwitchItem(
+                    SettingsPremiumSwitchItem(
                         title = "完全ロックモード（デフォルト）",
                         description = "タイマー開始時に完全ロックをデフォルトで有効にする",
                         checked = uiState.focusModeStrict,
-                        onCheckedChange = viewModel::toggleFocusModeStrict
+                        isPremium = isPremium,
+                        onCheckedChange = { checked ->
+                            if (isPremium) {
+                                viewModel.toggleFocusModeStrict(checked)
+                            }
+                        },
+                        onPremiumClick = onNavigateToPremium
                     )
+                    // 許可アプリ設定
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigateToAllowedApps() }
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Apps,
+                                contentDescription = null,
+                                tint = Teal700,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "許可アプリ",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = if (uiState.allowedAppsCount > 0) {
+                                        "${uiState.allowedAppsCount}個選択中"
+                                    } else {
+                                        "ロックモード中に使用を許可するアプリ"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+                        Icon(
+                            Icons.Default.ChevronRight,
+                            contentDescription = "詳細",
+                            tint = TextSecondary
+                        )
+                    }
                 }
+            }
+
+            // Timer Auto-Loop Section
+            SettingsSection(title = "タイマー") {
+                SettingsPremiumSwitchItem(
+                    title = "自動ループ",
+                    description = "ポモドーロサイクル完了後も自動で次のサイクルを開始",
+                    checked = uiState.autoLoopEnabled,
+                    isPremium = isPremium,
+                    onCheckedChange = { checked ->
+                        if (isPremium) {
+                            viewModel.toggleAutoLoop(checked)
+                        }
+                    },
+                    onPremiumClick = onNavigateToPremium
+                )
             }
 
             // Premium Section
@@ -394,6 +462,69 @@ private fun SettingsSwitchItem(
                 checkedTrackColor = Teal700.copy(alpha = 0.5f),
                 uncheckedThumbColor = TextSecondary,
                 uncheckedTrackColor = SurfaceVariantDark
+            )
+        )
+    }
+}
+
+@Composable
+private fun SettingsPremiumSwitchItem(
+    title: String,
+    description: String,
+    checked: Boolean,
+    isPremium: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    onPremiumClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(enabled = !isPremium) { onPremiumClick() }
+            .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isPremium) TextPrimary else TextSecondary
+                )
+                if (!isPremium) {
+                    PremiumBadge()
+                }
+            }
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+        }
+        Switch(
+            checked = checked && isPremium,
+            onCheckedChange = { newValue ->
+                if (isPremium) {
+                    onCheckedChange(newValue)
+                } else {
+                    onPremiumClick()
+                }
+            },
+            enabled = isPremium,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Teal700,
+                checkedTrackColor = Teal700.copy(alpha = 0.5f),
+                uncheckedThumbColor = TextSecondary,
+                uncheckedTrackColor = SurfaceVariantDark,
+                disabledCheckedThumbColor = TextSecondary,
+                disabledCheckedTrackColor = SurfaceVariantDark,
+                disabledUncheckedThumbColor = TextSecondary,
+                disabledUncheckedTrackColor = SurfaceVariantDark
             )
         )
     }

@@ -2,7 +2,6 @@ package com.zenith.app.data.billing
 
 import android.app.Activity
 import android.content.Context
-import android.util.Log
 import com.android.billingclient.api.AcknowledgePurchaseParams
 import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
@@ -19,6 +18,7 @@ import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
+import timber.log.Timber
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,10 +33,6 @@ import kotlin.coroutines.resume
 class BillingClientWrapper @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    companion object {
-        private const val TAG = "BillingClientWrapper"
-    }
-
     private var billingClient: BillingClient? = null
 
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
@@ -52,23 +48,23 @@ class BillingClientWrapper @Inject constructor(
         when (billingResult.responseCode) {
             BillingClient.BillingResponseCode.OK -> {
                 if (purchases != null) {
-                    Log.d(TAG, "Purchase updated: ${purchases.size} items")
+                    Timber.d("Purchase updated: %d items", purchases.size)
                     _newPurchases.tryEmit(purchases)
                     _purchases.tryEmit(purchases)
                 }
             }
             BillingClient.BillingResponseCode.USER_CANCELED -> {
-                Log.d(TAG, "User canceled purchase")
+                Timber.d("User canceled purchase")
             }
             BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
-                Log.w(TAG, "Item already owned")
+                Timber.w("Item already owned")
             }
             BillingClient.BillingResponseCode.SERVICE_DISCONNECTED -> {
-                Log.w(TAG, "Billing service disconnected")
+                Timber.w("Billing service disconnected")
                 _connectionState.value = ConnectionState.Disconnected
             }
             else -> {
-                Log.e(TAG, "Purchase failed: ${billingResult.responseCode} - ${billingResult.debugMessage}")
+                Timber.e("Purchase failed: %d - %s", billingResult.responseCode, billingResult.debugMessage)
             }
         }
     }

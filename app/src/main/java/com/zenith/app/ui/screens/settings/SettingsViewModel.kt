@@ -27,7 +27,9 @@ data class SettingsUiState(
     val longBreakMinutes: Int = 15,
     val cyclesBeforeLongBreak: Int = 4,
     val focusModeEnabled: Boolean = true,
-    val focusModeStrict: Boolean = false
+    val focusModeStrict: Boolean = false,
+    val autoLoopEnabled: Boolean = false,
+    val allowedAppsCount: Int = 0
 )
 
 @HiltViewModel
@@ -61,6 +63,7 @@ class SettingsViewModel @Inject constructor(
     private fun loadSettings() {
         viewModelScope.launch {
             val settings = settingsRepository.getPomodoroSettings()
+            val allowedApps = settingsRepository.getAllowedApps()
             _uiState.update {
                 it.copy(
                     isLoading = false,
@@ -71,7 +74,9 @@ class SettingsViewModel @Inject constructor(
                     longBreakMinutes = settings.longBreakMinutes,
                     cyclesBeforeLongBreak = settings.cyclesBeforeLongBreak,
                     focusModeEnabled = settings.focusModeEnabled,
-                    focusModeStrict = settings.focusModeStrict
+                    focusModeStrict = settings.focusModeStrict,
+                    autoLoopEnabled = settings.autoLoopEnabled,
+                    allowedAppsCount = allowedApps.size
                 )
             }
         }
@@ -116,9 +121,18 @@ class SettingsViewModel @Inject constructor(
         saveSettings()
     }
 
-    fun toggleFocusModeStrict(strict: Boolean) {
+    fun toggleFocusModeStrict(strict: Boolean): Boolean {
+        // Premium機能なので確認（呼び出し元でPremium確認することを期待）
         _uiState.update { it.copy(focusModeStrict = strict) }
         saveSettings()
+        return true
+    }
+
+    fun toggleAutoLoop(enabled: Boolean): Boolean {
+        // Premium機能なので確認（呼び出し元でPremium確認することを期待）
+        _uiState.update { it.copy(autoLoopEnabled = enabled) }
+        saveSettings()
+        return true
     }
 
     private fun saveSettings() {
@@ -131,6 +145,7 @@ class SettingsViewModel @Inject constructor(
                 cyclesBeforeLongBreak = state.cyclesBeforeLongBreak,
                 focusModeEnabled = state.focusModeEnabled,
                 focusModeStrict = state.focusModeStrict,
+                autoLoopEnabled = state.autoLoopEnabled,
                 reviewEnabled = state.reviewIntervalsEnabled,
                 notificationsEnabled = state.notificationsEnabled
             )

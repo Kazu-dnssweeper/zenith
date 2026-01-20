@@ -117,8 +117,10 @@ fun PremiumScreen(
     fun getProductPrice(type: SubscriptionType): String {
         return products.find { it.type == type }?.price ?: when (type) {
             SubscriptionType.MONTHLY -> "¥480"
-            SubscriptionType.YEARLY -> "¥3,600"
-            SubscriptionType.LIFETIME -> "¥4,800"
+            SubscriptionType.QUARTERLY -> "¥1,200"
+            SubscriptionType.HALF_YEARLY -> "¥2,000"
+            SubscriptionType.YEARLY -> "¥3,000"
+            SubscriptionType.LIFETIME -> "¥4,000"
             SubscriptionType.FREE -> ""
         }
     }
@@ -227,10 +229,36 @@ fun PremiumScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             PlanCard(
+                title = "3ヶ月プラン",
+                price = getProductPrice(SubscriptionType.QUARTERLY),
+                period = "/3ヶ月",
+                badge = "17%お得",
+                monthlyEquivalent = "¥400/月",
+                isSelected = selectedPlan == SubscriptionType.QUARTERLY,
+                onClick = { selectedPlan = SubscriptionType.QUARTERLY }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PlanCard(
+                title = "6ヶ月プラン",
+                price = getProductPrice(SubscriptionType.HALF_YEARLY),
+                period = "/6ヶ月",
+                badge = "31%お得",
+                monthlyEquivalent = "¥333/月",
+                isSelected = selectedPlan == SubscriptionType.HALF_YEARLY,
+                onClick = { selectedPlan = SubscriptionType.HALF_YEARLY }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            PlanCard(
                 title = "年額プラン",
                 price = getProductPrice(SubscriptionType.YEARLY),
                 period = "/年",
-                badge = "25%お得",
+                badge = "おすすめ・48%お得",
+                monthlyEquivalent = "¥250/月",
+                isRecommended = true,
                 isSelected = selectedPlan == SubscriptionType.YEARLY,
                 onClick = { selectedPlan = SubscriptionType.YEARLY }
             )
@@ -241,7 +269,7 @@ fun PremiumScreen(
                 title = "買い切り",
                 price = getProductPrice(SubscriptionType.LIFETIME),
                 period = "",
-                badge = "一度の支払いで永久利用",
+                badge = "永久利用",
                 isSelected = selectedPlan == SubscriptionType.LIFETIME,
                 onClick = { selectedPlan = SubscriptionType.LIFETIME }
             )
@@ -317,6 +345,8 @@ private fun PlanCard(
     price: String,
     period: String,
     badge: String? = null,
+    monthlyEquivalent: String? = null,
+    isRecommended: Boolean = false,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
@@ -324,8 +354,18 @@ private fun PlanCard(
         CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         )
+    } else if (isRecommended) {
+        CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
+        )
     } else {
         CardDefaults.outlinedCardColors()
+    }
+
+    val borderColor = when {
+        isSelected -> MaterialTheme.colorScheme.primary
+        isRecommended -> MaterialTheme.colorScheme.secondary
+        else -> MaterialTheme.colorScheme.outline
     }
 
     OutlinedCard(
@@ -333,61 +373,96 @@ private fun PlanCard(
         modifier = Modifier.fillMaxWidth(),
         colors = cardColors,
         border = CardDefaults.outlinedCardBorder().copy(
-            brush = if (isSelected) {
-                androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary)
-            } else {
-                androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outline)
-            }
+            brush = androidx.compose.ui.graphics.SolidColor(borderColor),
+            width = if (isRecommended || isSelected) 2.dp else 1.dp
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
+        Column {
+            // おすすめバナー
+            if (isRecommended) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    if (badge != null) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                            )
-                        ) {
-                            Text(
-                                text = badge,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text(
+                            text = "おすすめ",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        )
                     }
                 }
             }
             Row(
-                verticalAlignment = Alignment.Bottom
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = price,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                if (period.isNotEmpty()) {
-                    Text(
-                        text = period,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        if (badge != null) {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                                )
+                            ) {
+                                Text(
+                                    text = badge,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                    // 月額換算表示
+                    if (monthlyEquivalent != null) {
+                        Text(
+                            text = monthlyEquivalent,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = price,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        if (period.isNotEmpty()) {
+                            Text(
+                                text = period,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }

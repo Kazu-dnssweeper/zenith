@@ -12,6 +12,7 @@ import com.zenith.app.domain.repository.PremiumRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -95,7 +96,7 @@ class PremiumRepositoryImpl @Inject constructor(
             try {
                 SubscriptionType.valueOf(it)
             } catch (e: IllegalArgumentException) {
-                android.util.Log.w("PremiumRepository", "Unknown subscription type: $it, defaulting to FREE")
+                Timber.w("Unknown subscription type: %s, defaulting to FREE", it)
                 SubscriptionType.FREE
             }
         } ?: SubscriptionType.FREE
@@ -114,7 +115,7 @@ class PremiumRepositoryImpl @Inject constructor(
         return try {
             LocalDateTime.parse(str, formatter)
         } catch (e: Exception) {
-            android.util.Log.w("PremiumRepository", "Failed to parse datetime: $str", e)
+            Timber.w(e, "Failed to parse datetime: %s", str)
             null
         }
     }

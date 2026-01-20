@@ -10,6 +10,7 @@ import android.os.IBinder
 import androidx.annotation.RawRes
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
+import timber.log.Timber
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
@@ -127,7 +128,7 @@ class BgmService : Service() {
                 release()
             }
         } catch (e: Exception) {
-            android.util.Log.e("BgmService", "Error releasing MediaPlayer", e)
+            Timber.e(e, "Error releasing MediaPlayer")
         } finally {
             mediaPlayer = null
         }

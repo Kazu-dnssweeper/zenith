@@ -7,12 +7,10 @@ import androidx.lifecycle.viewModelScope
 import com.zenith.app.data.cloud.CloudBackupInfo
 import com.zenith.app.data.cloud.GoogleAuthManager
 import com.zenith.app.data.cloud.GoogleSignInState
-import com.zenith.app.data.cloud.NoBackupFoundException
 import com.zenith.app.domain.model.ImportResult
 import com.zenith.app.domain.model.SubscriptionStatus
 import com.zenith.app.domain.usecase.BackupUseCase
 import com.zenith.app.domain.usecase.CloudBackupUseCase
-import com.zenith.app.domain.usecase.PremiumRequiredException
 import com.zenith.app.ui.premium.PremiumManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -98,10 +96,7 @@ class BackupViewModel @Inject constructor(
                     _backupState.value = BackupState.ExportSuccess("バックアップが完了しました")
                 },
                 onFailure = { e ->
-                    _backupState.value = when (e) {
-                        is PremiumRequiredException -> BackupState.Error("Premium機能です")
-                        else -> BackupState.Error(e.message ?: "エクスポートに失敗しました")
-                    }
+                    _backupState.value = BackupState.Error(BackupError.fromException(e).message)
                 }
             )
         }
@@ -116,10 +111,7 @@ class BackupViewModel @Inject constructor(
                     _backupState.value = BackupState.ImportSuccess(result)
                 },
                 onFailure = { e ->
-                    _backupState.value = when (e) {
-                        is PremiumRequiredException -> BackupState.Error("Premium機能です")
-                        else -> BackupState.Error(e.message ?: "インポートに失敗しました")
-                    }
+                    _backupState.value = BackupState.Error(BackupError.fromException(e).message)
                 }
             )
         }
@@ -156,10 +148,7 @@ class BackupViewModel @Inject constructor(
                     _cloudBackupState.value = CloudBackupState.UploadSuccess(info)
                 },
                 onFailure = { e ->
-                    _cloudBackupState.value = when (e) {
-                        is PremiumRequiredException -> CloudBackupState.Error("Premium機能です")
-                        else -> CloudBackupState.Error(e.message ?: "アップロードに失敗しました")
-                    }
+                    _cloudBackupState.value = CloudBackupState.Error(BackupError.fromException(e).message)
                 }
             )
         }
@@ -174,11 +163,7 @@ class BackupViewModel @Inject constructor(
                     _cloudBackupState.value = CloudBackupState.DownloadSuccess(result)
                 },
                 onFailure = { e ->
-                    _cloudBackupState.value = when (e) {
-                        is PremiumRequiredException -> CloudBackupState.Error("Premium機能です")
-                        is NoBackupFoundException -> CloudBackupState.Error("クラウドにバックアップがありません")
-                        else -> CloudBackupState.Error(e.message ?: "ダウンロードに失敗しました")
-                    }
+                    _cloudBackupState.value = CloudBackupState.Error(BackupError.fromException(e).message)
                 }
             )
         }

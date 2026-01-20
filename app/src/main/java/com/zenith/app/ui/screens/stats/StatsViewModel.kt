@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.zenith.app.domain.model.SubscriptionStatus
 import com.zenith.app.domain.repository.DailyStatsRepository
+import com.zenith.app.util.DateUtils
 import com.zenith.app.domain.repository.StudySessionRepository
 import com.zenith.app.ui.premium.PremiumManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -83,7 +83,7 @@ class StatsViewModel @Inject constructor(
             val maxStreak = dailyStatsRepository.getMaxStreak()
             val thisWeekMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(weekStart, today)
             val thisMonthMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(monthStart, today)
-            val totalSessions = studySessionRepository.getAllSessions().first().size
+            val totalSessions = studySessionRepository.getSessionCount()
 
             // Calculate average (last 30 days)
             val thirtyDaysAgo = today.minusDays(30)
@@ -91,7 +91,6 @@ class StatsViewModel @Inject constructor(
             val averageDaily = last30DaysMinutes / 30
 
             // Get weekly data for chart
-            val dayLabels = listOf("月", "火", "水", "木", "金", "土", "日")
             val weeklyData = (0 until 7).map { dayOffset ->
                 val date = weekStart.plusDays(dayOffset.toLong())
                 val minutes = if (date <= today) {
@@ -100,7 +99,7 @@ class StatsViewModel @Inject constructor(
                     0
                 }
                 DayStats(
-                    dayOfWeek = dayLabels[dayOffset],
+                    dayOfWeek = DateUtils.WEEKDAY_LABELS[dayOffset],
                     minutes = minutes
                 )
             }

@@ -182,6 +182,8 @@ class BillingUseCase @Inject constructor(
 
         return when (type) {
             SubscriptionType.MONTHLY -> purchaseTime.plusMonths(1)
+            SubscriptionType.QUARTERLY -> purchaseTime.plusMonths(3)
+            SubscriptionType.HALF_YEARLY -> purchaseTime.plusMonths(6)
             SubscriptionType.YEARLY -> purchaseTime.plusYears(1)
             else -> purchaseTime
         }
