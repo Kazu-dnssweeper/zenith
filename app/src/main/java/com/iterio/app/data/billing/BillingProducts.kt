@@ -1,0 +1,46 @@
+package com.iterio.app.data.billing
+
+import com.iterio.app.domain.model.SubscriptionType
+
+object BillingProducts {
+    // サブスクリプション商品ID
+    const val SUBSCRIPTION_MONTHLY = "iterio_premium_monthly"
+    const val SUBSCRIPTION_QUARTERLY = "iterio_premium_quarterly"
+    const val SUBSCRIPTION_HALF_YEARLY = "iterio_premium_half_yearly"
+    const val SUBSCRIPTION_YEARLY = "iterio_premium_yearly"
+
+    // 一回購入（In-App Product）商品ID
+    const val INAPP_LIFETIME = "iterio_premium_lifetime"
+
+    // 商品ID一覧
+    val SUBSCRIPTION_SKUS = listOf(
+        SUBSCRIPTION_MONTHLY,
+        SUBSCRIPTION_QUARTERLY,
+        SUBSCRIPTION_HALF_YEARLY,
+        SUBSCRIPTION_YEARLY
+    )
+    val INAPP_SKUS = listOf(INAPP_LIFETIME)
+    val ALL_SKUS = SUBSCRIPTION_SKUS + INAPP_SKUS
+
+    // SubscriptionTypeとの相互変換
+    fun toSubscriptionType(productId: String): SubscriptionType = when (productId) {
+        SUBSCRIPTION_MONTHLY -> SubscriptionType.MONTHLY
+        SUBSCRIPTION_QUARTERLY -> SubscriptionType.QUARTERLY
+        SUBSCRIPTION_HALF_YEARLY -> SubscriptionType.HALF_YEARLY
+        SUBSCRIPTION_YEARLY -> SubscriptionType.YEARLY
+        INAPP_LIFETIME -> SubscriptionType.LIFETIME
+        else -> SubscriptionType.FREE
+    }
+
+    fun toProductId(type: SubscriptionType): String? = when (type) {
+        SubscriptionType.MONTHLY -> SUBSCRIPTION_MONTHLY
+        SubscriptionType.QUARTERLY -> SUBSCRIPTION_QUARTERLY
+        SubscriptionType.HALF_YEARLY -> SUBSCRIPTION_HALF_YEARLY
+        SubscriptionType.YEARLY -> SUBSCRIPTION_YEARLY
+        SubscriptionType.LIFETIME -> INAPP_LIFETIME
+        SubscriptionType.FREE -> null
+    }
+
+    fun isSubscription(productId: String): Boolean = productId in SUBSCRIPTION_SKUS
+    fun isInApp(productId: String): Boolean = productId in INAPP_SKUS
+}
