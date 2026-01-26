@@ -474,7 +474,7 @@ private fun SelectedDateInfo(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "復習タスク",
+                        text = stringResource(R.string.calendar_review_tasks),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         color = TextPrimary
@@ -482,7 +482,7 @@ private fun SelectedDateInfo(
                     Spacer(modifier = Modifier.width(8.dp))
                     val completedCount = reviewTasks.count { it.isCompleted }
                     Text(
-                        text = "$completedCount / ${reviewTasks.size} 完了",
+                        text = stringResource(R.string.calendar_completed_count, completedCount, reviewTasks.size),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (completedCount == reviewTasks.size) AccentSuccess else TextSecondary
                     )
@@ -597,7 +597,7 @@ private fun SelectedDateReviewTaskItem(
                     if (reviewTask.isCompleted) {
                         Icon(
                             Icons.Default.Check,
-                            contentDescription = "完了",
+                            contentDescription = stringResource(R.string.calendar_completed),
                             tint = MaterialTheme.colorScheme.surface,
                             modifier = Modifier.size(16.dp)
                         )
@@ -606,7 +606,7 @@ private fun SelectedDateReviewTaskItem(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = reviewTask.taskName ?: "タスク",
+                        text = reviewTask.taskName ?: stringResource(R.string.default_task_name),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                         textDecoration = if (reviewTask.isCompleted) TextDecoration.LineThrough else TextDecoration.None,

@@ -1,6 +1,8 @@
 package com.iterio.app.data.repository
 
+import androidx.room.withTransaction
 import com.iterio.app.config.AppConfig
+import com.iterio.app.data.local.IterioDatabase
 import com.iterio.app.data.local.dao.SettingsDao
 import com.iterio.app.data.local.entity.SettingsEntity
 import com.iterio.app.domain.model.PomodoroSettings
@@ -16,7 +18,8 @@ import javax.inject.Singleton
 
 @Singleton
 class SettingsRepositoryImpl @Inject constructor(
-    private val settingsDao: SettingsDao
+    private val settingsDao: SettingsDao,
+    private val database: IterioDatabase
 ) : SettingsRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -79,17 +82,19 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updatePomodoroSettings(settings: PomodoroSettings) {
-        setSetting(SettingsEntity.KEY_WORK_DURATION_MINUTES, settings.workDurationMinutes.toString())
-        setSetting(SettingsEntity.KEY_SHORT_BREAK_MINUTES, settings.shortBreakMinutes.toString())
-        setSetting(SettingsEntity.KEY_LONG_BREAK_MINUTES, settings.longBreakMinutes.toString())
-        setSetting(SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK, settings.cyclesBeforeLongBreak.toString())
-        setSetting(SettingsEntity.KEY_FOCUS_MODE_ENABLED, settings.focusModeEnabled.toString())
-        setSetting(SettingsEntity.KEY_FOCUS_MODE_STRICT, settings.focusModeStrict.toString())
-        setSetting(SettingsEntity.KEY_AUTO_LOOP_ENABLED, settings.autoLoopEnabled.toString())
-        setSetting(SettingsEntity.KEY_REVIEW_ENABLED, settings.reviewEnabled.toString())
-        setSetting(SettingsEntity.KEY_REVIEW_INTERVALS, json.encodeToString(settings.reviewIntervals))
-        setSetting(SettingsEntity.KEY_DEFAULT_REVIEW_COUNT, settings.defaultReviewCount.toString())
-        setSetting(SettingsEntity.KEY_NOTIFICATIONS_ENABLED, settings.notificationsEnabled.toString())
+        database.withTransaction {
+            setSetting(SettingsEntity.KEY_WORK_DURATION_MINUTES, settings.workDurationMinutes.toString())
+            setSetting(SettingsEntity.KEY_SHORT_BREAK_MINUTES, settings.shortBreakMinutes.toString())
+            setSetting(SettingsEntity.KEY_LONG_BREAK_MINUTES, settings.longBreakMinutes.toString())
+            setSetting(SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK, settings.cyclesBeforeLongBreak.toString())
+            setSetting(SettingsEntity.KEY_FOCUS_MODE_ENABLED, settings.focusModeEnabled.toString())
+            setSetting(SettingsEntity.KEY_FOCUS_MODE_STRICT, settings.focusModeStrict.toString())
+            setSetting(SettingsEntity.KEY_AUTO_LOOP_ENABLED, settings.autoLoopEnabled.toString())
+            setSetting(SettingsEntity.KEY_REVIEW_ENABLED, settings.reviewEnabled.toString())
+            setSetting(SettingsEntity.KEY_REVIEW_INTERVALS, json.encodeToString(settings.reviewIntervals))
+            setSetting(SettingsEntity.KEY_DEFAULT_REVIEW_COUNT, settings.defaultReviewCount.toString())
+            setSetting(SettingsEntity.KEY_NOTIFICATIONS_ENABLED, settings.notificationsEnabled.toString())
+        }
     }
 
     override suspend fun getSetting(key: String, defaultValue: String): String {

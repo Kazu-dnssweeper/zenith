@@ -61,9 +61,10 @@ object AppModule {
     @Provides
     @Singleton
     fun provideSettingsRepository(
-        settingsDao: SettingsDao
+        settingsDao: SettingsDao,
+        database: IterioDatabase
     ): SettingsRepository {
-        return SettingsRepositoryImpl(settingsDao)
+        return SettingsRepositoryImpl(settingsDao, database)
     }
 
     @Provides

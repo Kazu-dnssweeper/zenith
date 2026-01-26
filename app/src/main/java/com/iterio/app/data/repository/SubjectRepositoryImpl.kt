@@ -7,7 +7,9 @@ import com.iterio.app.domain.repository.SubjectRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class SubjectRepositoryImpl @Inject constructor(
     private val subjectDao: SubjectDao
 ) : SubjectRepository {

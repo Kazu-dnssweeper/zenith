@@ -17,6 +17,12 @@ import javax.inject.Singleton
 @Singleton
 class SignatureVerifier @Inject constructor() {
 
+    init {
+        if (BuildConfig.DEBUG && BASE64_ENCODED_PUBLIC_KEY.isEmpty()) {
+            Timber.e("BILLING_PUBLIC_KEY未設定 - 課金テスト前に設定してください")
+        }
+    }
+
     companion object {
         /**
          * Google Play Console → 収益化の設定 → ライセンス から取得
@@ -94,5 +100,22 @@ class SignatureVerifier @Inject constructor() {
      */
     fun isKeyConfigured(): Boolean {
         return BASE64_ENCODED_PUBLIC_KEY.isNotEmpty() && publicKey != null
+    }
+
+    /**
+     * 公開鍵の設定状態を検証
+     */
+    fun validateConfiguration(): ConfigurationStatus {
+        return when {
+            BASE64_ENCODED_PUBLIC_KEY.isEmpty() -> ConfigurationStatus.KeyMissing
+            publicKey == null -> ConfigurationStatus.KeyInvalid
+            else -> ConfigurationStatus.Valid
+        }
+    }
+
+    sealed class ConfigurationStatus {
+        data object Valid : ConfigurationStatus()
+        data object KeyMissing : ConfigurationStatus()
+        data object KeyInvalid : ConfigurationStatus()
     }
 }

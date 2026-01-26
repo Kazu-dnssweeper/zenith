@@ -10,6 +10,8 @@ import com.iterio.app.data.billing.PurchaseVerifier
 import com.iterio.app.domain.model.SubscriptionType
 import com.iterio.app.domain.repository.PremiumRepository
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -23,6 +25,9 @@ class BillingUseCase @Inject constructor(
     private val premiumRepository: PremiumRepository
 ) {
     val newPurchases: SharedFlow<List<Purchase>> = billingClientWrapper.newPurchases
+
+    private val purchaseProcessingMutex = Mutex()
+    private val processedPurchaseTokens = mutableSetOf<String>()
 
     suspend fun ensureConnected(): Boolean {
         return billingClientWrapper.startConnection()
@@ -120,32 +125,45 @@ class BillingUseCase @Inject constructor(
     }
 
     suspend fun processPurchase(purchase: Purchase): ProcessPurchaseResult {
-        val verificationResult = purchaseVerifier.verifyPurchase(purchase)
-
-        return when (verificationResult) {
-            is PurchaseVerifier.VerificationResult.Verified -> {
-                // 購入承認（未承認の場合）
-                if (!purchase.isAcknowledged) {
-                    val ackResult = billingClientWrapper.acknowledgePurchase(purchase.purchaseToken)
-                    if (ackResult.responseCode != BillingClient.BillingResponseCode.OK) {
-                        return ProcessPurchaseResult.Error("Failed to acknowledge purchase")
-                    }
-                }
-
+        return purchaseProcessingMutex.withLock {
+            // 重複処理を防止
+            if (purchase.purchaseToken in processedPurchaseTokens) {
                 val productId = purchase.products.firstOrNull()
                 val subscriptionType = productId?.let { BillingProducts.toSubscriptionType(it) }
                     ?: SubscriptionType.FREE
-
-                val expiresAt = calculateExpiryDate(purchase, subscriptionType)
-                premiumRepository.updateSubscription(subscriptionType, expiresAt)
-
-                ProcessPurchaseResult.Success(subscriptionType)
+                return@withLock ProcessPurchaseResult.Success(subscriptionType)
             }
-            is PurchaseVerifier.VerificationResult.Pending -> {
-                ProcessPurchaseResult.Pending
-            }
-            is PurchaseVerifier.VerificationResult.Failed -> {
-                ProcessPurchaseResult.Error(verificationResult.reason)
+
+            val verificationResult = purchaseVerifier.verifyPurchase(purchase)
+
+            when (verificationResult) {
+                is PurchaseVerifier.VerificationResult.Verified -> {
+                    // 購入承認を先に実行（承認前にクラッシュした場合のリトライを防止）
+                    if (!purchase.isAcknowledged) {
+                        val ackResult = billingClientWrapper.acknowledgePurchase(purchase.purchaseToken)
+                        if (ackResult.responseCode != BillingClient.BillingResponseCode.OK) {
+                            return@withLock ProcessPurchaseResult.Error("Failed to acknowledge purchase")
+                        }
+                    }
+
+                    val productId = purchase.products.firstOrNull()
+                    val subscriptionType = productId?.let { BillingProducts.toSubscriptionType(it) }
+                        ?: SubscriptionType.FREE
+
+                    val expiresAt = calculateExpiryDate(purchase, subscriptionType)
+                    premiumRepository.updateSubscription(subscriptionType, expiresAt)
+
+                    // 処理済みとして記録
+                    processedPurchaseTokens.add(purchase.purchaseToken)
+
+                    ProcessPurchaseResult.Success(subscriptionType)
+                }
+                is PurchaseVerifier.VerificationResult.Pending -> {
+                    ProcessPurchaseResult.Pending
+                }
+                is PurchaseVerifier.VerificationResult.Failed -> {
+                    ProcessPurchaseResult.Error(verificationResult.reason)
+                }
             }
         }
     }
