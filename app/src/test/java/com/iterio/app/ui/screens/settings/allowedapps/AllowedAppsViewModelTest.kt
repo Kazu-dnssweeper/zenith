@@ -1,6 +1,7 @@
 package com.iterio.app.ui.screens.settings.allowedapps
 
 import app.cash.turbine.test
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.AllowedApp
 import com.iterio.app.domain.repository.SettingsRepository
 import com.iterio.app.util.InstalledAppsHelper
@@ -64,7 +65,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `initial state has isLoading true`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns emptyList()
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -79,7 +80,7 @@ class AllowedAppsViewModelTest {
     fun `loadData loads installed apps and saved selection`() = runTest {
         // Arrange
         val savedApps = listOf("com.example.app1", "com.example.app2")
-        coEvery { settingsRepository.getAllowedApps() } returns savedApps
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(savedApps)
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(savedApps) } returns savedApps
 
@@ -99,7 +100,7 @@ class AllowedAppsViewModelTest {
         // Arrange
         val savedApps = listOf("com.example.app1", "com.deleted.app", "com.example.app2")
         val validApps = listOf("com.example.app1", "com.example.app2")
-        coEvery { settingsRepository.getAllowedApps() } returns savedApps
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(savedApps)
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(savedApps) } returns validApps
 
@@ -118,7 +119,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `toggleAppSelection adds app to selection`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -141,7 +142,7 @@ class AllowedAppsViewModelTest {
     fun `toggleAppSelection removes app from selection`() = runTest {
         // Arrange
         val savedApps = listOf("com.example.app1")
-        coEvery { settingsRepository.getAllowedApps() } returns savedApps
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(savedApps)
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(savedApps) } returns savedApps
 
@@ -165,7 +166,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `updateSearchQuery updates immediate query instantly`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -182,7 +183,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `updateSearchQuery debounces actual search query`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -207,7 +208,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `updateSearchQuery cancels previous debounce job`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -229,7 +230,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `selectAll selects all filtered apps`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -249,7 +250,7 @@ class AllowedAppsViewModelTest {
     fun `deselectAll deselects all filtered apps`() = runTest {
         // Arrange
         val savedApps = mockApps.map { it.packageName }
-        coEvery { settingsRepository.getAllowedApps() } returns savedApps
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(savedApps)
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(savedApps) } returns savedApps
 
@@ -267,7 +268,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `selectAll only affects filtered apps when search is active`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -295,7 +296,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `getFilteredApps returns all apps when no search query`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -312,7 +313,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `getFilteredApps filters by app name`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -333,7 +334,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `getFilteredApps filters by package name`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -353,7 +354,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `getFilteredApps is case insensitive`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 
@@ -375,7 +376,7 @@ class AllowedAppsViewModelTest {
     @Test
     fun `uiState emits loading then loaded state`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { installedAppsHelper.getInstalledUserApps() } returns mockApps
         every { installedAppsHelper.validatePackages(any()) } returns emptyList()
 

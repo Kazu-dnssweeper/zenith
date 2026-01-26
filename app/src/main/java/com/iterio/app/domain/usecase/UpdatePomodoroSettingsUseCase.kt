@@ -74,12 +74,7 @@ class UpdatePomodoroSettingsUseCase @Inject constructor(
      * 設定全体を更新
      */
     suspend fun updateSettings(settings: PomodoroSettings): Result<Unit, DomainError> {
-        return try {
-            settingsRepository.updatePomodoroSettings(settings)
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            Result.Failure(DomainError.DatabaseError("Failed to update settings", e))
-        }
+        return settingsRepository.updatePomodoroSettings(settings)
     }
 
     /**
@@ -88,13 +83,9 @@ class UpdatePomodoroSettingsUseCase @Inject constructor(
     private suspend fun updateSingleField(
         transform: (PomodoroSettings) -> PomodoroSettings
     ): Result<Unit, DomainError> {
-        return try {
-            val current = settingsRepository.getPomodoroSettings()
+        return settingsRepository.getPomodoroSettings().flatMap { current ->
             val updated = transform(current)
             settingsRepository.updatePomodoroSettings(updated)
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            Result.Failure(DomainError.DatabaseError("Failed to update settings", e))
         }
     }
 }

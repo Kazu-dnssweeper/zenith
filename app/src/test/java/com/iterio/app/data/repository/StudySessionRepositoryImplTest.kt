@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.iterio.app.data.local.dao.StudySessionDao
 import com.iterio.app.data.local.entity.StudySessionEntity
 import com.iterio.app.data.mapper.StudySessionMapper
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.StudySession
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -88,8 +89,10 @@ class StudySessionRepositoryImplTest {
 
         val result = repository.getSessionById(1)
 
-        assertNotNull(result)
-        assertEquals(25, result?.workDurationMinutes)
+        assertTrue(result.isSuccess)
+        val session = (result as Result.Success).value
+        assertNotNull(session)
+        assertEquals(25, session?.workDurationMinutes)
     }
 
     @Test
@@ -98,7 +101,9 @@ class StudySessionRepositoryImplTest {
 
         val result = repository.getSessionById(999)
 
-        assertNull(result)
+        assertTrue(result.isSuccess)
+        val session = (result as Result.Success).value
+        assertNull(session)
     }
 
     @Test
@@ -108,7 +113,8 @@ class StudySessionRepositoryImplTest {
 
         val result = repository.getTotalMinutesForDay(today)
 
-        assertEquals(120, result)
+        assertTrue(result.isSuccess)
+        assertEquals(120, (result as Result.Success).value)
     }
 
     @Test
@@ -118,7 +124,8 @@ class StudySessionRepositoryImplTest {
 
         val result = repository.getTotalMinutesForDay(today)
 
-        assertEquals(0, result)
+        assertTrue(result.isSuccess)
+        assertEquals(0, (result as Result.Success).value)
     }
 
     @Test
@@ -128,7 +135,8 @@ class StudySessionRepositoryImplTest {
 
         val result = repository.getTotalCyclesForDay(today)
 
-        assertEquals(4, result)
+        assertTrue(result.isSuccess)
+        assertEquals(4, (result as Result.Success).value)
     }
 
     @Test
@@ -136,9 +144,10 @@ class StudySessionRepositoryImplTest {
         val session = createSession(id = 0, taskId = 1)
         coEvery { studySessionDao.insertSession(any()) } returns 42L
 
-        val id = repository.insertSession(session)
+        val result = repository.insertSession(session)
 
-        assertEquals(42L, id)
+        assertTrue(result.isSuccess)
+        assertEquals(42L, (result as Result.Success).value)
         coVerify { studySessionDao.insertSession(any()) }
     }
 
@@ -212,7 +221,8 @@ class StudySessionRepositoryImplTest {
 
         val result = repository.getSessionCount()
 
-        assertEquals(150, result)
+        assertTrue(result.isSuccess)
+        assertEquals(150, (result as Result.Success).value)
     }
 
     @Test
@@ -221,7 +231,8 @@ class StudySessionRepositoryImplTest {
 
         val result = repository.getSessionCount()
 
-        assertEquals(0, result)
+        assertTrue(result.isSuccess)
+        assertEquals(0, (result as Result.Success).value)
     }
 
     // ==================== Helpers ====================

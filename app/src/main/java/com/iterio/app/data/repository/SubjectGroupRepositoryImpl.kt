@@ -2,6 +2,8 @@ package com.iterio.app.data.repository
 
 import com.iterio.app.data.local.dao.SubjectGroupDao
 import com.iterio.app.data.mapper.SubjectGroupMapper
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.SubjectGroup
 import com.iterio.app.domain.repository.SubjectGroupRepository
 import kotlinx.coroutines.flow.Flow
@@ -21,24 +23,29 @@ class SubjectGroupRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getGroupById(id: Long): SubjectGroup? {
-        return subjectGroupDao.getGroupById(id)?.let { mapper.toDomain(it) }
-    }
+    override suspend fun getGroupById(id: Long): Result<SubjectGroup?, DomainError> =
+        Result.catchingSuspend {
+            subjectGroupDao.getGroupById(id)?.let { mapper.toDomain(it) }
+        }
 
-    override suspend fun insertGroup(group: SubjectGroup): Long {
-        val displayOrder = subjectGroupDao.getNextDisplayOrder()
-        return subjectGroupDao.insertGroup(mapper.toEntity(group).copy(displayOrder = displayOrder))
-    }
+    override suspend fun insertGroup(group: SubjectGroup): Result<Long, DomainError> =
+        Result.catchingSuspend {
+            val displayOrder = subjectGroupDao.getNextDisplayOrder()
+            subjectGroupDao.insertGroup(mapper.toEntity(group).copy(displayOrder = displayOrder))
+        }
 
-    override suspend fun updateGroup(group: SubjectGroup) {
-        subjectGroupDao.updateGroup(mapper.toEntity(group))
-    }
+    override suspend fun updateGroup(group: SubjectGroup): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            subjectGroupDao.updateGroup(mapper.toEntity(group))
+        }
 
-    override suspend fun deleteGroup(group: SubjectGroup) {
-        subjectGroupDao.deleteGroup(mapper.toEntity(group))
-    }
+    override suspend fun deleteGroup(group: SubjectGroup): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            subjectGroupDao.deleteGroup(mapper.toEntity(group))
+        }
 
-    override suspend fun deleteGroupById(id: Long) {
-        subjectGroupDao.deleteGroupById(id)
-    }
+    override suspend fun deleteGroupById(id: Long): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            subjectGroupDao.deleteGroupById(id)
+        }
 }

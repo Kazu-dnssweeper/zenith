@@ -2,6 +2,8 @@ package com.iterio.app.data.repository
 
 import com.iterio.app.data.local.dao.SubjectDao
 import com.iterio.app.data.local.entity.SubjectEntity
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.Subject
 import com.iterio.app.domain.repository.SubjectRepository
 import kotlinx.coroutines.flow.Flow
@@ -14,23 +16,27 @@ class SubjectRepositoryImpl @Inject constructor(
     private val subjectDao: SubjectDao
 ) : SubjectRepository {
 
-    override suspend fun insert(subject: Subject): Long {
-        val maxOrder = subjectDao.getMaxDisplayOrder() ?: 0
-        val entity = subject.toEntity().copy(displayOrder = maxOrder + 1)
-        return subjectDao.insert(entity)
-    }
+    override suspend fun insert(subject: Subject): Result<Long, DomainError> =
+        Result.catchingSuspend {
+            val maxOrder = subjectDao.getMaxDisplayOrder() ?: 0
+            val entity = subject.toEntity().copy(displayOrder = maxOrder + 1)
+            subjectDao.insert(entity)
+        }
 
-    override suspend fun update(subject: Subject) {
-        subjectDao.update(subject.toEntity())
-    }
+    override suspend fun update(subject: Subject): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            subjectDao.update(subject.toEntity())
+        }
 
-    override suspend fun delete(subject: Subject) {
-        subjectDao.delete(subject.toEntity())
-    }
+    override suspend fun delete(subject: Subject): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            subjectDao.delete(subject.toEntity())
+        }
 
-    override suspend fun getById(id: Long): Subject? {
-        return subjectDao.getById(id)?.toDomain()
-    }
+    override suspend fun getById(id: Long): Result<Subject?, DomainError> =
+        Result.catchingSuspend {
+            subjectDao.getById(id)?.toDomain()
+        }
 
     override fun getAllSubjects(): Flow<List<Subject>> {
         return subjectDao.getAllSubjects().map { entities ->

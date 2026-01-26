@@ -1,6 +1,7 @@
 package com.iterio.app.ui.screens.calendar
 
 import app.cash.turbine.test
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.DailyStats
 import com.iterio.app.domain.model.ReviewTask
 import com.iterio.app.domain.model.ScheduleType
@@ -54,8 +55,8 @@ class CalendarViewModelTest {
         // Default mocks
         every { premiumManager.subscriptionStatus } returns subscriptionStatusFlow
         every { dailyStatsRepository.getStatsBetweenDates(any(), any()) } returns flowOf(emptyList())
-        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns emptyMap()
-        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns emptyMap()
+        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(emptyMap())
+        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(emptyMap())
     }
 
     private fun createViewModel() = CalendarViewModel(
@@ -112,8 +113,8 @@ class CalendarViewModelTest {
         val today = LocalDate.now()
         val regularCounts = mapOf(today to 3, today.plusDays(1) to 2)
         val reviewCounts = mapOf(today to 1)
-        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns regularCounts
-        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns reviewCounts
+        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(regularCounts)
+        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(reviewCounts)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -169,7 +170,7 @@ class CalendarViewModelTest {
         val reviewTasks = listOf(
             ReviewTask(id = 1L, studySessionId = 1L, taskId = 1L, scheduledDate = date, reviewNumber = 1)
         )
-        coEvery { taskRepository.getTasksForDate(date) } returns tasks
+        coEvery { taskRepository.getTasksForDate(date) } returns Result.Success(tasks)
         every { reviewTaskRepository.getAllTasksForDate(date) } returns flowOf(reviewTasks)
 
         val vm = createViewModel()
@@ -190,7 +191,7 @@ class CalendarViewModelTest {
     @Test
     fun `clearSelection resets selection`() = runTest {
         val date = LocalDate.now()
-        coEvery { taskRepository.getTasksForDate(date) } returns emptyList()
+        coEvery { taskRepository.getTasksForDate(date) } returns Result.Success(emptyList())
         every { reviewTaskRepository.getAllTasksForDate(date) } returns flowOf(emptyList())
 
         val vm = createViewModel()
@@ -212,7 +213,7 @@ class CalendarViewModelTest {
 
     @Test
     fun `toggleReviewTaskComplete marks task as completed`() = runTest {
-        coEvery { reviewTaskRepository.markAsCompleted(any()) } returns Unit
+        coEvery { reviewTaskRepository.markAsCompleted(any()) } returns Result.Success(Unit)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -225,7 +226,7 @@ class CalendarViewModelTest {
 
     @Test
     fun `toggleReviewTaskComplete marks task as incomplete`() = runTest {
-        coEvery { reviewTaskRepository.markAsIncomplete(any()) } returns Unit
+        coEvery { reviewTaskRepository.markAsIncomplete(any()) } returns Result.Success(Unit)
 
         val vm = createViewModel()
         advanceUntilIdle()

@@ -68,13 +68,14 @@ class LocaleManager @Inject constructor(
 
         // Then sync with Room database asynchronously
         scope.launch {
-            val savedLanguage = settingsRepository.getLanguage()
-            if (savedLanguage != cachedLanguage) {
-                // Room has different value, update SharedPreferences and apply
-                sharedPrefs.edit().putString(KEY_LANGUAGE, savedLanguage).apply()
-                _currentLanguage.value = savedLanguage
-                applyLocale(savedLanguage)
-                Timber.d("Synced locale from database: $savedLanguage")
+            settingsRepository.getLanguage().onSuccess { savedLanguage ->
+                if (savedLanguage != cachedLanguage) {
+                    // Room has different value, update SharedPreferences and apply
+                    sharedPrefs.edit().putString(KEY_LANGUAGE, savedLanguage).apply()
+                    _currentLanguage.value = savedLanguage
+                    applyLocale(savedLanguage)
+                    Timber.d("Synced locale from database: $savedLanguage")
+                }
             }
         }
     }

@@ -14,12 +14,14 @@ class PremiumManager @Inject constructor(
 ) {
     val subscriptionStatus: Flow<SubscriptionStatus> = premiumRepository.subscriptionStatus
 
-    suspend fun isPremium(): Boolean = premiumRepository.getSubscriptionStatus().isPremium
+    suspend fun isPremium(): Boolean =
+        premiumRepository.getSubscriptionStatus().getOrDefault(SubscriptionStatus()).isPremium
 
-    suspend fun getSubscriptionStatus(): SubscriptionStatus = premiumRepository.getSubscriptionStatus()
+    suspend fun getSubscriptionStatus(): SubscriptionStatus =
+        premiumRepository.getSubscriptionStatus().getOrDefault(SubscriptionStatus())
 
     suspend fun canAccessFeature(feature: PremiumFeature): Boolean {
-        return premiumRepository.canAccessFeature(feature)
+        return premiumRepository.canAccessFeature(feature).getOrDefault(false)
     }
 
     suspend fun startTrial() {

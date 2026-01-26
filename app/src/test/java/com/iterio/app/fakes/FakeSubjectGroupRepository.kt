@@ -1,5 +1,7 @@
 package com.iterio.app.fakes
 
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.SubjectGroup
 import com.iterio.app.domain.repository.SubjectGroupRepository
 import kotlinx.coroutines.flow.Flow
@@ -34,11 +36,11 @@ class FakeSubjectGroupRepository : SubjectGroupRepository {
         }
     }
 
-    override suspend fun getGroupById(id: Long): SubjectGroup? {
-        return groups.value.find { it.id == id }
+    override suspend fun getGroupById(id: Long): Result<SubjectGroup?, DomainError> {
+        return Result.Success(groups.value.find { it.id == id })
     }
 
-    override suspend fun insertGroup(group: SubjectGroup): Long {
+    override suspend fun insertGroup(group: SubjectGroup): Result<Long, DomainError> {
         val newId = nextId++
         val newGroup = group.copy(
             id = newId,
@@ -47,27 +49,30 @@ class FakeSubjectGroupRepository : SubjectGroupRepository {
         groups.update { currentList ->
             currentList + newGroup
         }
-        return newId
+        return Result.Success(newId)
     }
 
-    override suspend fun updateGroup(group: SubjectGroup) {
+    override suspend fun updateGroup(group: SubjectGroup): Result<Unit, DomainError> {
         groups.update { currentList ->
             currentList.map { existing ->
                 if (existing.id == group.id) group else existing
             }
         }
+        return Result.Success(Unit)
     }
 
-    override suspend fun deleteGroup(group: SubjectGroup) {
+    override suspend fun deleteGroup(group: SubjectGroup): Result<Unit, DomainError> {
         groups.update { currentList ->
             currentList.filter { it.id != group.id }
         }
+        return Result.Success(Unit)
     }
 
-    override suspend fun deleteGroupById(id: Long) {
+    override suspend fun deleteGroupById(id: Long): Result<Unit, DomainError> {
         groups.update { currentList ->
             currentList.filter { it.id != id }
         }
+        return Result.Success(Unit)
     }
 
     // ==================== Test helpers ====================

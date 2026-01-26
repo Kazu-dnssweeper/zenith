@@ -76,25 +76,25 @@ class StatsViewModel @Inject constructor(
             val monthStart = today.withDayOfMonth(1)
 
             // Today's stats (for free users)
-            val todayMinutes = studySessionRepository.getTotalMinutesForDay(today)
-            val todaySessions = studySessionRepository.getTotalCyclesForDay(today)
+            val todayMinutes = studySessionRepository.getTotalMinutesForDay(today).getOrDefault(0)
+            val todaySessions = studySessionRepository.getTotalCyclesForDay(today).getOrDefault(0)
 
-            val currentStreak = dailyStatsRepository.getCurrentStreak()
-            val maxStreak = dailyStatsRepository.getMaxStreak()
-            val thisWeekMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(weekStart, today)
-            val thisMonthMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(monthStart, today)
-            val totalSessions = studySessionRepository.getSessionCount()
+            val currentStreak = dailyStatsRepository.getCurrentStreak().getOrDefault(0)
+            val maxStreak = dailyStatsRepository.getMaxStreak().getOrDefault(0)
+            val thisWeekMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(weekStart, today).getOrDefault(0)
+            val thisMonthMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(monthStart, today).getOrDefault(0)
+            val totalSessions = studySessionRepository.getSessionCount().getOrDefault(0)
 
             // Calculate average (last 30 days)
             val thirtyDaysAgo = today.minusDays(30)
-            val last30DaysMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(thirtyDaysAgo, today)
+            val last30DaysMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(thirtyDaysAgo, today).getOrDefault(0)
             val averageDaily = last30DaysMinutes / 30
 
             // Get weekly data for chart
             val weeklyData = (0 until 7).map { dayOffset ->
                 val date = weekStart.plusDays(dayOffset.toLong())
                 val minutes = if (date <= today) {
-                    dailyStatsRepository.getTotalMinutesBetweenDates(date, date)
+                    dailyStatsRepository.getTotalMinutesBetweenDates(date, date).getOrDefault(0)
                 } else {
                     0
                 }

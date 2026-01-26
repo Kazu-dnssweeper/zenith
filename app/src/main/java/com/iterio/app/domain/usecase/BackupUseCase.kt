@@ -20,7 +20,7 @@ class BackupUseCase @Inject constructor(
      * バックアップ機能が利用可能か確認
      */
     suspend fun canUseBackup(): Boolean {
-        return premiumRepository.canAccessFeature(PremiumFeature.BACKUP)
+        return premiumRepository.canAccessFeature(PremiumFeature.BACKUP).getOrDefault(false)
     }
 
     /**

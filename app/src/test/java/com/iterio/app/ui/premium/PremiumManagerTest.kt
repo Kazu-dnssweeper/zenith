@@ -1,5 +1,6 @@
 package com.iterio.app.ui.premium
 
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PremiumFeature
 import com.iterio.app.domain.model.SubscriptionStatus
 import com.iterio.app.domain.model.SubscriptionType
@@ -72,7 +73,7 @@ class PremiumManagerTest {
     @Test
     fun `canAccessFeature returns true for premium user`() = runBlocking {
         // Arrange: Premiumユーザー
-        coEvery { premiumRepository.canAccessFeature(any()) } returns true
+        coEvery { premiumRepository.canAccessFeature(any()) } returns Result.Success(true)
 
         // Act
         val result = premiumManager.canAccessFeature(PremiumFeature.BACKUP)
@@ -84,7 +85,7 @@ class PremiumManagerTest {
     @Test
     fun `canAccessFeature returns false for free user on premium feature`() = runBlocking {
         // Arrange: 無料ユーザー
-        coEvery { premiumRepository.canAccessFeature(any()) } returns false
+        coEvery { premiumRepository.canAccessFeature(any()) } returns Result.Success(false)
 
         // Act
         val result = premiumManager.canAccessFeature(PremiumFeature.BACKUP)
@@ -96,8 +97,8 @@ class PremiumManagerTest {
     @Test
     fun `canAccessFeature checks correct feature`() = runBlocking {
         // Arrange
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BGM) } returns true
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.COMPLETE_LOCK_MODE) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BGM) } returns Result.Success(true)
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.COMPLETE_LOCK_MODE) } returns Result.Success(false)
 
         // Act & Assert
         assertTrue(
@@ -116,7 +117,7 @@ class PremiumManagerTest {
     fun `isPremium returns true for lifetime subscription`() = runBlocking {
         // Arrange
         val status = SubscriptionStatus(type = SubscriptionType.LIFETIME)
-        coEvery { premiumRepository.getSubscriptionStatus() } returns status
+        coEvery { premiumRepository.getSubscriptionStatus() } returns Result.Success(status)
 
         // Act
         val result = premiumManager.isPremium()
@@ -132,7 +133,7 @@ class PremiumManagerTest {
             type = SubscriptionType.MONTHLY,
             expiresAt = LocalDateTime.now().plusDays(15)
         )
-        coEvery { premiumRepository.getSubscriptionStatus() } returns status
+        coEvery { premiumRepository.getSubscriptionStatus() } returns Result.Success(status)
 
         // Act
         val result = premiumManager.isPremium()
@@ -148,7 +149,7 @@ class PremiumManagerTest {
             type = SubscriptionType.MONTHLY,
             expiresAt = LocalDateTime.now().minusDays(1)
         )
-        coEvery { premiumRepository.getSubscriptionStatus() } returns status
+        coEvery { premiumRepository.getSubscriptionStatus() } returns Result.Success(status)
 
         // Act
         val result = premiumManager.isPremium()
@@ -164,7 +165,7 @@ class PremiumManagerTest {
             type = SubscriptionType.FREE,
             trialExpiresAt = LocalDateTime.now().plusDays(3)
         )
-        coEvery { premiumRepository.getSubscriptionStatus() } returns status
+        coEvery { premiumRepository.getSubscriptionStatus() } returns Result.Success(status)
 
         // Act
         val result = premiumManager.isPremium()
@@ -177,7 +178,7 @@ class PremiumManagerTest {
     fun `isPremium returns false for free user without trial`() = runBlocking {
         // Arrange
         val status = SubscriptionStatus(type = SubscriptionType.FREE)
-        coEvery { premiumRepository.getSubscriptionStatus() } returns status
+        coEvery { premiumRepository.getSubscriptionStatus() } returns Result.Success(status)
 
         // Act
         val result = premiumManager.isPremium()

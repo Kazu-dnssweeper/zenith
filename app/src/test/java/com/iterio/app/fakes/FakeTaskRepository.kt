@@ -1,5 +1,7 @@
 package com.iterio.app.fakes
 
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.ScheduleType
 import com.iterio.app.domain.model.Task
 import com.iterio.app.domain.repository.TaskRepository
@@ -7,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -44,42 +45,45 @@ class FakeTaskRepository : TaskRepository {
         }
     }
 
-    override suspend fun getTaskById(id: Long): Task? {
-        return tasks.value.find { it.id == id }
+    override suspend fun getTaskById(id: Long): Result<Task?, DomainError> {
+        return Result.Success(tasks.value.find { it.id == id })
     }
 
-    override suspend fun insertTask(task: Task): Long {
+    override suspend fun insertTask(task: Task): Result<Long, DomainError> {
         val newId = nextId++
         val newTask = task.copy(id = newId)
         tasks.update { currentList ->
             currentList + newTask
         }
-        return newId
+        return Result.Success(newId)
     }
 
-    override suspend fun updateTask(task: Task) {
+    override suspend fun updateTask(task: Task): Result<Unit, DomainError> {
         tasks.update { currentList ->
             currentList.map { existing ->
                 if (existing.id == task.id) task else existing
             }
         }
+        return Result.Success(Unit)
     }
 
-    override suspend fun deleteTask(task: Task) {
+    override suspend fun deleteTask(task: Task): Result<Unit, DomainError> {
         tasks.update { currentList ->
             currentList.filter { it.id != task.id }
         }
+        return Result.Success(Unit)
     }
 
-    override suspend fun deactivateTask(id: Long) {
+    override suspend fun deactivateTask(id: Long): Result<Unit, DomainError> {
         tasks.update { currentList ->
             currentList.map { task ->
                 if (task.id == id) task.copy(isActive = false) else task
             }
         }
+        return Result.Success(Unit)
     }
 
-    override suspend fun updateProgress(id: Long, note: String?, percent: Int?, goal: String?) {
+    override suspend fun updateProgress(id: Long, note: String?, percent: Int?, goal: String?): Result<Unit, DomainError> {
         tasks.update { currentList ->
             currentList.map { task ->
                 if (task.id == id) {
@@ -94,6 +98,7 @@ class FakeTaskRepository : TaskRepository {
                 }
             }
         }
+        return Result.Success(Unit)
     }
 
     override fun getTodayScheduledTasks(today: LocalDate): Flow<List<Task>> {
@@ -111,7 +116,7 @@ class FakeTaskRepository : TaskRepository {
         }
     }
 
-    override suspend fun updateLastStudiedAt(taskId: Long, studiedAt: LocalDateTime) {
+    override suspend fun updateLastStudiedAt(taskId: Long, studiedAt: LocalDateTime): Result<Unit, DomainError> {
         tasks.update { currentList ->
             currentList.map { task ->
                 if (task.id == taskId) {
@@ -121,6 +126,7 @@ class FakeTaskRepository : TaskRepository {
                 }
             }
         }
+        return Result.Success(Unit)
     }
 
     override fun getUpcomingDeadlineTasks(startDate: LocalDate, endDate: LocalDate): Flow<List<Task>> {
@@ -134,9 +140,9 @@ class FakeTaskRepository : TaskRepository {
         }
     }
 
-    override suspend fun getTasksForDate(date: LocalDate): List<Task> {
+    override suspend fun getTasksForDate(date: LocalDate): Result<List<Task>, DomainError> {
         val dayOfWeek = date.dayOfWeek.value
-        return tasks.value.filter { task ->
+        val result = tasks.value.filter { task ->
             if (!task.isActive) return@filter false
             when (task.scheduleType) {
                 ScheduleType.REPEAT -> task.repeatDays.contains(dayOfWeek)
@@ -145,19 +151,24 @@ class FakeTaskRepository : TaskRepository {
                 ScheduleType.NONE -> false
             }
         }
+        return Result.Success(result)
     }
 
-    override suspend fun getTaskCountByDateRange(startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Int> {
+    override suspend fun getTaskCountByDateRange(startDate: LocalDate, endDate: LocalDate): Result<Map<LocalDate, Int>, DomainError> {
         val result = mutableMapOf<LocalDate, Int>()
         var current = startDate
         while (!current.isAfter(endDate)) {
-            val count = getTasksForDate(current).size
+            val tasksResult = getTasksForDate(current)
+            val count = when (tasksResult) {
+                is Result.Success -> tasksResult.value.size
+                is Result.Failure -> 0
+            }
             if (count > 0) {
                 result[current] = count
             }
             current = current.plusDays(1)
         }
-        return result
+        return Result.Success(result)
     }
 
     // ==================== Test helpers ====================

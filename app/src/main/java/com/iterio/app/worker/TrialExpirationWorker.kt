@@ -72,7 +72,8 @@ class TrialExpirationWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         createNotificationChannel()
 
-        val status = premiumRepository.getSubscriptionStatus()
+        val statusResult = premiumRepository.getSubscriptionStatus()
+        val status = statusResult.getOrNull() ?: return Result.success()
 
         // Only check if user is in trial period
         if (!status.isInTrialPeriod) {

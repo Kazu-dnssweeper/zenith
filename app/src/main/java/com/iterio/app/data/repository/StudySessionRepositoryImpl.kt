@@ -2,6 +2,8 @@ package com.iterio.app.data.repository
 
 import com.iterio.app.data.local.dao.StudySessionDao
 import com.iterio.app.data.mapper.StudySessionMapper
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.StudySession
 import com.iterio.app.domain.repository.StudySessionRepository
 import kotlinx.coroutines.flow.Flow
@@ -38,45 +40,53 @@ class StudySessionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getSessionById(id: Long): StudySession? {
-        return studySessionDao.getSessionById(id)?.let { mapper.toDomain(it) }
-    }
+    override suspend fun getSessionById(id: Long): Result<StudySession?, DomainError> =
+        Result.catchingSuspend {
+            studySessionDao.getSessionById(id)?.let { mapper.toDomain(it) }
+        }
 
-    override suspend fun getTotalMinutesForDay(date: LocalDate): Int {
-        val startOfDay = date.atStartOfDay()
-        val endOfDay = date.atTime(LocalTime.MAX)
-        return studySessionDao.getTotalMinutesForDay(startOfDay, endOfDay)
-    }
+    override suspend fun getTotalMinutesForDay(date: LocalDate): Result<Int, DomainError> =
+        Result.catchingSuspend {
+            val startOfDay = date.atStartOfDay()
+            val endOfDay = date.atTime(LocalTime.MAX)
+            studySessionDao.getTotalMinutesForDay(startOfDay, endOfDay)
+        }
 
-    override suspend fun getTotalCyclesForDay(date: LocalDate): Int {
-        val startOfDay = date.atStartOfDay()
-        val endOfDay = date.atTime(LocalTime.MAX)
-        return studySessionDao.getTotalCyclesForDay(startOfDay, endOfDay)
-    }
+    override suspend fun getTotalCyclesForDay(date: LocalDate): Result<Int, DomainError> =
+        Result.catchingSuspend {
+            val startOfDay = date.atStartOfDay()
+            val endOfDay = date.atTime(LocalTime.MAX)
+            studySessionDao.getTotalCyclesForDay(startOfDay, endOfDay)
+        }
 
-    override suspend fun insertSession(session: StudySession): Long {
-        return studySessionDao.insertSession(mapper.toEntity(session))
-    }
+    override suspend fun insertSession(session: StudySession): Result<Long, DomainError> =
+        Result.catchingSuspend {
+            studySessionDao.insertSession(mapper.toEntity(session))
+        }
 
-    override suspend fun updateSession(session: StudySession) {
-        studySessionDao.updateSession(mapper.toEntity(session))
-    }
+    override suspend fun updateSession(session: StudySession): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            studySessionDao.updateSession(mapper.toEntity(session))
+        }
 
-    override suspend fun deleteSession(session: StudySession) {
-        studySessionDao.deleteSession(mapper.toEntity(session))
-    }
+    override suspend fun deleteSession(session: StudySession): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            studySessionDao.deleteSession(mapper.toEntity(session))
+        }
 
-    override suspend fun finishSession(id: Long, durationMinutes: Int, cycles: Int, interrupted: Boolean) {
-        studySessionDao.finishSession(
-            id = id,
-            endedAt = LocalDateTime.now(),
-            durationMinutes = durationMinutes,
-            cycles = cycles,
-            interrupted = interrupted
-        )
-    }
+    override suspend fun finishSession(id: Long, durationMinutes: Int, cycles: Int, interrupted: Boolean): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            studySessionDao.finishSession(
+                id = id,
+                endedAt = LocalDateTime.now(),
+                durationMinutes = durationMinutes,
+                cycles = cycles,
+                interrupted = interrupted
+            )
+        }
 
-    override suspend fun getSessionCount(): Int {
-        return studySessionDao.getSessionCount()
-    }
+    override suspend fun getSessionCount(): Result<Int, DomainError> =
+        Result.catchingSuspend {
+            studySessionDao.getSessionCount()
+        }
 }

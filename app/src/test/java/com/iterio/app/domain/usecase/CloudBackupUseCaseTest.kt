@@ -3,6 +3,8 @@ package com.iterio.app.domain.usecase
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.iterio.app.data.cloud.CloudBackupInfo
 import com.iterio.app.data.cloud.GoogleDriveManager
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.BackupData
 import com.iterio.app.domain.model.ImportResult
 import com.iterio.app.domain.model.PremiumFeature
@@ -43,7 +45,7 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `canUseCloudBackup returns true for premium user`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
 
         val result = useCase.canUseCloudBackup()
 
@@ -52,7 +54,7 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `canUseCloudBackup returns false for free user`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(false)
 
         val result = useCase.canUseCloudBackup()
 
@@ -103,11 +105,11 @@ class CloudBackupUseCaseTest {
             modifiedTime = System.currentTimeMillis(),
             sizeBytes = 1024
         )
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         every { googleDriveManager.isInitialized() } returns true
         coEvery { backupRepository.exportBackup() } returns backupData
         every { backupRepository.serializeToJson(backupData) } returns jsonContent
-        coEvery { googleDriveManager.uploadBackup(jsonContent) } returns Result.success(cloudInfo)
+        coEvery { googleDriveManager.uploadBackup(jsonContent) } returns kotlin.Result.success(cloudInfo)
 
         val result = useCase.uploadToCloud()
 
@@ -117,7 +119,7 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `uploadToCloud fails for free user`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(false)
 
         val result = useCase.uploadToCloud()
 
@@ -127,7 +129,7 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `uploadToCloud fails when drive not initialized`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         every { googleDriveManager.isInitialized() } returns false
 
         val result = useCase.uploadToCloud()
@@ -138,7 +140,7 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `uploadToCloud propagates export exception`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         every { googleDriveManager.isInitialized() } returns true
         coEvery { backupRepository.exportBackup() } throws RuntimeException("Export failed")
 
@@ -162,10 +164,10 @@ class CloudBackupUseCaseTest {
             settingsImported = 1,
             statsImported = 7
         )
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         every { googleDriveManager.isInitialized() } returns true
-        coEvery { googleDriveManager.downloadBackup() } returns Result.success(jsonContent)
-        every { backupRepository.deserializeFromJson(jsonContent) } returns Result.success(backupData)
+        coEvery { googleDriveManager.downloadBackup() } returns kotlin.Result.success(jsonContent)
+        every { backupRepository.deserializeFromJson(jsonContent) } returns kotlin.Result.success(backupData)
         coEvery { backupRepository.importBackup(backupData) } returns importResult
 
         val result = useCase.downloadFromCloud()
@@ -176,7 +178,7 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `downloadFromCloud fails for free user`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(false)
 
         val result = useCase.downloadFromCloud()
 
@@ -186,7 +188,7 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `downloadFromCloud fails when drive not initialized`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         every { googleDriveManager.isInitialized() } returns false
 
         val result = useCase.downloadFromCloud()
@@ -197,9 +199,9 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `downloadFromCloud propagates download failure`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         every { googleDriveManager.isInitialized() } returns true
-        coEvery { googleDriveManager.downloadBackup() } returns Result.failure(RuntimeException("Download failed"))
+        coEvery { googleDriveManager.downloadBackup() } returns kotlin.Result.failure(RuntimeException("Download failed"))
 
         val result = useCase.downloadFromCloud()
 
@@ -218,7 +220,7 @@ class CloudBackupUseCaseTest {
             sizeBytes = 2048
         )
         every { googleDriveManager.isInitialized() } returns true
-        coEvery { googleDriveManager.getBackupInfo() } returns Result.success(cloudInfo)
+        coEvery { googleDriveManager.getBackupInfo() } returns kotlin.Result.success(cloudInfo)
 
         val result = useCase.getCloudBackupInfo()
 
@@ -240,9 +242,9 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `deleteCloudBackup succeeds for premium user`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         every { googleDriveManager.isInitialized() } returns true
-        coEvery { googleDriveManager.deleteBackup() } returns Result.success(Unit)
+        coEvery { googleDriveManager.deleteBackup() } returns kotlin.Result.success(Unit)
 
         val result = useCase.deleteCloudBackup()
 
@@ -251,7 +253,7 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `deleteCloudBackup fails for free user`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(false)
 
         val result = useCase.deleteCloudBackup()
 
@@ -261,7 +263,7 @@ class CloudBackupUseCaseTest {
 
     @Test
     fun `deleteCloudBackup fails when not initialized`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         every { googleDriveManager.isInitialized() } returns false
 
         val result = useCase.deleteCloudBackup()

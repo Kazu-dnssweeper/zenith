@@ -1,6 +1,8 @@
 package com.iterio.app.domain.usecase
 
 import android.net.Uri
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.BackupData
 import com.iterio.app.domain.model.ImportResult
 import com.iterio.app.domain.model.PremiumFeature
@@ -38,7 +40,7 @@ class BackupUseCaseTest {
 
     @Test
     fun `canUseBackup returns true when premium user`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
 
         val result = useCase.canUseBackup()
 
@@ -47,7 +49,7 @@ class BackupUseCaseTest {
 
     @Test
     fun `canUseBackup returns false when free user`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(false)
 
         val result = useCase.canUseBackup()
 
@@ -59,9 +61,9 @@ class BackupUseCaseTest {
     @Test
     fun `exportBackup succeeds for premium user`() = runTest {
         val backupData = createTestBackupData()
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         coEvery { backupRepository.exportBackup() } returns backupData
-        coEvery { backupRepository.writeToFile(backupData, mockUri) } returns Result.success(Unit)
+        coEvery { backupRepository.writeToFile(backupData, mockUri) } returns kotlin.Result.success(Unit)
 
         val result = useCase.exportBackup(mockUri)
 
@@ -72,7 +74,7 @@ class BackupUseCaseTest {
 
     @Test
     fun `exportBackup fails for free user with PremiumRequiredException`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(false)
 
         val result = useCase.exportBackup(mockUri)
 
@@ -82,7 +84,7 @@ class BackupUseCaseTest {
 
     @Test
     fun `exportBackup propagates repository exception`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         coEvery { backupRepository.exportBackup() } throws RuntimeException("Export error")
 
         val result = useCase.exportBackup(mockUri)
@@ -94,9 +96,9 @@ class BackupUseCaseTest {
     @Test
     fun `exportBackup propagates write failure`() = runTest {
         val backupData = createTestBackupData()
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
         coEvery { backupRepository.exportBackup() } returns backupData
-        coEvery { backupRepository.writeToFile(backupData, mockUri) } returns Result.failure(RuntimeException("Write failed"))
+        coEvery { backupRepository.writeToFile(backupData, mockUri) } returns kotlin.Result.failure(RuntimeException("Write failed"))
 
         val result = useCase.exportBackup(mockUri)
 
@@ -117,8 +119,8 @@ class BackupUseCaseTest {
             settingsImported = 1,
             statsImported = 7
         )
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
-        coEvery { backupRepository.readFromFile(mockUri) } returns Result.success(backupData)
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
+        coEvery { backupRepository.readFromFile(mockUri) } returns kotlin.Result.success(backupData)
         coEvery { backupRepository.importBackup(backupData) } returns importResult
 
         val result = useCase.importBackup(mockUri)
@@ -130,7 +132,7 @@ class BackupUseCaseTest {
 
     @Test
     fun `importBackup fails for free user with PremiumRequiredException`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(false)
 
         val result = useCase.importBackup(mockUri)
 
@@ -140,8 +142,8 @@ class BackupUseCaseTest {
 
     @Test
     fun `importBackup propagates read failure`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
-        coEvery { backupRepository.readFromFile(mockUri) } returns Result.failure(RuntimeException("Read failed"))
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
+        coEvery { backupRepository.readFromFile(mockUri) } returns kotlin.Result.failure(RuntimeException("Read failed"))
 
         val result = useCase.importBackup(mockUri)
 
@@ -152,8 +154,8 @@ class BackupUseCaseTest {
     @Test
     fun `importBackup propagates import exception`() = runTest {
         val backupData = createTestBackupData()
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
-        coEvery { backupRepository.readFromFile(mockUri) } returns Result.success(backupData)
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
+        coEvery { backupRepository.readFromFile(mockUri) } returns kotlin.Result.success(backupData)
         coEvery { backupRepository.importBackup(backupData) } throws RuntimeException("Import error")
 
         val result = useCase.importBackup(mockUri)
@@ -167,8 +169,8 @@ class BackupUseCaseTest {
     @Test
     fun `readBackupPreview succeeds for premium user`() = runTest {
         val backupData = createTestBackupData()
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns true
-        coEvery { backupRepository.readFromFile(mockUri) } returns Result.success(backupData)
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(true)
+        coEvery { backupRepository.readFromFile(mockUri) } returns kotlin.Result.success(backupData)
 
         val result = useCase.readBackupPreview(mockUri)
 
@@ -178,7 +180,7 @@ class BackupUseCaseTest {
 
     @Test
     fun `readBackupPreview fails for free user`() = runTest {
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BACKUP) } returns Result.Success(false)
 
         val result = useCase.readBackupPreview(mockUri)
 

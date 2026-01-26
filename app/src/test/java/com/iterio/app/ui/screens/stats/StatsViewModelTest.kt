@@ -1,6 +1,7 @@
 package com.iterio.app.ui.screens.stats
 
 import app.cash.turbine.test
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.SubscriptionStatus
 import com.iterio.app.domain.model.SubscriptionType
 import com.iterio.app.domain.repository.DailyStatsRepository
@@ -43,12 +44,12 @@ class StatsViewModelTest {
 
         // Default mocks
         every { premiumManager.subscriptionStatus } returns subscriptionStatusFlow
-        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns 0
-        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns 0
-        coEvery { dailyStatsRepository.getCurrentStreak() } returns 0
-        coEvery { dailyStatsRepository.getMaxStreak() } returns 0
-        coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returns 0
-        coEvery { studySessionRepository.getSessionCount() } returns 0
+        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns Result.Success(0)
+        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns Result.Success(0)
+        coEvery { dailyStatsRepository.getCurrentStreak() } returns Result.Success(0)
+        coEvery { dailyStatsRepository.getMaxStreak() } returns Result.Success(0)
+        coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returns Result.Success(0)
+        coEvery { studySessionRepository.getSessionCount() } returns Result.Success(0)
     }
 
     private fun createViewModel() = StatsViewModel(
@@ -70,7 +71,7 @@ class StatsViewModelTest {
 
     @Test
     fun `loads today minutes`() = runTest {
-        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns 90
+        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns Result.Success(90)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -84,7 +85,7 @@ class StatsViewModelTest {
 
     @Test
     fun `loads today sessions`() = runTest {
-        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns 3
+        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns Result.Success(3)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -98,7 +99,7 @@ class StatsViewModelTest {
 
     @Test
     fun `loads current streak`() = runTest {
-        coEvery { dailyStatsRepository.getCurrentStreak() } returns 14
+        coEvery { dailyStatsRepository.getCurrentStreak() } returns Result.Success(14)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -112,7 +113,7 @@ class StatsViewModelTest {
 
     @Test
     fun `loads max streak`() = runTest {
-        coEvery { dailyStatsRepository.getMaxStreak() } returns 30
+        coEvery { dailyStatsRepository.getMaxStreak() } returns Result.Success(30)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -128,9 +129,9 @@ class StatsViewModelTest {
     fun `loads this week minutes`() = runTest {
         // First call is for week, second for month, etc.
         coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returnsMany listOf(
-            300, // week
-            1200, // month
-            3600 // last 30 days for average
+            Result.Success(300), // week
+            Result.Success(1200), // month
+            Result.Success(3600) // last 30 days for average
         )
 
         val vm = createViewModel()
@@ -145,7 +146,7 @@ class StatsViewModelTest {
 
     @Test
     fun `loads total sessions count`() = runTest {
-        coEvery { studySessionRepository.getSessionCount() } returns 150
+        coEvery { studySessionRepository.getSessionCount() } returns Result.Success(150)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -161,7 +162,7 @@ class StatsViewModelTest {
     fun `calculates average daily minutes`() = runTest {
         // 900 minutes over 30 days = 30 average
         coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returnsMany listOf(
-            0, 0, 900
+            Result.Success(0), Result.Success(0), Result.Success(900)
         )
 
         val vm = createViewModel()
@@ -176,7 +177,7 @@ class StatsViewModelTest {
 
     @Test
     fun `loads weekly data with 7 days`() = runTest {
-        coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returns 60
+        coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returns Result.Success(60)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -207,7 +208,7 @@ class StatsViewModelTest {
         val vm = createViewModel()
         advanceUntilIdle()
 
-        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns 200
+        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns Result.Success(200)
         vm.refresh()
         advanceUntilIdle()
 

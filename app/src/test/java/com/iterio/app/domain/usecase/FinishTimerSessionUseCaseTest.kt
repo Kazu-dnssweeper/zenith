@@ -1,5 +1,7 @@
 package com.iterio.app.domain.usecase
 
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PomodoroSettings
 import com.iterio.app.domain.model.ReviewTask
 import com.iterio.app.domain.model.Task
@@ -32,6 +34,12 @@ class FinishTimerSessionUseCaseTest {
         studySessionRepository = mockk(relaxed = true)
         reviewTaskRepository = mockk(relaxed = true)
         taskRepository = mockk(relaxed = true)
+
+        // Set up default return values for Result types
+        coEvery { studySessionRepository.finishSession(any(), any(), any(), any()) } returns Result.Success(Unit)
+        coEvery { reviewTaskRepository.insertAll(any()) } returns Result.Success(Unit)
+        coEvery { taskRepository.updateLastStudiedAt(any(), any()) } returns Result.Success(Unit)
+
         useCase = FinishTimerSessionUseCase(studySessionRepository, reviewTaskRepository, taskRepository)
     }
 
@@ -76,7 +84,7 @@ class FinishTimerSessionUseCaseTest {
         )
 
         val capturedTasks = slot<List<ReviewTask>>()
-        coEvery { reviewTaskRepository.insertAll(capture(capturedTasks)) } returns Unit
+        coEvery { reviewTaskRepository.insertAll(capture(capturedTasks)) } returns Result.Success(Unit)
 
         useCase(params)
 
@@ -137,7 +145,7 @@ class FinishTimerSessionUseCaseTest {
         )
 
         val capturedTasks = slot<List<ReviewTask>>()
-        coEvery { reviewTaskRepository.insertAll(capture(capturedTasks)) } returns Unit
+        coEvery { reviewTaskRepository.insertAll(capture(capturedTasks)) } returns Result.Success(Unit)
 
         useCase(params)
 
@@ -163,7 +171,7 @@ class FinishTimerSessionUseCaseTest {
         )
 
         val capturedTasks = slot<List<ReviewTask>>()
-        coEvery { reviewTaskRepository.insertAll(capture(capturedTasks)) } returns Unit
+        coEvery { reviewTaskRepository.insertAll(capture(capturedTasks)) } returns Result.Success(Unit)
 
         useCase(params)
 
@@ -247,7 +255,7 @@ class FinishTimerSessionUseCaseTest {
 
     @Test
     fun `returns failure when repository throws exception`() = runTest {
-        coEvery { studySessionRepository.finishSession(any(), any(), any(), any()) } throws RuntimeException("DB error")
+        coEvery { studySessionRepository.finishSession(any(), any(), any(), any()) } returns Result.Failure(DomainError.DatabaseError("DB error"))
 
         val params = FinishTimerSessionUseCase.Params(
             sessionId = 1L,
@@ -283,7 +291,7 @@ class FinishTimerSessionUseCaseTest {
 
         val capturedTaskId = slot<Long>()
         val capturedDateTime = slot<LocalDateTime>()
-        coEvery { taskRepository.updateLastStudiedAt(capture(capturedTaskId), capture(capturedDateTime)) } returns Unit
+        coEvery { taskRepository.updateLastStudiedAt(capture(capturedTaskId), capture(capturedDateTime)) } returns Result.Success(Unit)
 
         useCase(params)
 

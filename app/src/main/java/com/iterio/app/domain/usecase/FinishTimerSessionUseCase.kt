@@ -34,51 +34,51 @@ class FinishTimerSessionUseCase @Inject constructor(
         Timber.d("FinishTimerSession: reviewEnabled=${params.settings.reviewEnabled}, " +
                 "isInterrupted=${params.isInterrupted}, " +
                 "reviewIntervals=${params.reviewIntervals}")
-        return try {
-            // セッション完了時は totalCycles、それ以外は currentCycle を使用
-            val cyclesCompleted = if (params.isSessionCompleted) {
-                params.totalCycles
-            } else {
-                params.currentCycle
-            }
 
-            // セッションを終了
-            studySessionRepository.finishSession(
-                id = params.sessionId,
-                durationMinutes = params.totalWorkMinutes,
-                cycles = cyclesCompleted,
-                interrupted = params.isInterrupted
-            )
+        // セッション完了時は totalCycles、それ以外は currentCycle を使用
+        val cyclesCompleted = if (params.isSessionCompleted) {
+            params.totalCycles
+        } else {
+            params.currentCycle
+        }
 
+        // セッションを終了
+        val finishResult = studySessionRepository.finishSession(
+            id = params.sessionId,
+            durationMinutes = params.totalWorkMinutes,
+            cycles = cyclesCompleted,
+            interrupted = params.isInterrupted
+        )
+
+        return finishResult.flatMap {
             // タスクの最終学習日時を更新
             taskRepository.updateLastStudiedAt(params.task.id, LocalDateTime.now())
-
-            // レビュータスク生成条件:
-            // - グローバルのレビュー機能が有効
-            // - タスク個別のレビュー機能が有効
-            // - 中断されていない
-            // - レビュー間隔が設定されている
-            if (params.settings.reviewEnabled &&
-                params.task.reviewEnabled &&
-                !params.isInterrupted &&
-                params.reviewIntervals.isNotEmpty()
-            ) {
-                val today = LocalDate.now()
-                val reviewTasks = params.reviewIntervals.mapIndexed { index, interval ->
-                    ReviewTask(
-                        studySessionId = params.sessionId,
-                        taskId = params.task.id,
-                        scheduledDate = today.plusDays(interval.toLong()),
-                        reviewNumber = index + 1
-                    )
+                .flatMap {
+                    // レビュータスク生成条件:
+                    // - グローバルのレビュー機能が有効
+                    // - タスク個別のレビュー機能が有効
+                    // - 中断されていない
+                    // - レビュー間隔が設定されている
+                    if (params.settings.reviewEnabled &&
+                        params.task.reviewEnabled &&
+                        !params.isInterrupted &&
+                        params.reviewIntervals.isNotEmpty()
+                    ) {
+                        val today = LocalDate.now()
+                        val reviewTasks = params.reviewIntervals.mapIndexed { index, interval ->
+                            ReviewTask(
+                                studySessionId = params.sessionId,
+                                taskId = params.task.id,
+                                scheduledDate = today.plusDays(interval.toLong()),
+                                reviewNumber = index + 1
+                            )
+                        }
+                        Timber.d("Inserting ${reviewTasks.size} review tasks for taskId=${params.task.id}")
+                        reviewTaskRepository.insertAll(reviewTasks)
+                    } else {
+                        Result.Success(Unit)
+                    }
                 }
-                Timber.d("Inserting ${reviewTasks.size} review tasks for taskId=${params.task.id}")
-                reviewTaskRepository.insertAll(reviewTasks)
-            }
-
-            Result.Success(Unit)
-        } catch (e: Exception) {
-            Result.Failure(DomainError.DatabaseError("Failed to finish session", e))
         }
     }
 

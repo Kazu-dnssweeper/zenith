@@ -1,6 +1,7 @@
 package com.iterio.app.fakes
 
 import app.cash.turbine.test
+import com.iterio.app.domain.common.Result
 import com.iterio.app.testutil.CoroutineTestRule
 import com.iterio.app.testutil.TestDataFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,10 +37,10 @@ class FakeSubjectGroupRepositoryTest {
     fun `insertGroup adds group and returns id`() = runTest {
         val group = TestDataFactory.createSubjectGroup(name = "Math")
 
-        val id = repository.insertGroup(group)
+        val id = (repository.insertGroup(group) as Result.Success).value
 
         assertEquals(1L, id)
-        val saved = repository.getGroupById(id)
+        val saved = (repository.getGroupById(id) as Result.Success).value
         assertNotNull(saved)
         assertEquals("Math", saved?.name)
     }
@@ -64,32 +65,32 @@ class FakeSubjectGroupRepositoryTest {
 
     @Test
     fun `updateGroup modifies existing group`() = runTest {
-        val id = repository.insertGroup(TestDataFactory.createSubjectGroup(name = "English"))
-        val inserted = repository.getGroupById(id)!!
+        val id = (repository.insertGroup(TestDataFactory.createSubjectGroup(name = "English")) as Result.Success).value
+        val inserted = (repository.getGroupById(id) as Result.Success).value!!
 
         repository.updateGroup(inserted.copy(name = "Japanese"))
 
-        val updated = repository.getGroupById(id)
+        val updated = (repository.getGroupById(id) as Result.Success).value
         assertEquals("Japanese", updated?.name)
     }
 
     @Test
     fun `deleteGroup removes group`() = runTest {
-        val id = repository.insertGroup(TestDataFactory.createSubjectGroup(name = "History"))
+        val id = (repository.insertGroup(TestDataFactory.createSubjectGroup(name = "History")) as Result.Success).value
 
-        val group = repository.getGroupById(id)!!
+        val group = (repository.getGroupById(id) as Result.Success).value!!
         repository.deleteGroup(group)
 
-        assertNull(repository.getGroupById(id))
+        assertNull((repository.getGroupById(id) as Result.Success).value)
     }
 
     @Test
     fun `deleteGroupById removes group by id`() = runTest {
-        val id = repository.insertGroup(TestDataFactory.createSubjectGroup(name = "Physics"))
+        val id = (repository.insertGroup(TestDataFactory.createSubjectGroup(name = "Physics")) as Result.Success).value
 
         repository.deleteGroupById(id)
 
-        assertNull(repository.getGroupById(id))
+        assertNull((repository.getGroupById(id) as Result.Success).value)
     }
 
     @Test

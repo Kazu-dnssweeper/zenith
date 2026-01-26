@@ -1,6 +1,7 @@
 package com.iterio.app.fakes
 
 import app.cash.turbine.test
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.ScheduleType
 import com.iterio.app.testutil.CoroutineTestRule
 import com.iterio.app.testutil.TestDataFactory
@@ -38,10 +39,10 @@ class FakeTaskRepositoryTest {
     fun `insertTask adds task and returns id`() = runTest {
         val task = TestDataFactory.createTask(name = "Study Math")
 
-        val id = repository.insertTask(task)
+        val id = (repository.insertTask(task) as Result.Success).value
 
         assertEquals(1L, id)
-        val saved = repository.getTaskById(id)
+        val saved = (repository.getTaskById(id) as Result.Success).value
         assertNotNull(saved)
         assertEquals("Study Math", saved?.name)
     }
@@ -75,42 +76,42 @@ class FakeTaskRepositoryTest {
 
     @Test
     fun `updateTask modifies existing task`() = runTest {
-        val id = repository.insertTask(TestDataFactory.createTask(name = "Original"))
-        val task = repository.getTaskById(id)!!
+        val id = (repository.insertTask(TestDataFactory.createTask(name = "Original")) as Result.Success).value
+        val task = (repository.getTaskById(id) as Result.Success).value!!
 
         repository.updateTask(task.copy(name = "Updated"))
 
-        val updated = repository.getTaskById(id)
+        val updated = (repository.getTaskById(id) as Result.Success).value
         assertEquals("Updated", updated?.name)
     }
 
     @Test
     fun `deleteTask removes task`() = runTest {
-        val id = repository.insertTask(TestDataFactory.createTask(name = "ToDelete"))
-        val task = repository.getTaskById(id)!!
+        val id = (repository.insertTask(TestDataFactory.createTask(name = "ToDelete")) as Result.Success).value
+        val task = (repository.getTaskById(id) as Result.Success).value!!
 
         repository.deleteTask(task)
 
-        assertNull(repository.getTaskById(id))
+        assertNull((repository.getTaskById(id) as Result.Success).value)
     }
 
     @Test
     fun `deactivateTask sets isActive to false`() = runTest {
-        val id = repository.insertTask(TestDataFactory.createTask(name = "ToDeactivate", isActive = true))
+        val id = (repository.insertTask(TestDataFactory.createTask(name = "ToDeactivate", isActive = true)) as Result.Success).value
 
         repository.deactivateTask(id)
 
-        val task = repository.getTaskById(id)
+        val task = (repository.getTaskById(id) as Result.Success).value
         assertFalse(task!!.isActive)
     }
 
     @Test
     fun `updateProgress updates task progress fields`() = runTest {
-        val id = repository.insertTask(TestDataFactory.createTask(name = "Task"))
+        val id = (repository.insertTask(TestDataFactory.createTask(name = "Task")) as Result.Success).value
 
         repository.updateProgress(id, note = "Good progress", percent = 50, goal = "Finish chapter")
 
-        val task = repository.getTaskById(id)
+        val task = (repository.getTaskById(id) as Result.Success).value
         assertEquals("Good progress", task?.progressNote)
         assertEquals(50, task?.progressPercent)
         assertEquals("Finish chapter", task?.nextGoal)
@@ -162,12 +163,12 @@ class FakeTaskRepositoryTest {
 
     @Test
     fun `updateLastStudiedAt updates timestamp`() = runTest {
-        val id = repository.insertTask(TestDataFactory.createTask(name = "Task"))
+        val id = (repository.insertTask(TestDataFactory.createTask(name = "Task")) as Result.Success).value
         val studiedAt = LocalDateTime.of(2026, 1, 23, 10, 30)
 
         repository.updateLastStudiedAt(id, studiedAt)
 
-        val task = repository.getTaskById(id)
+        val task = (repository.getTaskById(id) as Result.Success).value
         assertEquals(studiedAt, task?.lastStudiedAt)
     }
 
@@ -206,7 +207,7 @@ class FakeTaskRepositoryTest {
         repository.insertTask(TestDataFactory.createDeadlineTask(deadlineDate = date))
         repository.insertTask(TestDataFactory.createTask(scheduleType = ScheduleType.NONE))
 
-        val tasks = repository.getTasksForDate(date)
+        val tasks = (repository.getTasksForDate(date) as Result.Success).value
         assertEquals(3, tasks.size)
     }
 
@@ -221,7 +222,7 @@ class FakeTaskRepositoryTest {
         // Specific date on 7th (Wednesday)
         repository.insertTask(TestDataFactory.createSpecificDateTask(specificDate = LocalDate.of(2026, 1, 7)))
 
-        val counts = repository.getTaskCountByDateRange(startDate, endDate)
+        val counts = (repository.getTaskCountByDateRange(startDate, endDate) as Result.Success).value
 
         assertEquals(1, counts[LocalDate.of(2026, 1, 5)])  // Monday: 1 repeat
         assertNull(counts[LocalDate.of(2026, 1, 6)])        // Tuesday: 0

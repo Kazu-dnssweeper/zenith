@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.iterio.app.data.local.dao.DailyStatsDao
 import com.iterio.app.data.local.entity.DailyStatsEntity
 import com.iterio.app.data.mapper.DailyStatsMapper
+import com.iterio.app.domain.common.Result
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -97,8 +98,10 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getByDate(date)
 
-        assertNotNull(result)
-        assertEquals(60, result?.totalStudyMinutes)
+        assertTrue(result.isSuccess)
+        val stats = (result as Result.Success).value
+        assertNotNull(stats)
+        assertEquals(60, stats?.totalStudyMinutes)
     }
 
     @Test
@@ -108,7 +111,9 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getByDate(date)
 
-        assertNull(result)
+        assertTrue(result.isSuccess)
+        val stats = (result as Result.Success).value
+        assertNull(stats)
     }
 
     @Test
@@ -163,7 +168,8 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getTotalMinutesBetweenDates(startDate, endDate)
 
-        assertEquals(420, result)
+        assertTrue(result.isSuccess)
+        assertEquals(420, (result as Result.Success).value)
     }
 
     @Test
@@ -174,7 +180,8 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getTotalMinutesBetweenDates(startDate, endDate)
 
-        assertEquals(0, result)
+        assertTrue(result.isSuccess)
+        assertEquals(0, (result as Result.Success).value)
     }
 
     @Test
@@ -183,7 +190,8 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getCurrentStreak()
 
-        assertEquals(7, result)
+        assertTrue(result.isSuccess)
+        assertEquals(7, (result as Result.Success).value)
     }
 
     @Test
@@ -192,7 +200,8 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getCurrentStreak()
 
-        assertEquals(0, result)
+        assertTrue(result.isSuccess)
+        assertEquals(0, (result as Result.Success).value)
     }
 
     @Test
@@ -201,7 +210,8 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getMaxStreak()
 
-        assertEquals(30, result)
+        assertTrue(result.isSuccess)
+        assertEquals(30, (result as Result.Success).value)
     }
 
     @Test
@@ -210,7 +220,8 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getMaxStreak()
 
-        assertEquals(0, result)
+        assertTrue(result.isSuccess)
+        assertEquals(0, (result as Result.Success).value)
     }
 
     @Test
@@ -225,9 +236,11 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getWeeklyData(weekStart)
 
-        assertEquals(7, result.size)
-        assertEquals("月", result[0].dayOfWeek)
-        assertEquals("日", result[6].dayOfWeek)
+        assertTrue(result.isSuccess)
+        val data = (result as Result.Success).value
+        assertEquals(7, data.size)
+        assertEquals("月", data[0].dayOfWeek)
+        assertEquals("日", data[6].dayOfWeek)
     }
 
     @Test
@@ -245,10 +258,12 @@ class DailyStatsRepositoryImplTest {
 
         val result = repository.getWeeklyData(weekStart)
 
-        assertEquals(7, result.size)
-        assertEquals(60, result[0].minutes)
-        assertEquals(0, result[1].minutes)
-        assertEquals(60, result[2].minutes)
+        assertTrue(result.isSuccess)
+        val data = (result as Result.Success).value
+        assertEquals(7, data.size)
+        assertEquals(60, data[0].minutes)
+        assertEquals(0, data[1].minutes)
+        assertEquals(60, data[2].minutes)
     }
 
     // ==================== Helpers ====================

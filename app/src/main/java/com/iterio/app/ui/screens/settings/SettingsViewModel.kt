@@ -86,35 +86,37 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadSettings() {
         viewModelScope.launch {
-            val settings = settingsRepository.getPomodoroSettings()
-            val allowedApps = settingsRepository.getAllowedApps()
+            val settingsResult = settingsRepository.getPomodoroSettings()
+            val allowedAppsResult = settingsRepository.getAllowedApps()
             val language = localeManager.getCurrentLanguage()
-            val isPremiumStatus = premiumManager.isPremium()
 
             // BGM設定（BgmManagerから取得）
             val bgmTrackId = bgmManager.selectedTrack.value?.id
             val bgmVolume = bgmManager.volume.value
             val bgmAutoPlayEnabled = bgmManager.autoPlayEnabled.value
 
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    notificationsEnabled = settings.notificationsEnabled,
-                    reviewIntervalsEnabled = settings.reviewEnabled,
-                    defaultReviewCount = settings.defaultReviewCount,
-                    workDurationMinutes = settings.workDurationMinutes,
-                    shortBreakMinutes = settings.shortBreakMinutes,
-                    longBreakMinutes = settings.longBreakMinutes,
-                    cyclesBeforeLongBreak = settings.cyclesBeforeLongBreak,
-                    focusModeEnabled = settings.focusModeEnabled,
-                    focusModeStrict = settings.focusModeStrict,
-                    autoLoopEnabled = settings.autoLoopEnabled,
-                    allowedAppsCount = allowedApps.size,
-                    language = language,
-                    bgmTrackId = bgmTrackId,
-                    bgmVolume = bgmVolume,
-                    bgmAutoPlayEnabled = bgmAutoPlayEnabled
-                )
+            settingsResult.onSuccess { settings ->
+                val allowedApps = allowedAppsResult.getOrDefault(emptyList())
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        notificationsEnabled = settings.notificationsEnabled,
+                        reviewIntervalsEnabled = settings.reviewEnabled,
+                        defaultReviewCount = settings.defaultReviewCount,
+                        workDurationMinutes = settings.workDurationMinutes,
+                        shortBreakMinutes = settings.shortBreakMinutes,
+                        longBreakMinutes = settings.longBreakMinutes,
+                        cyclesBeforeLongBreak = settings.cyclesBeforeLongBreak,
+                        focusModeEnabled = settings.focusModeEnabled,
+                        focusModeStrict = settings.focusModeStrict,
+                        autoLoopEnabled = settings.autoLoopEnabled,
+                        allowedAppsCount = allowedApps.size,
+                        language = language,
+                        bgmTrackId = bgmTrackId,
+                        bgmVolume = bgmVolume,
+                        bgmAutoPlayEnabled = bgmAutoPlayEnabled
+                    )
+                }
             }
         }
     }
@@ -239,12 +241,12 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadReviewTaskCounts() {
         viewModelScope.launch {
-            val totalCount = reviewTaskRepository.getTotalCount()
-            val incompleteCount = reviewTaskRepository.getIncompleteCount()
+            val totalCountResult = reviewTaskRepository.getTotalCount()
+            val incompleteCountResult = reviewTaskRepository.getIncompleteCount()
             _uiState.update {
                 it.copy(
-                    reviewTaskTotalCount = totalCount,
-                    reviewTaskIncompleteCount = incompleteCount
+                    reviewTaskTotalCount = totalCountResult.getOrDefault(0),
+                    reviewTaskIncompleteCount = incompleteCountResult.getOrDefault(0)
                 )
             }
         }
@@ -284,14 +286,16 @@ class SettingsViewModel @Inject constructor(
     fun deleteAllReviewTasks() {
         viewModelScope.launch {
             reviewTaskRepository.deleteAll()
-            _uiState.update {
-                it.copy(
-                    reviewTaskTotalCount = 0,
-                    reviewTaskIncompleteCount = 0,
-                    showDeleteAllReviewTasksDialog = false,
-                    reviewTasks = emptyList()
-                )
-            }
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            reviewTaskTotalCount = 0,
+                            reviewTaskIncompleteCount = 0,
+                            showDeleteAllReviewTasksDialog = false,
+                            reviewTasks = emptyList()
+                        )
+                    }
+                }
         }
     }
 

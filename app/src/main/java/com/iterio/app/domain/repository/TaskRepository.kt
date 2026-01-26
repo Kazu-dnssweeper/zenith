@@ -1,5 +1,7 @@
 package com.iterio.app.domain.repository
 
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.Task
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -8,12 +10,12 @@ import java.time.LocalDateTime
 interface TaskRepository {
     fun getTasksByGroup(groupId: Long): Flow<List<Task>>
     fun getAllActiveTasks(): Flow<List<Task>>
-    suspend fun getTaskById(id: Long): Task?
-    suspend fun insertTask(task: Task): Long
-    suspend fun updateTask(task: Task)
-    suspend fun deleteTask(task: Task)
-    suspend fun deactivateTask(id: Long)
-    suspend fun updateProgress(id: Long, note: String?, percent: Int?, goal: String?)
+    suspend fun getTaskById(id: Long): Result<Task?, DomainError>
+    suspend fun insertTask(task: Task): Result<Long, DomainError>
+    suspend fun updateTask(task: Task): Result<Unit, DomainError>
+    suspend fun deleteTask(task: Task): Result<Unit, DomainError>
+    suspend fun deactivateTask(id: Long): Result<Unit, DomainError>
+    suspend fun updateProgress(id: Long, note: String?, percent: Int?, goal: String?): Result<Unit, DomainError>
 
     /**
      * 今日のスケジュール対象タスクを取得
@@ -23,7 +25,7 @@ interface TaskRepository {
     /**
      * 最終学習日時を更新
      */
-    suspend fun updateLastStudiedAt(taskId: Long, studiedAt: LocalDateTime)
+    suspend fun updateLastStudiedAt(taskId: Long, studiedAt: LocalDateTime): Result<Unit, DomainError>
 
     /**
      * 期限が近いタスクを取得
@@ -33,10 +35,10 @@ interface TaskRepository {
     /**
      * 特定日のタスクを取得
      */
-    suspend fun getTasksForDate(date: LocalDate): List<Task>
+    suspend fun getTasksForDate(date: LocalDate): Result<List<Task>, DomainError>
 
     /**
      * 日付範囲のタスク数を取得
      */
-    suspend fun getTaskCountByDateRange(startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Int>
+    suspend fun getTaskCountByDateRange(startDate: LocalDate, endDate: LocalDate): Result<Map<LocalDate, Int>, DomainError>
 }

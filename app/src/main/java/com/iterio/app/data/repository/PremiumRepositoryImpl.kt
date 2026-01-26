@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PremiumFeature
 import com.iterio.app.domain.model.SubscriptionStatus
 import com.iterio.app.domain.model.SubscriptionType
@@ -40,55 +42,61 @@ class PremiumRepositoryImpl @Inject constructor(
         parseSubscriptionStatus(prefs)
     }
 
-    override suspend fun getSubscriptionStatus(): SubscriptionStatus {
-        return subscriptionStatus.first()
-    }
+    override suspend fun getSubscriptionStatus(): Result<SubscriptionStatus, DomainError> =
+        Result.catchingSuspend {
+            subscriptionStatus.first()
+        }
 
-    override suspend fun startTrial() {
-        dataStore.edit { prefs ->
-            if (prefs[KEY_IS_TRIAL_USED] != true) {
-                val now = LocalDateTime.now()
-                val expires = now.plusDays(TRIAL_DAYS)
-                prefs[KEY_TRIAL_STARTED_AT] = now.format(formatter)
-                prefs[KEY_TRIAL_EXPIRES_AT] = expires.format(formatter)
-                prefs[KEY_IS_TRIAL_USED] = true
+    override suspend fun startTrial(): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            dataStore.edit { prefs ->
+                if (prefs[KEY_IS_TRIAL_USED] != true) {
+                    val now = LocalDateTime.now()
+                    val expires = now.plusDays(TRIAL_DAYS)
+                    prefs[KEY_TRIAL_STARTED_AT] = now.format(formatter)
+                    prefs[KEY_TRIAL_EXPIRES_AT] = expires.format(formatter)
+                    prefs[KEY_IS_TRIAL_USED] = true
+                    prefs[KEY_HAS_SEEN_TRIAL_OFFER] = true
+                }
+            }
+        }
+
+    override suspend fun updateSubscription(type: SubscriptionType, expiresAt: LocalDateTime?): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            dataStore.edit { prefs ->
+                prefs[KEY_SUBSCRIPTION_TYPE] = type.name
+                if (expiresAt != null) {
+                    prefs[KEY_EXPIRES_AT] = expiresAt.format(formatter)
+                } else {
+                    prefs.remove(KEY_EXPIRES_AT)
+                }
+            }
+        }
+
+    override suspend fun canAccessFeature(feature: PremiumFeature): Result<Boolean, DomainError> =
+        Result.catchingSuspend {
+            val status = subscriptionStatus.first()
+            status.isPremium
+        }
+
+    override suspend fun markTrialOfferSeen(): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            dataStore.edit { prefs ->
                 prefs[KEY_HAS_SEEN_TRIAL_OFFER] = true
             }
         }
-    }
 
-    override suspend fun updateSubscription(type: SubscriptionType, expiresAt: LocalDateTime?) {
-        dataStore.edit { prefs ->
-            prefs[KEY_SUBSCRIPTION_TYPE] = type.name
-            if (expiresAt != null) {
-                prefs[KEY_EXPIRES_AT] = expiresAt.format(formatter)
-            } else {
+    override suspend fun clearSubscription(): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            dataStore.edit { prefs ->
+                prefs.remove(KEY_SUBSCRIPTION_TYPE)
                 prefs.remove(KEY_EXPIRES_AT)
+                prefs.remove(KEY_TRIAL_STARTED_AT)
+                prefs.remove(KEY_TRIAL_EXPIRES_AT)
+                prefs.remove(KEY_IS_TRIAL_USED)
+                prefs.remove(KEY_HAS_SEEN_TRIAL_OFFER)
             }
         }
-    }
-
-    override suspend fun canAccessFeature(feature: PremiumFeature): Boolean {
-        val status = getSubscriptionStatus()
-        return status.isPremium
-    }
-
-    override suspend fun markTrialOfferSeen() {
-        dataStore.edit { prefs ->
-            prefs[KEY_HAS_SEEN_TRIAL_OFFER] = true
-        }
-    }
-
-    override suspend fun clearSubscription() {
-        dataStore.edit { prefs ->
-            prefs.remove(KEY_SUBSCRIPTION_TYPE)
-            prefs.remove(KEY_EXPIRES_AT)
-            prefs.remove(KEY_TRIAL_STARTED_AT)
-            prefs.remove(KEY_TRIAL_EXPIRES_AT)
-            prefs.remove(KEY_IS_TRIAL_USED)
-            prefs.remove(KEY_HAS_SEEN_TRIAL_OFFER)
-        }
-    }
 
     private fun parseSubscriptionStatus(prefs: Preferences): SubscriptionStatus {
         val typeString = prefs[KEY_SUBSCRIPTION_TYPE]

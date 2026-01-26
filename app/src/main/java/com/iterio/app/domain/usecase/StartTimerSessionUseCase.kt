@@ -32,21 +32,16 @@ class StartTimerSessionUseCase @Inject constructor(
         cycles: Int,
         startTime: LocalDateTime = LocalDateTime.now()
     ): Result<Long, DomainError> {
-        return try {
-            // タスク固有の作業時間があればそれを使用
-            val workDurationMinutes = task.workDurationMinutes ?: settings.workDurationMinutes
-            val plannedDuration = workDurationMinutes * cycles
+        // タスク固有の作業時間があればそれを使用
+        val workDurationMinutes = task.workDurationMinutes ?: settings.workDurationMinutes
+        val plannedDuration = workDurationMinutes * cycles
 
-            val session = StudySession(
-                taskId = task.id,
-                startedAt = startTime,
-                plannedDurationMinutes = plannedDuration
-            )
+        val session = StudySession(
+            taskId = task.id,
+            startedAt = startTime,
+            plannedDurationMinutes = plannedDuration
+        )
 
-            val sessionId = studySessionRepository.insertSession(session)
-            Result.Success(sessionId)
-        } catch (e: Exception) {
-            Result.Failure(DomainError.DatabaseError("Failed to create session", e))
-        }
+        return studySessionRepository.insertSession(session)
     }
 }

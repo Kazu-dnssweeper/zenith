@@ -1,6 +1,7 @@
 package com.iterio.app.ui.screens.home
 
 import app.cash.turbine.test
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.ReviewTask
 import com.iterio.app.domain.model.ScheduleType
 import com.iterio.app.domain.model.Task
@@ -52,10 +53,10 @@ class HomeViewModelTest {
 
         // Default mocks
         val today = LocalDate.now()
-        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns 0
-        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns 0
-        coEvery { dailyStatsRepository.getCurrentStreak() } returns 0
-        coEvery { dailyStatsRepository.getWeeklyData(any()) } returns emptyList()
+        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns Result.Success(0)
+        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns Result.Success(0)
+        coEvery { dailyStatsRepository.getCurrentStreak() } returns Result.Success(0)
+        coEvery { dailyStatsRepository.getWeeklyData(any()) } returns Result.Success(emptyList())
         every { taskRepository.getUpcomingDeadlineTasks(any(), any()) } returns flowOf(emptyList())
         every { getTodayTasksUseCase(any()) } returns flowOf(
             TodayTasksResult(emptyList(), emptyList())
@@ -83,7 +84,7 @@ class HomeViewModelTest {
 
     @Test
     fun `loads today minutes correctly`() = runTest {
-        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns 120
+        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns Result.Success(120)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -97,7 +98,7 @@ class HomeViewModelTest {
 
     @Test
     fun `loads today cycles correctly`() = runTest {
-        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns 4
+        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns Result.Success(4)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -111,7 +112,7 @@ class HomeViewModelTest {
 
     @Test
     fun `loads current streak correctly`() = runTest {
-        coEvery { dailyStatsRepository.getCurrentStreak() } returns 7
+        coEvery { dailyStatsRepository.getCurrentStreak() } returns Result.Success(7)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -170,7 +171,7 @@ class HomeViewModelTest {
             DayStats("月", LocalDate.now(), 60),
             DayStats("火", LocalDate.now().plusDays(1), 90)
         )
-        coEvery { dailyStatsRepository.getWeeklyData(any()) } returns weeklyData
+        coEvery { dailyStatsRepository.getWeeklyData(any()) } returns Result.Success(weeklyData)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -204,7 +205,7 @@ class HomeViewModelTest {
         val vm = createViewModel()
         advanceUntilIdle()
 
-        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns 180
+        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns Result.Success(180)
         vm.loadHomeData()
         advanceUntilIdle()
 
@@ -217,7 +218,7 @@ class HomeViewModelTest {
 
     @Test
     fun `toggleReviewTaskComplete marks task as completed`() = runTest {
-        coEvery { reviewTaskRepository.markAsCompleted(any()) } returns Unit
+        coEvery { reviewTaskRepository.markAsCompleted(any()) } returns Result.Success(Unit)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -230,7 +231,7 @@ class HomeViewModelTest {
 
     @Test
     fun `toggleReviewTaskComplete marks task as incomplete`() = runTest {
-        coEvery { reviewTaskRepository.markAsIncomplete(any()) } returns Unit
+        coEvery { reviewTaskRepository.markAsIncomplete(any()) } returns Result.Success(Unit)
 
         val vm = createViewModel()
         advanceUntilIdle()

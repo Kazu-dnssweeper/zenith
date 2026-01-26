@@ -1,5 +1,6 @@
 package com.iterio.app.fakes
 
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.ReviewTask
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -28,8 +29,8 @@ class FakeReviewTaskRepositoryTest {
         val task1 = createReviewTask(studySessionId = 1L, taskId = 1L)
         val task2 = createReviewTask(studySessionId = 2L, taskId = 2L)
 
-        val id1 = repository.insert(task1)
-        val id2 = repository.insert(task2)
+        val id1 = (repository.insert(task1) as Result.Success).value
+        val id2 = (repository.insert(task2) as Result.Success).value
 
         assertEquals(1L, id1)
         assertEquals(2L, id2)
@@ -53,15 +54,15 @@ class FakeReviewTaskRepositoryTest {
 
     @Test
     fun `getById returns null for non-existent id`() = runTest {
-        val result = repository.getById(999L)
+        val result = (repository.getById(999L) as Result.Success).value
         assertNull(result)
     }
 
     @Test
     fun `getById returns task when exists`() = runTest {
-        val id = repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L))
+        val id = (repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L)) as Result.Success).value
 
-        val task = repository.getById(id)
+        val task = (repository.getById(id) as Result.Success).value
 
         assertNotNull(task)
         assertEquals(1L, task?.taskId)
@@ -106,7 +107,7 @@ class FakeReviewTaskRepositoryTest {
     fun `getAllTasksForDate returns all tasks including completed`() = runTest {
         val today = LocalDate.now()
 
-        val id1 = repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L, scheduledDate = today))
+        val id1 = (repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L, scheduledDate = today)) as Result.Success).value
         repository.insert(createReviewTask(studySessionId = 2L, taskId = 2L, scheduledDate = today))
 
         repository.markAsCompleted(id1)
@@ -135,34 +136,34 @@ class FakeReviewTaskRepositoryTest {
 
     @Test
     fun `update updates existing task`() = runTest {
-        val id = repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L))
+        val id = (repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L)) as Result.Success).value
 
-        val task = repository.getById(id)!!
+        val task = (repository.getById(id) as Result.Success).value!!
         repository.update(task.copy(taskName = "Updated"))
 
-        val updated = repository.getById(id)
+        val updated = (repository.getById(id) as Result.Success).value
         assertEquals("Updated", updated?.taskName)
     }
 
     @Test
     fun `markAsCompleted marks task as completed`() = runTest {
-        val id = repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L))
+        val id = (repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L)) as Result.Success).value
 
         repository.markAsCompleted(id)
 
-        val task = repository.getById(id)
+        val task = (repository.getById(id) as Result.Success).value
         assertTrue(task?.isCompleted ?: false)
         assertNotNull(task?.completedAt)
     }
 
     @Test
     fun `markAsIncomplete marks task as incomplete`() = runTest {
-        val id = repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L))
+        val id = (repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L)) as Result.Success).value
         repository.markAsCompleted(id)
 
         repository.markAsIncomplete(id)
 
-        val task = repository.getById(id)
+        val task = (repository.getById(id) as Result.Success).value
         assertFalse(task?.isCompleted ?: true)
         assertNull(task?.completedAt)
     }
@@ -171,11 +172,11 @@ class FakeReviewTaskRepositoryTest {
     fun `reschedule changes scheduled date`() = runTest {
         val today = LocalDate.now()
         val tomorrow = today.plusDays(1)
-        val id = repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L, scheduledDate = today))
+        val id = (repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L, scheduledDate = today)) as Result.Success).value
 
         repository.reschedule(id, tomorrow)
 
-        val task = repository.getById(id)
+        val task = (repository.getById(id) as Result.Success).value
         assertEquals(tomorrow, task?.scheduledDate)
     }
 
@@ -183,12 +184,12 @@ class FakeReviewTaskRepositoryTest {
 
     @Test
     fun `delete removes task`() = runTest {
-        val id = repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L))
+        val id = (repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L)) as Result.Success).value
 
-        val task = repository.getById(id)!!
+        val task = (repository.getById(id) as Result.Success).value!!
         repository.delete(task)
 
-        assertNull(repository.getById(id))
+        assertNull((repository.getById(id) as Result.Success).value)
     }
 
     @Test
@@ -225,13 +226,13 @@ class FakeReviewTaskRepositoryTest {
     fun `getPendingTaskCountForDate returns correct count`() = runTest {
         val today = LocalDate.now()
 
-        val id1 = repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L, scheduledDate = today))
+        val id1 = (repository.insert(createReviewTask(studySessionId = 1L, taskId = 1L, scheduledDate = today)) as Result.Success).value
         repository.insert(createReviewTask(studySessionId = 2L, taskId = 2L, scheduledDate = today))
         repository.insert(createReviewTask(studySessionId = 3L, taskId = 3L, scheduledDate = today))
 
         repository.markAsCompleted(id1)
 
-        val count = repository.getPendingTaskCountForDate(today)
+        val count = (repository.getPendingTaskCountForDate(today) as Result.Success).value
 
         assertEquals(2, count)
     }

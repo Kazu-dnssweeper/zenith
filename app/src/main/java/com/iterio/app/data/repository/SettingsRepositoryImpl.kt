@@ -5,6 +5,8 @@ import com.iterio.app.config.AppConfig
 import com.iterio.app.data.local.IterioDatabase
 import com.iterio.app.data.local.dao.SettingsDao
 import com.iterio.app.data.local.entity.SettingsEntity
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PomodoroSettings
 import com.iterio.app.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
@@ -30,80 +32,92 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getPomodoroSettings(): PomodoroSettings {
-        return PomodoroSettings(
-            workDurationMinutes = getSetting(
-                SettingsEntity.KEY_WORK_DURATION_MINUTES,
-                SettingsEntity.DEFAULT_WORK_DURATION
-            ).toIntOrNull() ?: 25,
-            shortBreakMinutes = getSetting(
-                SettingsEntity.KEY_SHORT_BREAK_MINUTES,
-                SettingsEntity.DEFAULT_SHORT_BREAK
-            ).toIntOrNull() ?: 5,
-            longBreakMinutes = getSetting(
-                SettingsEntity.KEY_LONG_BREAK_MINUTES,
-                SettingsEntity.DEFAULT_LONG_BREAK
-            ).toIntOrNull() ?: 15,
-            cyclesBeforeLongBreak = getSetting(
-                SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK,
-                SettingsEntity.DEFAULT_CYCLES
-            ).toIntOrNull() ?: 4,
-            focusModeEnabled = getSetting(
-                SettingsEntity.KEY_FOCUS_MODE_ENABLED,
-                "true"
-            ).toBoolean(),
-            focusModeStrict = getSetting(
-                SettingsEntity.KEY_FOCUS_MODE_STRICT,
-                "false"
-            ).toBoolean(),
-            autoLoopEnabled = getSetting(
-                SettingsEntity.KEY_AUTO_LOOP_ENABLED,
-                "false"
-            ).toBoolean(),
-            reviewEnabled = getSetting(
-                SettingsEntity.KEY_REVIEW_ENABLED,
-                "true"
-            ).toBoolean(),
-            reviewIntervals = parseReviewIntervals(
-                getSetting(
-                    SettingsEntity.KEY_REVIEW_INTERVALS,
-                    SettingsEntity.DEFAULT_REVIEW_INTERVALS
-                )
-            ),
-            defaultReviewCount = getSetting(
-                SettingsEntity.KEY_DEFAULT_REVIEW_COUNT,
-                SettingsEntity.DEFAULT_REVIEW_COUNT
-            ).toIntOrNull() ?: 2,
-            notificationsEnabled = getSetting(
-                SettingsEntity.KEY_NOTIFICATIONS_ENABLED,
-                "true"
-            ).toBoolean()
-        )
-    }
-
-    override suspend fun updatePomodoroSettings(settings: PomodoroSettings) {
-        database.withTransaction {
-            setSetting(SettingsEntity.KEY_WORK_DURATION_MINUTES, settings.workDurationMinutes.toString())
-            setSetting(SettingsEntity.KEY_SHORT_BREAK_MINUTES, settings.shortBreakMinutes.toString())
-            setSetting(SettingsEntity.KEY_LONG_BREAK_MINUTES, settings.longBreakMinutes.toString())
-            setSetting(SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK, settings.cyclesBeforeLongBreak.toString())
-            setSetting(SettingsEntity.KEY_FOCUS_MODE_ENABLED, settings.focusModeEnabled.toString())
-            setSetting(SettingsEntity.KEY_FOCUS_MODE_STRICT, settings.focusModeStrict.toString())
-            setSetting(SettingsEntity.KEY_AUTO_LOOP_ENABLED, settings.autoLoopEnabled.toString())
-            setSetting(SettingsEntity.KEY_REVIEW_ENABLED, settings.reviewEnabled.toString())
-            setSetting(SettingsEntity.KEY_REVIEW_INTERVALS, json.encodeToString(settings.reviewIntervals))
-            setSetting(SettingsEntity.KEY_DEFAULT_REVIEW_COUNT, settings.defaultReviewCount.toString())
-            setSetting(SettingsEntity.KEY_NOTIFICATIONS_ENABLED, settings.notificationsEnabled.toString())
+    override suspend fun getPomodoroSettings(): Result<PomodoroSettings, DomainError> =
+        Result.catchingSuspend {
+            PomodoroSettings(
+                workDurationMinutes = getSettingInternal(
+                    SettingsEntity.KEY_WORK_DURATION_MINUTES,
+                    SettingsEntity.DEFAULT_WORK_DURATION
+                ).toIntOrNull() ?: 25,
+                shortBreakMinutes = getSettingInternal(
+                    SettingsEntity.KEY_SHORT_BREAK_MINUTES,
+                    SettingsEntity.DEFAULT_SHORT_BREAK
+                ).toIntOrNull() ?: 5,
+                longBreakMinutes = getSettingInternal(
+                    SettingsEntity.KEY_LONG_BREAK_MINUTES,
+                    SettingsEntity.DEFAULT_LONG_BREAK
+                ).toIntOrNull() ?: 15,
+                cyclesBeforeLongBreak = getSettingInternal(
+                    SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK,
+                    SettingsEntity.DEFAULT_CYCLES
+                ).toIntOrNull() ?: 4,
+                focusModeEnabled = getSettingInternal(
+                    SettingsEntity.KEY_FOCUS_MODE_ENABLED,
+                    "true"
+                ).toBoolean(),
+                focusModeStrict = getSettingInternal(
+                    SettingsEntity.KEY_FOCUS_MODE_STRICT,
+                    "false"
+                ).toBoolean(),
+                autoLoopEnabled = getSettingInternal(
+                    SettingsEntity.KEY_AUTO_LOOP_ENABLED,
+                    "false"
+                ).toBoolean(),
+                reviewEnabled = getSettingInternal(
+                    SettingsEntity.KEY_REVIEW_ENABLED,
+                    "true"
+                ).toBoolean(),
+                reviewIntervals = parseReviewIntervals(
+                    getSettingInternal(
+                        SettingsEntity.KEY_REVIEW_INTERVALS,
+                        SettingsEntity.DEFAULT_REVIEW_INTERVALS
+                    )
+                ),
+                defaultReviewCount = getSettingInternal(
+                    SettingsEntity.KEY_DEFAULT_REVIEW_COUNT,
+                    SettingsEntity.DEFAULT_REVIEW_COUNT
+                ).toIntOrNull() ?: 2,
+                notificationsEnabled = getSettingInternal(
+                    SettingsEntity.KEY_NOTIFICATIONS_ENABLED,
+                    "true"
+                ).toBoolean()
+            )
         }
-    }
 
-    override suspend fun getSetting(key: String, defaultValue: String): String {
+    override suspend fun updatePomodoroSettings(settings: PomodoroSettings): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            database.withTransaction {
+                setSettingInternal(SettingsEntity.KEY_WORK_DURATION_MINUTES, settings.workDurationMinutes.toString())
+                setSettingInternal(SettingsEntity.KEY_SHORT_BREAK_MINUTES, settings.shortBreakMinutes.toString())
+                setSettingInternal(SettingsEntity.KEY_LONG_BREAK_MINUTES, settings.longBreakMinutes.toString())
+                setSettingInternal(SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK, settings.cyclesBeforeLongBreak.toString())
+                setSettingInternal(SettingsEntity.KEY_FOCUS_MODE_ENABLED, settings.focusModeEnabled.toString())
+                setSettingInternal(SettingsEntity.KEY_FOCUS_MODE_STRICT, settings.focusModeStrict.toString())
+                setSettingInternal(SettingsEntity.KEY_AUTO_LOOP_ENABLED, settings.autoLoopEnabled.toString())
+                setSettingInternal(SettingsEntity.KEY_REVIEW_ENABLED, settings.reviewEnabled.toString())
+                setSettingInternal(SettingsEntity.KEY_REVIEW_INTERVALS, json.encodeToString(settings.reviewIntervals))
+                setSettingInternal(SettingsEntity.KEY_DEFAULT_REVIEW_COUNT, settings.defaultReviewCount.toString())
+                setSettingInternal(SettingsEntity.KEY_NOTIFICATIONS_ENABLED, settings.notificationsEnabled.toString())
+            }
+        }
+
+    override suspend fun getSetting(key: String, defaultValue: String): Result<String, DomainError> =
+        Result.catchingSuspend {
+            getSettingInternal(key, defaultValue)
+        }
+
+    override suspend fun setSetting(key: String, value: String): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            setSettingInternal(key, value)
+        }
+
+    private suspend fun getSettingInternal(key: String, defaultValue: String): String {
         return settingsDao.getSettingValue(key) ?: defaultValue.also {
             settingsDao.setSetting(key, it)
         }
     }
 
-    override suspend fun setSetting(key: String, value: String) {
+    private suspend fun setSettingInternal(key: String, value: String) {
         settingsDao.setSetting(key, value)
     }
 
@@ -139,18 +153,20 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     // 許可アプリ設定
-    override suspend fun getAllowedApps(): List<String> {
-        val jsonString = getSetting(
-            SettingsEntity.KEY_ALLOWED_APPS,
-            SettingsEntity.DEFAULT_ALLOWED_APPS
-        )
-        return parseAllowedApps(jsonString)
-    }
+    override suspend fun getAllowedApps(): Result<List<String>, DomainError> =
+        Result.catchingSuspend {
+            val jsonString = getSettingInternal(
+                SettingsEntity.KEY_ALLOWED_APPS,
+                SettingsEntity.DEFAULT_ALLOWED_APPS
+            )
+            parseAllowedApps(jsonString)
+        }
 
-    override suspend fun setAllowedApps(packages: List<String>) {
-        val jsonString = json.encodeToString(packages)
-        setSetting(SettingsEntity.KEY_ALLOWED_APPS, jsonString)
-    }
+    override suspend fun setAllowedApps(packages: List<String>): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            val jsonString = json.encodeToString(packages)
+            setSettingInternal(SettingsEntity.KEY_ALLOWED_APPS, jsonString)
+        }
 
     override fun getAllowedAppsFlow(): Flow<List<String>> {
         return settingsDao.getSettingFlow(SettingsEntity.KEY_ALLOWED_APPS).map { value ->
@@ -171,13 +187,15 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     // 言語設定
-    override suspend fun getLanguage(): String {
-        return getSetting(SettingsEntity.KEY_LANGUAGE, SettingsEntity.DEFAULT_LANGUAGE)
-    }
+    override suspend fun getLanguage(): Result<String, DomainError> =
+        Result.catchingSuspend {
+            getSettingInternal(SettingsEntity.KEY_LANGUAGE, SettingsEntity.DEFAULT_LANGUAGE)
+        }
 
-    override suspend fun setLanguage(languageCode: String) {
-        setSetting(SettingsEntity.KEY_LANGUAGE, languageCode)
-    }
+    override suspend fun setLanguage(languageCode: String): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            setSettingInternal(SettingsEntity.KEY_LANGUAGE, languageCode)
+        }
 
     override fun getLanguageFlow(): Flow<String> {
         return settingsDao.getSettingFlow(SettingsEntity.KEY_LANGUAGE).map { value ->
@@ -186,14 +204,16 @@ class SettingsRepositoryImpl @Inject constructor(
     }
 
     // BGM設定
-    override suspend fun getBgmTrackId(): String? {
-        val value = getSetting(SettingsEntity.KEY_BGM_TRACK_ID, SettingsEntity.DEFAULT_BGM_TRACK_ID)
-        return value.ifEmpty { null }
-    }
+    override suspend fun getBgmTrackId(): Result<String?, DomainError> =
+        Result.catchingSuspend {
+            val value = getSettingInternal(SettingsEntity.KEY_BGM_TRACK_ID, SettingsEntity.DEFAULT_BGM_TRACK_ID)
+            value.ifEmpty { null }
+        }
 
-    override suspend fun setBgmTrackId(trackId: String?) {
-        setSetting(SettingsEntity.KEY_BGM_TRACK_ID, trackId ?: "")
-    }
+    override suspend fun setBgmTrackId(trackId: String?): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            setSettingInternal(SettingsEntity.KEY_BGM_TRACK_ID, trackId ?: "")
+        }
 
     override fun getBgmTrackIdFlow(): Flow<String?> {
         return settingsDao.getSettingFlow(SettingsEntity.KEY_BGM_TRACK_ID).map { value ->
@@ -202,15 +222,17 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getBgmVolume(): Float {
-        val value = getSetting(SettingsEntity.KEY_BGM_VOLUME, SettingsEntity.DEFAULT_BGM_VOLUME)
-        return value.toFloatOrNull()?.coerceIn(0f, 1f) ?: 0.5f
-    }
+    override suspend fun getBgmVolume(): Result<Float, DomainError> =
+        Result.catchingSuspend {
+            val value = getSettingInternal(SettingsEntity.KEY_BGM_VOLUME, SettingsEntity.DEFAULT_BGM_VOLUME)
+            value.toFloatOrNull()?.coerceIn(0f, 1f) ?: 0.5f
+        }
 
-    override suspend fun setBgmVolume(volume: Float) {
-        val clampedVolume = volume.coerceIn(0f, 1f)
-        setSetting(SettingsEntity.KEY_BGM_VOLUME, clampedVolume.toString())
-    }
+    override suspend fun setBgmVolume(volume: Float): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            val clampedVolume = volume.coerceIn(0f, 1f)
+            setSettingInternal(SettingsEntity.KEY_BGM_VOLUME, clampedVolume.toString())
+        }
 
     override fun getBgmVolumeFlow(): Flow<Float> {
         return settingsDao.getSettingFlow(SettingsEntity.KEY_BGM_VOLUME).map { value ->
@@ -218,13 +240,15 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getBgmAutoPlay(): Boolean {
-        return getSetting(SettingsEntity.KEY_BGM_AUTO_PLAY, SettingsEntity.DEFAULT_BGM_AUTO_PLAY).toBoolean()
-    }
+    override suspend fun getBgmAutoPlay(): Result<Boolean, DomainError> =
+        Result.catchingSuspend {
+            getSettingInternal(SettingsEntity.KEY_BGM_AUTO_PLAY, SettingsEntity.DEFAULT_BGM_AUTO_PLAY).toBoolean()
+        }
 
-    override suspend fun setBgmAutoPlay(enabled: Boolean) {
-        setSetting(SettingsEntity.KEY_BGM_AUTO_PLAY, enabled.toString())
-    }
+    override suspend fun setBgmAutoPlay(enabled: Boolean): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            setSettingInternal(SettingsEntity.KEY_BGM_AUTO_PLAY, enabled.toString())
+        }
 
     override fun getBgmAutoPlayFlow(): Flow<Boolean> {
         return settingsDao.getSettingFlow(SettingsEntity.KEY_BGM_AUTO_PLAY).map { value ->

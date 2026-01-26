@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.iterio.app.data.local.IterioDatabase
 import com.iterio.app.data.local.dao.SettingsDao
 import com.iterio.app.data.local.entity.SettingsEntity
+import com.iterio.app.domain.common.Result
 import androidx.room.withTransaction
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -40,8 +41,10 @@ class SettingsRepositoryImplTest {
         coEvery { settingsDao.getSettingValue(any()) } returns null
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        val settings = repository.getPomodoroSettings()
+        val result = repository.getPomodoroSettings()
 
+        assertTrue(result is Result.Success)
+        val settings = (result as Result.Success).value
         assertEquals(25, settings.workDurationMinutes)
         assertEquals(5, settings.shortBreakMinutes)
         assertEquals(15, settings.longBreakMinutes)
@@ -67,8 +70,10 @@ class SettingsRepositoryImplTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_DEFAULT_REVIEW_COUNT) } returns "3"
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_NOTIFICATIONS_ENABLED) } returns "false"
 
-        val settings = repository.getPomodoroSettings()
+        val result = repository.getPomodoroSettings()
 
+        assertTrue(result is Result.Success)
+        val settings = (result as Result.Success).value
         assertEquals(30, settings.workDurationMinutes)
         assertEquals(10, settings.shortBreakMinutes)
         assertEquals(20, settings.longBreakMinutes)
@@ -123,8 +128,9 @@ class SettingsRepositoryImplTest {
             notificationsEnabled = false
         )
 
-        repository.updatePomodoroSettings(settings)
+        val result = repository.updatePomodoroSettings(settings)
 
+        assertTrue(result is Result.Success)
         coVerify { settingsDao.setSetting(SettingsEntity.KEY_WORK_DURATION_MINUTES, "50") }
         coVerify { settingsDao.setSetting(SettingsEntity.KEY_SHORT_BREAK_MINUTES, "15") }
         coVerify { settingsDao.setSetting(SettingsEntity.KEY_LONG_BREAK_MINUTES, "30") }
@@ -145,7 +151,8 @@ class SettingsRepositoryImplTest {
 
         val result = repository.getSetting("test_key", "default")
 
-        assertEquals("test_value", result)
+        assertTrue(result is Result.Success)
+        assertEquals("test_value", (result as Result.Success).value)
     }
 
     @Test
@@ -155,7 +162,8 @@ class SettingsRepositoryImplTest {
 
         val result = repository.getSetting("test_key", "default_value")
 
-        assertEquals("default_value", result)
+        assertTrue(result is Result.Success)
+        assertEquals("default_value", (result as Result.Success).value)
         coVerify { settingsDao.setSetting("test_key", "default_value") }
     }
 
@@ -163,8 +171,9 @@ class SettingsRepositoryImplTest {
     fun `setSetting calls dao`() = runTest {
         coEvery { settingsDao.setSetting("key", "value") } returns Unit
 
-        repository.setSetting("key", "value")
+        val result = repository.setSetting("key", "value")
 
+        assertTrue(result is Result.Success)
         coVerify { settingsDao.setSetting("key", "value") }
     }
 
@@ -175,17 +184,20 @@ class SettingsRepositoryImplTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_ALLOWED_APPS) } returns null
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        val apps = repository.getAllowedApps()
+        val result = repository.getAllowedApps()
 
-        assertTrue(apps.isEmpty())
+        assertTrue(result is Result.Success)
+        assertTrue((result as Result.Success).value.isEmpty())
     }
 
     @Test
     fun `getAllowedApps returns stored packages`() = runTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_ALLOWED_APPS) } returns """["com.example.app1", "com.example.app2"]"""
 
-        val apps = repository.getAllowedApps()
+        val result = repository.getAllowedApps()
 
+        assertTrue(result is Result.Success)
+        val apps = (result as Result.Success).value
         assertEquals(2, apps.size)
         assertEquals("com.example.app1", apps[0])
         assertEquals("com.example.app2", apps[1])
@@ -195,8 +207,9 @@ class SettingsRepositoryImplTest {
     fun `setAllowedApps saves packages as JSON`() = runTest {
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        repository.setAllowedApps(listOf("com.example.app"))
+        val result = repository.setAllowedApps(listOf("com.example.app"))
 
+        assertTrue(result is Result.Success)
         coVerify { settingsDao.setSetting(SettingsEntity.KEY_ALLOWED_APPS, match { it.contains("com.example.app") }) }
     }
 
@@ -219,26 +232,29 @@ class SettingsRepositoryImplTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_LANGUAGE) } returns null
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        val language = repository.getLanguage()
+        val result = repository.getLanguage()
 
-        assertEquals("ja", language)
+        assertTrue(result is Result.Success)
+        assertEquals("ja", (result as Result.Success).value)
     }
 
     @Test
     fun `getLanguage returns stored value`() = runTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_LANGUAGE) } returns "en"
 
-        val language = repository.getLanguage()
+        val result = repository.getLanguage()
 
-        assertEquals("en", language)
+        assertTrue(result is Result.Success)
+        assertEquals("en", (result as Result.Success).value)
     }
 
     @Test
     fun `setLanguage saves value`() = runTest {
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        repository.setLanguage("en")
+        val result = repository.setLanguage("en")
 
+        assertTrue(result is Result.Success)
         coVerify { settingsDao.setSetting(SettingsEntity.KEY_LANGUAGE, "en") }
     }
 
@@ -259,26 +275,29 @@ class SettingsRepositoryImplTest {
     fun `getBgmTrackId returns null when empty`() = runTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_BGM_TRACK_ID) } returns ""
 
-        val trackId = repository.getBgmTrackId()
+        val result = repository.getBgmTrackId()
 
-        assertNull(trackId)
+        assertTrue(result is Result.Success)
+        assertNull((result as Result.Success).value)
     }
 
     @Test
     fun `getBgmTrackId returns stored value`() = runTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_BGM_TRACK_ID) } returns "track_1"
 
-        val trackId = repository.getBgmTrackId()
+        val result = repository.getBgmTrackId()
 
-        assertEquals("track_1", trackId)
+        assertTrue(result is Result.Success)
+        assertEquals("track_1", (result as Result.Success).value)
     }
 
     @Test
     fun `setBgmTrackId saves value`() = runTest {
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        repository.setBgmTrackId("track_2")
+        val result = repository.setBgmTrackId("track_2")
 
+        assertTrue(result is Result.Success)
         coVerify { settingsDao.setSetting(SettingsEntity.KEY_BGM_TRACK_ID, "track_2") }
     }
 
@@ -286,8 +305,9 @@ class SettingsRepositoryImplTest {
     fun `setBgmTrackId saves empty when null`() = runTest {
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        repository.setBgmTrackId(null)
+        val result = repository.setBgmTrackId(null)
 
+        assertTrue(result is Result.Success)
         coVerify { settingsDao.setSetting(SettingsEntity.KEY_BGM_TRACK_ID, "") }
     }
 
@@ -296,26 +316,29 @@ class SettingsRepositoryImplTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_BGM_VOLUME) } returns null
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        val volume = repository.getBgmVolume()
+        val result = repository.getBgmVolume()
 
-        assertEquals(0.5f, volume, 0.001f)
+        assertTrue(result is Result.Success)
+        assertEquals(0.5f, (result as Result.Success).value, 0.001f)
     }
 
     @Test
     fun `getBgmVolume clamps value to 0-1 range`() = runTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_BGM_VOLUME) } returns "1.5"
 
-        val volume = repository.getBgmVolume()
+        val result = repository.getBgmVolume()
 
-        assertEquals(1f, volume, 0.001f)
+        assertTrue(result is Result.Success)
+        assertEquals(1f, (result as Result.Success).value, 0.001f)
     }
 
     @Test
     fun `setBgmVolume clamps value`() = runTest {
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        repository.setBgmVolume(1.5f)
+        val result = repository.setBgmVolume(1.5f)
 
+        assertTrue(result is Result.Success)
         coVerify { settingsDao.setSetting(SettingsEntity.KEY_BGM_VOLUME, "1.0") }
     }
 
@@ -324,17 +347,19 @@ class SettingsRepositoryImplTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_BGM_AUTO_PLAY) } returns null
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        val autoPlay = repository.getBgmAutoPlay()
+        val result = repository.getBgmAutoPlay()
 
-        assertTrue(autoPlay)
+        assertTrue(result is Result.Success)
+        assertTrue((result as Result.Success).value)
     }
 
     @Test
     fun `setBgmAutoPlay saves value`() = runTest {
         coEvery { settingsDao.setSetting(any(), any()) } returns Unit
 
-        repository.setBgmAutoPlay(false)
+        val result = repository.setBgmAutoPlay(false)
 
+        assertTrue(result is Result.Success)
         coVerify { settingsDao.setSetting(SettingsEntity.KEY_BGM_AUTO_PLAY, "false") }
     }
 
@@ -375,8 +400,9 @@ class SettingsRepositoryImplTest {
     fun `getAllowedApps returns empty list for malformed JSON`() = runTest {
         coEvery { settingsDao.getSettingValue(SettingsEntity.KEY_ALLOWED_APPS) } returns "not valid json"
 
-        val apps = repository.getAllowedApps()
+        val result = repository.getAllowedApps()
 
-        assertTrue(apps.isEmpty())
+        assertTrue(result is Result.Success)
+        assertTrue((result as Result.Success).value.isEmpty())
     }
 }

@@ -1,5 +1,6 @@
 package com.iterio.app.ui.screens.tasks
 
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PomodoroSettings
 import com.iterio.app.domain.model.ScheduleType
 import com.iterio.app.domain.model.SubjectGroup
@@ -57,7 +58,7 @@ class TasksViewModelEventTest {
 
         every { subjectGroupRepository.getAllGroups() } returns flowOf(listOf(mockGroup))
         every { taskRepository.getTasksByGroup(any()) } returns flowOf(emptyList())
-        coEvery { settingsRepository.getPomodoroSettings() } returns PomodoroSettings()
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(PomodoroSettings())
         every { premiumManager.subscriptionStatus } returns subscriptionStatusFlow
         coEvery { premiumManager.isPremium() } returns false
         every { premiumManager.getReviewCountOptions(any()) } returns listOf(2)

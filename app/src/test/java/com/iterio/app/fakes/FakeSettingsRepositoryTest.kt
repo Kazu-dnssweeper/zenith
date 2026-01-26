@@ -1,6 +1,7 @@
 package com.iterio.app.fakes
 
 import com.iterio.app.config.AppConfig
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PomodoroSettings
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -24,7 +25,7 @@ class FakeSettingsRepositoryTest {
 
     @Test
     fun `getPomodoroSettings returns default settings initially`() = runTest {
-        val settings = repository.getPomodoroSettings()
+        val settings = (repository.getPomodoroSettings() as Result.Success).value
 
         assertEquals(AppConfig.Timer.DEFAULT_WORK_MINUTES, settings.workDurationMinutes)
         assertEquals(AppConfig.Timer.DEFAULT_SHORT_BREAK_MINUTES, settings.shortBreakMinutes)
@@ -42,7 +43,7 @@ class FakeSettingsRepositoryTest {
         )
 
         repository.updatePomodoroSettings(newSettings)
-        val retrieved = repository.getPomodoroSettings()
+        val retrieved = (repository.getPomodoroSettings() as Result.Success).value
 
         assertEquals(50, retrieved.workDurationMinutes)
         assertEquals(10, retrieved.shortBreakMinutes)
@@ -66,7 +67,7 @@ class FakeSettingsRepositoryTest {
 
     @Test
     fun `getSetting returns default when not set`() = runTest {
-        val result = repository.getSetting("test_key", "default_value")
+        val result = (repository.getSetting("test_key", "default_value") as Result.Success).value
         assertEquals("default_value", result)
     }
 
@@ -74,7 +75,7 @@ class FakeSettingsRepositoryTest {
     fun `setSetting persists value`() = runTest {
         repository.setSetting("test_key", "test_value")
 
-        val result = repository.getSetting("test_key", "default")
+        val result = (repository.getSetting("test_key", "default") as Result.Success).value
         assertEquals("test_value", result)
     }
 
@@ -83,7 +84,7 @@ class FakeSettingsRepositoryTest {
         repository.setSetting("test_key", "value1")
         repository.setSetting("test_key", "value2")
 
-        val result = repository.getSetting("test_key", "default")
+        val result = (repository.getSetting("test_key", "default") as Result.Success).value
         assertEquals("value2", result)
     }
 
@@ -91,7 +92,7 @@ class FakeSettingsRepositoryTest {
 
     @Test
     fun `getAllowedApps returns empty list initially`() = runTest {
-        val apps = repository.getAllowedApps()
+        val apps = (repository.getAllowedApps() as Result.Success).value
         assertTrue(apps.isEmpty())
     }
 
@@ -100,7 +101,7 @@ class FakeSettingsRepositoryTest {
         val packages = listOf("com.app.one", "com.app.two", "com.app.three")
 
         repository.setAllowedApps(packages)
-        val result = repository.getAllowedApps()
+        val result = (repository.getAllowedApps() as Result.Success).value
 
         assertEquals(3, result.size)
         assertTrue(result.containsAll(packages))
@@ -111,7 +112,7 @@ class FakeSettingsRepositoryTest {
         repository.setAllowedApps(listOf("com.app.one", "com.app.two"))
         repository.setAllowedApps(listOf("com.app.three"))
 
-        val result = repository.getAllowedApps()
+        val result = (repository.getAllowedApps() as Result.Success).value
 
         assertEquals(1, result.size)
         assertEquals("com.app.three", result[0])
@@ -141,7 +142,7 @@ class FakeSettingsRepositoryTest {
         )
 
         repository.updatePomodoroSettings(settings)
-        val retrieved = repository.getPomodoroSettings()
+        val retrieved = (repository.getPomodoroSettings() as Result.Success).value
 
         assertTrue(retrieved.focusModeEnabled)
         assertTrue(retrieved.focusModeStrict)

@@ -56,20 +56,22 @@ class HomeViewModel @Inject constructor(
 
             // Load today's stats
             launch {
-                val minutes = studySessionRepository.getTotalMinutesForDay(today)
-                val cycles = studySessionRepository.getTotalCyclesForDay(today)
+                val minutesResult = studySessionRepository.getTotalMinutesForDay(today)
+                val cyclesResult = studySessionRepository.getTotalCyclesForDay(today)
                 _uiState.update {
                     it.copy(
-                        todayMinutes = minutes,
-                        todayCycles = cycles
+                        todayMinutes = minutesResult.getOrDefault(0),
+                        todayCycles = cyclesResult.getOrDefault(0)
                     )
                 }
             }
 
             // Load current streak
             launch {
-                val streak = dailyStatsRepository.getCurrentStreak()
-                _uiState.update { it.copy(currentStreak = streak) }
+                dailyStatsRepository.getCurrentStreak()
+                    .onSuccess { streak ->
+                        _uiState.update { it.copy(currentStreak = streak) }
+                    }
             }
 
             // Load today's scheduled tasks and review tasks using UseCase
@@ -88,8 +90,10 @@ class HomeViewModel @Inject constructor(
             // Load weekly data
             launch {
                 val weekStart = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                val weeklyData = dailyStatsRepository.getWeeklyData(weekStart)
-                _uiState.update { it.copy(weeklyData = weeklyData) }
+                dailyStatsRepository.getWeeklyData(weekStart)
+                    .onSuccess { weeklyData ->
+                        _uiState.update { it.copy(weeklyData = weeklyData) }
+                    }
             }
 
             // Load upcoming deadline tasks (next 7 days)

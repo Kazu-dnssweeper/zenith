@@ -28,28 +28,32 @@ class GetTimerInitialStateUseCase @Inject constructor(
      * @return 初期状態データまたはエラー
      */
     suspend operator fun invoke(taskId: Long): Result<TimerInitialState, DomainError> {
-        return try {
-            val task = taskRepository.getTaskById(taskId)
-                ?: return Result.Failure(DomainError.NotFoundError("Task not found: $taskId"))
+        val taskResult = taskRepository.getTaskById(taskId)
+        return taskResult.flatMap { task ->
+            if (task == null) {
+                return@flatMap Result.Failure(DomainError.NotFoundError("Task not found: $taskId"))
+            }
 
-            val settings = settingsRepository.getPomodoroSettings()
-            val allowedApps = settingsRepository.getAllowedApps().toSet()
+            val settingsResult = settingsRepository.getPomodoroSettings()
+            val allowedAppsResult = settingsRepository.getAllowedApps()
 
-            // タスク固有の作業時間があればそれを使用、なければ設定のデフォルト値
-            val effectiveWorkDuration = task.workDurationMinutes ?: settings.workDurationMinutes
-            val totalTimeSeconds = effectiveWorkDuration * TimeConstants.SECONDS_PER_MINUTE
+            settingsResult.flatMap { settings ->
+                val allowedApps = allowedAppsResult.getOrDefault(emptyList()).toSet()
 
-            Result.Success(
-                TimerInitialState(
-                    task = task,
-                    settings = settings,
-                    effectiveWorkDurationMinutes = effectiveWorkDuration,
-                    totalTimeSeconds = totalTimeSeconds,
-                    defaultAllowedApps = allowedApps
+                // タスク固有の作業時間があればそれを使用、なければ設定のデフォルト値
+                val effectiveWorkDuration = task.workDurationMinutes ?: settings.workDurationMinutes
+                val totalTimeSeconds = effectiveWorkDuration * TimeConstants.SECONDS_PER_MINUTE
+
+                Result.Success(
+                    TimerInitialState(
+                        task = task,
+                        settings = settings,
+                        effectiveWorkDurationMinutes = effectiveWorkDuration,
+                        totalTimeSeconds = totalTimeSeconds,
+                        defaultAllowedApps = allowedApps
+                    )
                 )
-            )
-        } catch (e: Exception) {
-            Result.Failure(DomainError.DatabaseError("Failed to load timer state", e))
+            }
         }
     }
 }

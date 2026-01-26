@@ -22,7 +22,7 @@ class CloudBackupUseCase @Inject constructor(
      * クラウドバックアップ機能が利用可能か確認
      */
     suspend fun canUseCloudBackup(): Boolean {
-        return premiumRepository.canAccessFeature(PremiumFeature.BACKUP)
+        return premiumRepository.canAccessFeature(PremiumFeature.BACKUP).getOrDefault(false)
     }
 
     /**

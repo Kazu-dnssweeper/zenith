@@ -5,6 +5,7 @@ import com.iterio.app.data.local.dao.DateTaskCount
 import com.iterio.app.data.local.dao.TaskDao
 import com.iterio.app.data.local.entity.TaskEntity
 import com.iterio.app.data.mapper.TaskMapper
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.ScheduleType
 import com.iterio.app.domain.model.Task
 import io.mockk.coEvery
@@ -75,8 +76,10 @@ class TaskRepositoryImplTest {
 
         val result = repository.getTaskById(1)
 
-        assertNotNull(result)
-        assertEquals("Test Task", result?.name)
+        assertTrue(result.isSuccess)
+        val task = (result as Result.Success).value
+        assertNotNull(task)
+        assertEquals("Test Task", task?.name)
     }
 
     @Test
@@ -85,7 +88,9 @@ class TaskRepositoryImplTest {
 
         val result = repository.getTaskById(999)
 
-        assertNull(result)
+        assertTrue(result.isSuccess)
+        val task = (result as Result.Success).value
+        assertNull(task)
     }
 
     @Test
@@ -93,9 +98,10 @@ class TaskRepositoryImplTest {
         val task = createTask(id = 0, name = "New Task")
         coEvery { taskDao.insertTask(any()) } returns 42L
 
-        val id = repository.insertTask(task)
+        val result = repository.insertTask(task)
 
-        assertEquals(42L, id)
+        assertTrue(result.isSuccess)
+        assertEquals(42L, (result as Result.Success).value)
         coVerify { taskDao.insertTask(any()) }
     }
 
@@ -192,8 +198,10 @@ class TaskRepositoryImplTest {
 
         val result = repository.getTasksForDate(date)
 
-        assertEquals(1, result.size)
-        assertEquals("Specific Date Task", result[0].name)
+        assertTrue(result.isSuccess)
+        val tasks = (result as Result.Success).value
+        assertEquals(1, tasks.size)
+        assertEquals("Specific Date Task", tasks[0].name)
     }
 
     @Test
@@ -212,8 +220,10 @@ class TaskRepositoryImplTest {
 
         val result = repository.getTaskCountByDateRange(startDate, endDate)
 
+        assertTrue(result.isSuccess)
+        val counts = (result as Result.Success).value
         // Should have counts for various dates
-        assertTrue(result.isNotEmpty())
+        assertTrue(counts.isNotEmpty())
     }
 
     @Test
@@ -225,7 +235,9 @@ class TaskRepositoryImplTest {
 
         val result = repository.getTaskCountByDateRange(startDate, endDate)
 
-        assertTrue(result.isEmpty())
+        assertTrue(result.isSuccess)
+        val counts = (result as Result.Success).value
+        assertTrue(counts.isEmpty())
     }
 
     // ==================== Helpers ====================

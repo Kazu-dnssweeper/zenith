@@ -1,5 +1,6 @@
 package com.iterio.app.fakes
 
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.DailyStats
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -28,7 +29,7 @@ class FakeDailyStatsRepositoryTest {
 
         repository.updateStats(today, studyMinutes = 25, subjectName = "Math")
 
-        val stats = repository.getByDate(today)
+        val stats = (repository.getByDate(today) as Result.Success).value
         assertNotNull(stats)
         assertEquals(25, stats?.totalStudyMinutes)
     }
@@ -40,7 +41,7 @@ class FakeDailyStatsRepositoryTest {
         repository.updateStats(today, studyMinutes = 25, subjectName = "Math")
         repository.updateStats(today, studyMinutes = 30, subjectName = "Math")
 
-        val stats = repository.getByDate(today)
+        val stats = (repository.getByDate(today) as Result.Success).value
         assertEquals(55, stats?.totalStudyMinutes)
     }
 
@@ -51,7 +52,7 @@ class FakeDailyStatsRepositoryTest {
         repository.updateStats(today, studyMinutes = 25, subjectName = "Math")
         repository.updateStats(today, studyMinutes = 30, subjectName = "English")
 
-        val stats = repository.getByDate(today)
+        val stats = (repository.getByDate(today) as Result.Success).value
         assertEquals(55, stats?.totalStudyMinutes)
         assertEquals(2, stats?.subjectBreakdown?.size)
     }
@@ -60,7 +61,7 @@ class FakeDailyStatsRepositoryTest {
 
     @Test
     fun `getByDate returns null for non-existent date`() = runTest {
-        val result = repository.getByDate(LocalDate.now())
+        val result = (repository.getByDate(LocalDate.now()) as Result.Success).value
         assertNull(result)
     }
 
@@ -105,7 +106,7 @@ class FakeDailyStatsRepositoryTest {
         repository.updateStats(yesterday, studyMinutes = 20, subjectName = "B")
         repository.updateStats(today, studyMinutes = 30, subjectName = "C")
 
-        val total = repository.getTotalMinutesBetweenDates(twoDaysAgo, today)
+        val total = (repository.getTotalMinutesBetweenDates(twoDaysAgo, today) as Result.Success).value
 
         assertEquals(60, total)
     }
@@ -114,7 +115,7 @@ class FakeDailyStatsRepositoryTest {
 
     @Test
     fun `getCurrentStreak returns 0 when no data`() = runTest {
-        val streak = repository.getCurrentStreak()
+        val streak = (repository.getCurrentStreak() as Result.Success).value
         assertEquals(0, streak)
     }
 
@@ -123,7 +124,7 @@ class FakeDailyStatsRepositoryTest {
         val today = LocalDate.now()
         repository.updateStats(today, studyMinutes = 25, subjectName = "Math")
 
-        val streak = repository.getCurrentStreak()
+        val streak = (repository.getCurrentStreak() as Result.Success).value
         assertEquals(1, streak)
     }
 
@@ -135,7 +136,7 @@ class FakeDailyStatsRepositoryTest {
         repository.updateStats(today.minusDays(1), studyMinutes = 25, subjectName = "Math")
         repository.updateStats(today.minusDays(2), studyMinutes = 25, subjectName = "Math")
 
-        val streak = repository.getCurrentStreak()
+        val streak = (repository.getCurrentStreak() as Result.Success).value
         assertEquals(3, streak)
     }
 
@@ -148,13 +149,13 @@ class FakeDailyStatsRepositoryTest {
         // Gap on minusDays(2)
         repository.updateStats(today.minusDays(3), studyMinutes = 25, subjectName = "Math")
 
-        val streak = repository.getCurrentStreak()
+        val streak = (repository.getCurrentStreak() as Result.Success).value
         assertEquals(2, streak)
     }
 
     @Test
     fun `getMaxStreak returns 0 when no data`() = runTest {
-        val streak = repository.getMaxStreak()
+        val streak = (repository.getMaxStreak() as Result.Success).value
         assertEquals(0, streak)
     }
 
@@ -176,7 +177,7 @@ class FakeDailyStatsRepositoryTest {
         repository.updateStats(today.minusDays(1), studyMinutes = 25, subjectName = "A")
         repository.updateStats(today, studyMinutes = 25, subjectName = "A")
 
-        val maxStreak = repository.getMaxStreak()
+        val maxStreak = (repository.getMaxStreak() as Result.Success).value
         assertEquals(4, maxStreak)
     }
 
@@ -189,7 +190,7 @@ class FakeDailyStatsRepositoryTest {
         repository.updateStats(weekStart, studyMinutes = 30, subjectName = "Math")
         repository.updateStats(weekStart.plusDays(2), studyMinutes = 45, subjectName = "English")
 
-        val weeklyData = repository.getWeeklyData(weekStart)
+        val weeklyData = (repository.getWeeklyData(weekStart) as Result.Success).value
 
         assertEquals(7, weeklyData.size)
         assertEquals(30, weeklyData[0].minutes) // Monday
@@ -201,7 +202,7 @@ class FakeDailyStatsRepositoryTest {
     fun `getWeeklyData has correct day labels`() = runTest {
         val weekStart = LocalDate.of(2026, 1, 19) // Monday
 
-        val weeklyData = repository.getWeeklyData(weekStart)
+        val weeklyData = (repository.getWeeklyData(weekStart) as Result.Success).value
 
         assertEquals("月", weeklyData[0].dayOfWeek)
         assertEquals("火", weeklyData[1].dayOfWeek)

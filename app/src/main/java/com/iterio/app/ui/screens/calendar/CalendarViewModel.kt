@@ -80,8 +80,11 @@ class CalendarViewModel @Inject constructor(
 
             // Load task counts for the month (通常タスク + 復習タスク)
             launch {
-                val regularTaskCounts = taskRepository.getTaskCountByDateRange(startDate, endDate)
-                val reviewTaskCounts = reviewTaskRepository.getTaskCountByDateRange(startDate, endDate)
+                val regularResult = taskRepository.getTaskCountByDateRange(startDate, endDate)
+                val reviewResult = reviewTaskRepository.getTaskCountByDateRange(startDate, endDate)
+
+                val regularTaskCounts = regularResult.getOrDefault(emptyMap())
+                val reviewTaskCounts = reviewResult.getOrDefault(emptyMap())
 
                 // 通常タスク + 復習タスクのカウントを合算
                 val combinedCounts = (regularTaskCounts.keys + reviewTaskCounts.keys)
@@ -111,8 +114,10 @@ class CalendarViewModel @Inject constructor(
 
     private fun loadTasksForDate(date: LocalDate) {
         viewModelScope.launch {
-            val tasks = taskRepository.getTasksForDate(date)
-            _uiState.update { it.copy(selectedDateTasks = tasks) }
+            taskRepository.getTasksForDate(date)
+                .onSuccess { tasks ->
+                    _uiState.update { it.copy(selectedDateTasks = tasks) }
+                }
         }
 
         viewModelScope.launch {

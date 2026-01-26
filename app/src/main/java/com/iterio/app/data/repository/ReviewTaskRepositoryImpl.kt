@@ -2,6 +2,8 @@ package com.iterio.app.data.repository
 
 import com.iterio.app.data.local.dao.ReviewTaskDao
 import com.iterio.app.data.mapper.ReviewTaskMapper
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.ReviewTask
 import com.iterio.app.domain.repository.ReviewTaskRepository
 import kotlinx.coroutines.flow.Flow
@@ -17,25 +19,30 @@ class ReviewTaskRepositoryImpl @Inject constructor(
     private val mapper: ReviewTaskMapper
 ) : ReviewTaskRepository {
 
-    override suspend fun insert(task: ReviewTask): Long {
-        return reviewTaskDao.insert(mapper.toEntity(task))
-    }
+    override suspend fun insert(task: ReviewTask): Result<Long, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.insert(mapper.toEntity(task))
+        }
 
-    override suspend fun insertAll(tasks: List<ReviewTask>) {
-        reviewTaskDao.insertAll(mapper.toEntityList(tasks))
-    }
+    override suspend fun insertAll(tasks: List<ReviewTask>): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.insertAll(mapper.toEntityList(tasks))
+        }
 
-    override suspend fun update(task: ReviewTask) {
-        reviewTaskDao.update(mapper.toEntity(task))
-    }
+    override suspend fun update(task: ReviewTask): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.update(mapper.toEntity(task))
+        }
 
-    override suspend fun delete(task: ReviewTask) {
-        reviewTaskDao.delete(mapper.toEntity(task))
-    }
+    override suspend fun delete(task: ReviewTask): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.delete(mapper.toEntity(task))
+        }
 
-    override suspend fun getById(id: Long): ReviewTask? {
-        return reviewTaskDao.getById(id)?.let { mapper.toDomain(it) }
-    }
+    override suspend fun getById(id: Long): Result<ReviewTask?, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.getById(id)?.let { mapper.toDomain(it) }
+        }
 
     override fun getTasksForSession(studySessionId: Long): Flow<List<ReviewTask>> {
         return reviewTaskDao.getTasksForSession(studySessionId).map { entities ->
@@ -67,34 +74,41 @@ class ReviewTaskRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getPendingTaskCountForDate(date: LocalDate): Int {
-        return reviewTaskDao.getPendingTaskCountForDate(date)
-    }
+    override suspend fun getPendingTaskCountForDate(date: LocalDate): Result<Int, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.getPendingTaskCountForDate(date)
+        }
 
-    override suspend fun markAsCompleted(taskId: Long) {
-        reviewTaskDao.markAsCompleted(taskId, LocalDateTime.now())
-    }
+    override suspend fun markAsCompleted(taskId: Long): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.markAsCompleted(taskId, LocalDateTime.now())
+        }
 
-    override suspend fun markAsIncomplete(taskId: Long) {
-        reviewTaskDao.markAsIncomplete(taskId)
-    }
+    override suspend fun markAsIncomplete(taskId: Long): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.markAsIncomplete(taskId)
+        }
 
-    override suspend fun reschedule(taskId: Long, newDate: LocalDate) {
-        reviewTaskDao.reschedule(taskId, newDate)
-    }
+    override suspend fun reschedule(taskId: Long, newDate: LocalDate): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.reschedule(taskId, newDate)
+        }
 
-    override suspend fun deleteTasksForSession(studySessionId: Long) {
-        reviewTaskDao.deleteTasksForSession(studySessionId)
-    }
+    override suspend fun deleteTasksForSession(studySessionId: Long): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.deleteTasksForSession(studySessionId)
+        }
 
-    override suspend fun deleteTasksForTask(taskId: Long) {
-        reviewTaskDao.deleteTasksForTask(taskId)
-    }
+    override suspend fun deleteTasksForTask(taskId: Long): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.deleteTasksForTask(taskId)
+        }
 
-    override suspend fun getTaskCountByDateRange(startDate: LocalDate, endDate: LocalDate): Map<LocalDate, Int> {
-        return reviewTaskDao.getTaskCountByDateRange(startDate, endDate)
-            .associate { it.date to it.count }
-    }
+    override suspend fun getTaskCountByDateRange(startDate: LocalDate, endDate: LocalDate): Result<Map<LocalDate, Int>, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.getTaskCountByDateRange(startDate, endDate)
+                .associate { it.date to it.count }
+        }
 
     override fun getAllWithDetails(): Flow<List<ReviewTask>> {
         return reviewTaskDao.getAllWithDetails().map { entities ->
@@ -102,15 +116,18 @@ class ReviewTaskRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getTotalCount(): Int {
-        return reviewTaskDao.getTotalCount()
-    }
+    override suspend fun getTotalCount(): Result<Int, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.getTotalCount()
+        }
 
-    override suspend fun getIncompleteCount(): Int {
-        return reviewTaskDao.getIncompleteCount()
-    }
+    override suspend fun getIncompleteCount(): Result<Int, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.getIncompleteCount()
+        }
 
-    override suspend fun deleteAll() {
-        reviewTaskDao.deleteAll()
-    }
+    override suspend fun deleteAll(): Result<Unit, DomainError> =
+        Result.catchingSuspend {
+            reviewTaskDao.deleteAll()
+        }
 }

@@ -71,7 +71,8 @@ class ReviewReminderWorker @AssistedInject constructor(
         createNotificationChannel()
 
         val today = LocalDate.now()
-        val pendingCount = reviewTaskRepository.getPendingTaskCountForDate(today)
+        val pendingCountResult = reviewTaskRepository.getPendingTaskCountForDate(today)
+        val pendingCount = pendingCountResult.getOrDefault(0)
 
         if (pendingCount > 0) {
             showNotification(pendingCount)

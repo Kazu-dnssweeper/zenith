@@ -1,12 +1,13 @@
 package com.iterio.app.fakes
 
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.DailyStats
 import com.iterio.app.domain.repository.DailyStatsRepository
 import com.iterio.app.domain.repository.DayStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
-import java.time.DayOfWeek
 import java.time.LocalDate
 
 /**
@@ -16,7 +17,7 @@ class FakeDailyStatsRepository : DailyStatsRepository {
 
     private val stats = MutableStateFlow<Map<LocalDate, DailyStats>>(emptyMap())
 
-    override suspend fun updateStats(date: LocalDate, studyMinutes: Int, subjectName: String) {
+    override suspend fun updateStats(date: LocalDate, studyMinutes: Int, subjectName: String): Result<Unit, DomainError> {
         val existing = stats.value[date]
         val newStats = if (existing != null) {
             val updatedBreakdown = existing.subjectBreakdown.toMutableMap()
@@ -35,9 +36,11 @@ class FakeDailyStatsRepository : DailyStatsRepository {
             )
         }
         stats.value = stats.value + (date to newStats)
+        return Result.Success(Unit)
     }
 
-    override suspend fun getByDate(date: LocalDate): DailyStats? = stats.value[date]
+    override suspend fun getByDate(date: LocalDate): Result<DailyStats?, DomainError> =
+        Result.Success(stats.value[date])
 
     override fun getByDateFlow(date: LocalDate): Flow<DailyStats?> =
         stats.map { it[date] }
@@ -49,13 +52,15 @@ class FakeDailyStatsRepository : DailyStatsRepository {
             }.sortedBy { it.date }
         }
 
-    override suspend fun getTotalMinutesBetweenDates(startDate: LocalDate, endDate: LocalDate): Int =
-        stats.value.values
-            .filter { it.date >= startDate && it.date <= endDate }
-            .sumOf { it.totalStudyMinutes }
+    override suspend fun getTotalMinutesBetweenDates(startDate: LocalDate, endDate: LocalDate): Result<Int, DomainError> =
+        Result.Success(
+            stats.value.values
+                .filter { it.date >= startDate && it.date <= endDate }
+                .sumOf { it.totalStudyMinutes }
+        )
 
-    override suspend fun getCurrentStreak(): Int {
-        if (stats.value.isEmpty()) return 0
+    override suspend fun getCurrentStreak(): Result<Int, DomainError> {
+        if (stats.value.isEmpty()) return Result.Success(0)
 
         var streak = 0
         var currentDate = LocalDate.now()
@@ -70,14 +75,14 @@ class FakeDailyStatsRepository : DailyStatsRepository {
             currentDate = currentDate.minusDays(1)
         }
 
-        return streak
+        return Result.Success(streak)
     }
 
-    override suspend fun getMaxStreak(): Int {
-        if (stats.value.isEmpty()) return 0
+    override suspend fun getMaxStreak(): Result<Int, DomainError> {
+        if (stats.value.isEmpty()) return Result.Success(0)
 
         val sortedDates = stats.value.keys.sorted()
-        if (sortedDates.isEmpty()) return 0
+        if (sortedDates.isEmpty()) return Result.Success(0)
 
         var maxStreak = 1
         var currentStreak = 1
@@ -91,12 +96,12 @@ class FakeDailyStatsRepository : DailyStatsRepository {
             }
         }
 
-        return maxStreak
+        return Result.Success(maxStreak)
     }
 
-    override suspend fun getWeeklyData(weekStart: LocalDate): List<DayStats> {
+    override suspend fun getWeeklyData(weekStart: LocalDate): Result<List<DayStats>, DomainError> {
         val dayLabels = listOf("月", "火", "水", "木", "金", "土", "日")
-        return (0 until 7).map { offset ->
+        val weeklyData = (0 until 7).map { offset ->
             val date = weekStart.plusDays(offset.toLong())
             val dailyStats = stats.value[date]
             DayStats(
@@ -105,6 +110,7 @@ class FakeDailyStatsRepository : DailyStatsRepository {
                 minutes = dailyStats?.totalStudyMinutes ?: 0
             )
         }
+        return Result.Success(weeklyData)
     }
 
     // Test helpers

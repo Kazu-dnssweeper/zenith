@@ -55,18 +55,18 @@ class SettingsViewModelEventTest {
         settingsRepository = mockk(relaxed = true)
         updatePomodoroSettingsUseCase = mockk(relaxed = true)
         premiumManager = mockk(relaxed = true)
-        localeManager = mockk(relaxed = true)
+        localeManager = mockk()
         reviewTaskRepository = mockk(relaxed = true)
         bgmManager = mockk(relaxed = true)
 
-        coEvery { settingsRepository.getPomodoroSettings() } returns PomodoroSettings()
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(PomodoroSettings())
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         coEvery { updatePomodoroSettingsUseCase.updateSettings(any()) } returns Result.Success(Unit)
         every { premiumManager.subscriptionStatus } returns subscriptionStatusFlow
         coEvery { premiumManager.isPremium() } returns false
         every { localeManager.getCurrentLanguage() } returns "ja"
-        coEvery { reviewTaskRepository.getTotalCount() } returns 0
-        coEvery { reviewTaskRepository.getIncompleteCount() } returns 0
+        coEvery { reviewTaskRepository.getTotalCount() } returns Result.Success(0)
+        coEvery { reviewTaskRepository.getIncompleteCount() } returns Result.Success(0)
         every { bgmManager.selectedTrack } returns selectedTrackFlow
         every { bgmManager.volume } returns volumeFlow
         every { bgmManager.autoPlayEnabled } returns autoPlayFlow

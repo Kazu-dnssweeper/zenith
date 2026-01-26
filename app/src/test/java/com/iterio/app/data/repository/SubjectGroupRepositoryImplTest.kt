@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.iterio.app.data.local.dao.SubjectGroupDao
 import com.iterio.app.data.local.entity.SubjectGroupEntity
 import com.iterio.app.data.mapper.SubjectGroupMapper
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.SubjectGroup
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -67,8 +68,10 @@ class SubjectGroupRepositoryImplTest {
 
         val result = repository.getGroupById(1)
 
-        assertNotNull(result)
-        assertEquals("Science", result?.name)
+        assertTrue(result.isSuccess)
+        val group = (result as Result.Success).value
+        assertNotNull(group)
+        assertEquals("Science", group?.name)
     }
 
     @Test
@@ -77,7 +80,9 @@ class SubjectGroupRepositoryImplTest {
 
         val result = repository.getGroupById(999)
 
-        assertNull(result)
+        assertTrue(result.isSuccess)
+        val group = (result as Result.Success).value
+        assertNull(group)
     }
 
     @Test
@@ -86,9 +91,10 @@ class SubjectGroupRepositoryImplTest {
         coEvery { subjectGroupDao.getNextDisplayOrder() } returns 5
         coEvery { subjectGroupDao.insertGroup(any()) } returns 42L
 
-        val id = repository.insertGroup(group)
+        val result = repository.insertGroup(group)
 
-        assertEquals(42L, id)
+        assertTrue(result.isSuccess)
+        assertEquals(42L, (result as Result.Success).value)
         coVerify { subjectGroupDao.getNextDisplayOrder() }
         coVerify { subjectGroupDao.insertGroup(match { it.displayOrder == 5 }) }
     }
@@ -99,8 +105,9 @@ class SubjectGroupRepositoryImplTest {
         coEvery { subjectGroupDao.getNextDisplayOrder() } returns 1
         coEvery { subjectGroupDao.insertGroup(any()) } returns 1L
 
-        repository.insertGroup(group)
+        val result = repository.insertGroup(group)
 
+        assertTrue(result.isSuccess)
         coVerify { subjectGroupDao.insertGroup(match { it.displayOrder == 1 }) }
     }
 

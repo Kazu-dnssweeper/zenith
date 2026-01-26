@@ -66,8 +66,10 @@ class TasksViewModel @Inject constructor(
 
     private fun loadDefaultWorkDuration() {
         viewModelScope.launch {
-            val settings = settingsRepository.getPomodoroSettings()
-            _uiState.update { it.copy(defaultWorkDurationMinutes = settings.workDurationMinutes) }
+            settingsRepository.getPomodoroSettings()
+                .onSuccess { settings ->
+                    _uiState.update { it.copy(defaultWorkDurationMinutes = settings.workDurationMinutes) }
+                }
         }
     }
 
@@ -284,34 +286,39 @@ class TasksViewModel @Inject constructor(
     fun addGroup(name: String, colorHex: String) {
         viewModelScope.launch {
             val group = SubjectGroup(name = name, colorHex = colorHex)
-            val id = subjectGroupRepository.insertGroup(group)
-            hideAddGroupDialog()
-            // 新しく作成したグループを選択
-            subjectGroupRepository.getGroupById(id)?.let { newGroup ->
-                selectGroup(newGroup)
-            }
+            subjectGroupRepository.insertGroup(group)
+                .onSuccess { id ->
+                    hideAddGroupDialog()
+                    // 新しく作成したグループを選択
+                    subjectGroupRepository.getGroupById(id)
+                        .onSuccess { newGroup ->
+                            newGroup?.let { selectGroup(it) }
+                        }
+                }
         }
     }
 
     fun updateGroup(group: SubjectGroup) {
         viewModelScope.launch {
             subjectGroupRepository.updateGroup(group)
-            hideEditGroupDialog()
+                .onSuccess { hideEditGroupDialog() }
         }
     }
 
     fun deleteGroup(group: SubjectGroup) {
         viewModelScope.launch {
             subjectGroupRepository.deleteGroup(group)
-            hideEditGroupDialog()
-            // 削除後に最初のグループを選択
-            _uiState.update { state ->
-                val remainingGroups = state.groups.filter { it.id != group.id }
-                state.copy(
-                    selectedGroup = remainingGroups.firstOrNull(),
-                    tasksForSelectedGroup = emptyList()
-                )
-            }
+                .onSuccess {
+                    hideEditGroupDialog()
+                    // 削除後に最初のグループを選択
+                    _uiState.update { state ->
+                        val remainingGroups = state.groups.filter { it.id != group.id }
+                        state.copy(
+                            selectedGroup = remainingGroups.firstOrNull(),
+                            tasksForSelectedGroup = emptyList()
+                        )
+                    }
+                }
         }
     }
 
@@ -339,21 +346,21 @@ class TasksViewModel @Inject constructor(
                 reviewEnabled = reviewEnabled
             )
             taskRepository.insertTask(task)
-            hideAddTaskDialog()
+                .onSuccess { hideAddTaskDialog() }
         }
     }
 
     fun updateTask(task: Task) {
         viewModelScope.launch {
             taskRepository.updateTask(task)
-            hideEditTaskDialog()
+                .onSuccess { hideEditTaskDialog() }
         }
     }
 
     fun deleteTask(task: Task) {
         viewModelScope.launch {
             taskRepository.deleteTask(task)
-            hideEditTaskDialog()
+                .onSuccess { hideEditTaskDialog() }
         }
     }
 

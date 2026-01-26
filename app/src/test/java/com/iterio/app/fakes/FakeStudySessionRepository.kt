@@ -1,5 +1,7 @@
 package com.iterio.app.fakes
 
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.StudySession
 import com.iterio.app.domain.repository.StudySessionRepository
 import kotlinx.coroutines.flow.Flow
@@ -29,32 +31,38 @@ class FakeStudySessionRepository : StudySessionRepository {
             map.values.filter { it.startedAt.toLocalDate() == date }
         }
 
-    override suspend fun getSessionById(id: Long): StudySession? =
-        sessions.value[id]
+    override suspend fun getSessionById(id: Long): Result<StudySession?, DomainError> =
+        Result.Success(sessions.value[id])
 
-    override suspend fun getTotalMinutesForDay(date: LocalDate): Int =
-        sessions.value.values
-            .filter { it.startedAt.toLocalDate() == date }
-            .sumOf { it.workDurationMinutes }
+    override suspend fun getTotalMinutesForDay(date: LocalDate): Result<Int, DomainError> =
+        Result.Success(
+            sessions.value.values
+                .filter { it.startedAt.toLocalDate() == date }
+                .sumOf { it.workDurationMinutes }
+        )
 
-    override suspend fun getTotalCyclesForDay(date: LocalDate): Int =
-        sessions.value.values
-            .filter { it.startedAt.toLocalDate() == date }
-            .sumOf { it.cyclesCompleted }
+    override suspend fun getTotalCyclesForDay(date: LocalDate): Result<Int, DomainError> =
+        Result.Success(
+            sessions.value.values
+                .filter { it.startedAt.toLocalDate() == date }
+                .sumOf { it.cyclesCompleted }
+        )
 
-    override suspend fun insertSession(session: StudySession): Long {
+    override suspend fun insertSession(session: StudySession): Result<Long, DomainError> {
         val id = nextId++
         val sessionWithId = session.copy(id = id)
         sessions.value = sessions.value + (id to sessionWithId)
-        return id
+        return Result.Success(id)
     }
 
-    override suspend fun updateSession(session: StudySession) {
+    override suspend fun updateSession(session: StudySession): Result<Unit, DomainError> {
         sessions.value = sessions.value + (session.id to session)
+        return Result.Success(Unit)
     }
 
-    override suspend fun deleteSession(session: StudySession) {
+    override suspend fun deleteSession(session: StudySession): Result<Unit, DomainError> {
         sessions.value = sessions.value - session.id
+        return Result.Success(Unit)
     }
 
     override suspend fun finishSession(
@@ -62,8 +70,8 @@ class FakeStudySessionRepository : StudySessionRepository {
         durationMinutes: Int,
         cycles: Int,
         interrupted: Boolean
-    ) {
-        val session = sessions.value[id] ?: return
+    ): Result<Unit, DomainError> {
+        val session = sessions.value[id] ?: return Result.Success(Unit)
         val finished = session.copy(
             workDurationMinutes = durationMinutes,
             cyclesCompleted = cycles,
@@ -71,9 +79,11 @@ class FakeStudySessionRepository : StudySessionRepository {
             endedAt = LocalDateTime.now()
         )
         sessions.value = sessions.value + (id to finished)
+        return Result.Success(Unit)
     }
 
-    override suspend fun getSessionCount(): Int = sessions.value.size
+    override suspend fun getSessionCount(): Result<Int, DomainError> =
+        Result.Success(sessions.value.size)
 
     // Test helpers
     fun clear() {

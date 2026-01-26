@@ -1,5 +1,6 @@
 package com.iterio.app.domain.usecase
 
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PomodoroSettings
 import com.iterio.app.domain.model.Task
 import com.iterio.app.domain.repository.SettingsRepository
@@ -31,9 +32,9 @@ class GetTimerInitialStateUseCaseTest {
     fun `returns task and settings when task exists`() = runTest {
         val task = Task(id = 1L, groupId = 1L, name = "Math Study")
         val settings = PomodoroSettings(workDurationMinutes = 25)
-        coEvery { taskRepository.getTaskById(1L) } returns task
-        coEvery { settingsRepository.getPomodoroSettings() } returns settings
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { taskRepository.getTaskById(1L) } returns Result.Success(task)
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(settings)
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList())
 
         val result = useCase(1L)
 
@@ -44,9 +45,9 @@ class GetTimerInitialStateUseCaseTest {
 
     @Test
     fun `returns failure when task not found`() = runTest {
-        coEvery { taskRepository.getTaskById(999L) } returns null
-        coEvery { settingsRepository.getPomodoroSettings() } returns PomodoroSettings()
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { taskRepository.getTaskById(999L) } returns Result.Success(null)
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(PomodoroSettings())
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList())
 
         val result = useCase(999L)
 
@@ -57,9 +58,9 @@ class GetTimerInitialStateUseCaseTest {
     fun `uses task specific work duration when available`() = runTest {
         val task = Task(id = 1L, groupId = 1L, name = "Task", workDurationMinutes = 45)
         val settings = PomodoroSettings(workDurationMinutes = 25)
-        coEvery { taskRepository.getTaskById(1L) } returns task
-        coEvery { settingsRepository.getPomodoroSettings() } returns settings
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { taskRepository.getTaskById(1L) } returns Result.Success(task)
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(settings)
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList())
 
         val result = useCase(1L)
 
@@ -70,9 +71,9 @@ class GetTimerInitialStateUseCaseTest {
     fun `uses settings default when task has no specific duration`() = runTest {
         val task = Task(id = 1L, groupId = 1L, name = "Task", workDurationMinutes = null)
         val settings = PomodoroSettings(workDurationMinutes = 30)
-        coEvery { taskRepository.getTaskById(1L) } returns task
-        coEvery { settingsRepository.getPomodoroSettings() } returns settings
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { taskRepository.getTaskById(1L) } returns Result.Success(task)
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(settings)
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList())
 
         val result = useCase(1L)
 
@@ -84,9 +85,9 @@ class GetTimerInitialStateUseCaseTest {
         val task = Task(id = 1L, groupId = 1L, name = "Task")
         val settings = PomodoroSettings()
         val allowedApps = listOf("com.app1", "com.app2")
-        coEvery { taskRepository.getTaskById(1L) } returns task
-        coEvery { settingsRepository.getPomodoroSettings() } returns settings
-        coEvery { settingsRepository.getAllowedApps() } returns allowedApps
+        coEvery { taskRepository.getTaskById(1L) } returns Result.Success(task)
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(settings)
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(allowedApps)
 
         val result = useCase(1L)
 
@@ -97,9 +98,9 @@ class GetTimerInitialStateUseCaseTest {
     fun `calculates total time in seconds correctly`() = runTest {
         val task = Task(id = 1L, groupId = 1L, name = "Task", workDurationMinutes = 25)
         val settings = PomodoroSettings()
-        coEvery { taskRepository.getTaskById(1L) } returns task
-        coEvery { settingsRepository.getPomodoroSettings() } returns settings
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { taskRepository.getTaskById(1L) } returns Result.Success(task)
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(settings)
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList())
 
         val result = useCase(1L)
 

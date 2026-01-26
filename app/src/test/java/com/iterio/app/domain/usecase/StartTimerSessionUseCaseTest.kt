@@ -1,5 +1,7 @@
 package com.iterio.app.domain.usecase
 
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PomodoroSettings
 import com.iterio.app.domain.model.StudySession
 import com.iterio.app.domain.model.Task
@@ -32,7 +34,7 @@ class StartTimerSessionUseCaseTest {
     fun `creates session with task id`() = runTest {
         val task = Task(id = 10L, groupId = 1L, name = "Study")
         val sessionSlot = slot<StudySession>()
-        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns 1L
+        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns Result.Success(1L)
 
         useCase(task, PomodoroSettings(), 4)
 
@@ -44,7 +46,7 @@ class StartTimerSessionUseCaseTest {
         val task = Task(id = 1L, groupId = 1L, name = "Study", workDurationMinutes = 25)
         val settings = PomodoroSettings(workDurationMinutes = 30)
         val sessionSlot = slot<StudySession>()
-        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns 1L
+        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns Result.Success(1L)
 
         useCase(task, settings, 4)
 
@@ -57,7 +59,7 @@ class StartTimerSessionUseCaseTest {
         val task = Task(id = 1L, groupId = 1L, name = "Study", workDurationMinutes = null)
         val settings = PomodoroSettings(workDurationMinutes = 30)
         val sessionSlot = slot<StudySession>()
-        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns 1L
+        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns Result.Success(1L)
 
         useCase(task, settings, 2)
 
@@ -68,7 +70,7 @@ class StartTimerSessionUseCaseTest {
     @Test
     fun `returns session id on success`() = runTest {
         val task = Task(id = 1L, groupId = 1L, name = "Study")
-        coEvery { studySessionRepository.insertSession(any()) } returns 42L
+        coEvery { studySessionRepository.insertSession(any()) } returns Result.Success(42L)
 
         val result = useCase(task, PomodoroSettings(), 4)
 
@@ -80,7 +82,7 @@ class StartTimerSessionUseCaseTest {
     fun `sets start time close to now`() = runTest {
         val task = Task(id = 1L, groupId = 1L, name = "Study")
         val sessionSlot = slot<StudySession>()
-        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns 1L
+        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns Result.Success(1L)
 
         val before = LocalDateTime.now()
         useCase(task, PomodoroSettings(), 4)
@@ -96,7 +98,7 @@ class StartTimerSessionUseCaseTest {
         val task = Task(id = 1L, groupId = 1L, name = "Study")
         val customStartTime = LocalDateTime.of(2025, 1, 15, 10, 0)
         val sessionSlot = slot<StudySession>()
-        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns 1L
+        coEvery { studySessionRepository.insertSession(capture(sessionSlot)) } returns Result.Success(1L)
 
         useCase(task, PomodoroSettings(), 4, customStartTime)
 
@@ -106,7 +108,7 @@ class StartTimerSessionUseCaseTest {
     @Test
     fun `returns failure when repository throws exception`() = runTest {
         val task = Task(id = 1L, groupId = 1L, name = "Study")
-        coEvery { studySessionRepository.insertSession(any()) } throws RuntimeException("DB error")
+        coEvery { studySessionRepository.insertSession(any()) } returns Result.Failure(DomainError.DatabaseError("DB error"))
 
         val result = useCase(task, PomodoroSettings(), 4)
 
@@ -116,7 +118,7 @@ class StartTimerSessionUseCaseTest {
     @Test
     fun `calls repository insert exactly once`() = runTest {
         val task = Task(id = 1L, groupId = 1L, name = "Study")
-        coEvery { studySessionRepository.insertSession(any()) } returns 1L
+        coEvery { studySessionRepository.insertSession(any()) } returns Result.Success(1L)
 
         useCase(task, PomodoroSettings(), 4)
 

@@ -45,7 +45,7 @@ class AllowedAppsViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             // 並行して許可アプリ設定とインストール済みアプリを取得
-            val savedAllowedApps = settingsRepository.getAllowedApps()
+            val savedAllowedApps = settingsRepository.getAllowedApps().getOrDefault(emptyList())
             val installedApps = installedAppsHelper.getInstalledUserApps()
 
             // 削除されたアプリを検証してフィルタリング

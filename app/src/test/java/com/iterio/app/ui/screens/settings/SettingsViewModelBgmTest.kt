@@ -1,6 +1,7 @@
 package com.iterio.app.ui.screens.settings
 
 import app.cash.turbine.test
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.BgmTrack
 import com.iterio.app.domain.model.BgmTracks
 import com.iterio.app.domain.model.PomodoroSettings
@@ -64,18 +65,18 @@ class SettingsViewModelBgmTest {
         settingsRepository = mockk(relaxed = true)
         updatePomodoroSettingsUseCase = mockk(relaxed = true)
         premiumManager = mockk(relaxed = true)
-        localeManager = mockk(relaxed = true)
+        localeManager = mockk()
         reviewTaskRepository = mockk(relaxed = true)
         bgmManager = mockk(relaxed = true)
 
         // Default mock responses
-        coEvery { settingsRepository.getPomodoroSettings() } returns PomodoroSettings()
-        coEvery { settingsRepository.getAllowedApps() } returns emptyList()
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(PomodoroSettings())
+        coEvery { settingsRepository.getAllowedApps() } returns Result.Success(emptyList<String>())
         every { premiumManager.subscriptionStatus } returns subscriptionStatusFlow
         coEvery { premiumManager.isPremium() } returns false
         every { localeManager.getCurrentLanguage() } returns "ja"
-        coEvery { reviewTaskRepository.getTotalCount() } returns 0
-        coEvery { reviewTaskRepository.getIncompleteCount() } returns 0
+        coEvery { reviewTaskRepository.getTotalCount() } returns Result.Success(0)
+        coEvery { reviewTaskRepository.getIncompleteCount() } returns Result.Success(0)
 
         // BGM mock responses
         every { bgmManager.selectedTrack } returns selectedTrackFlow

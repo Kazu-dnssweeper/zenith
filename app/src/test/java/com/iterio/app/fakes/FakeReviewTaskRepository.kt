@@ -1,5 +1,7 @@
 package com.iterio.app.fakes
 
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.ReviewTask
 import com.iterio.app.domain.repository.ReviewTaskRepository
 import kotlinx.coroutines.flow.Flow
@@ -16,26 +18,30 @@ class FakeReviewTaskRepository : ReviewTaskRepository {
     private val tasks = MutableStateFlow<Map<Long, ReviewTask>>(emptyMap())
     private var nextId = 1L
 
-    override suspend fun insert(task: ReviewTask): Long {
+    override suspend fun insert(task: ReviewTask): Result<Long, DomainError> {
         val id = nextId++
         val taskWithId = task.copy(id = id)
         tasks.value = tasks.value + (id to taskWithId)
-        return id
+        return Result.Success(id)
     }
 
-    override suspend fun insertAll(tasks: List<ReviewTask>) {
-        tasks.forEach { insert(it) }
+    override suspend fun insertAll(taskList: List<ReviewTask>): Result<Unit, DomainError> {
+        taskList.forEach { insert(it) }
+        return Result.Success(Unit)
     }
 
-    override suspend fun update(task: ReviewTask) {
+    override suspend fun update(task: ReviewTask): Result<Unit, DomainError> {
         tasks.value = tasks.value + (task.id to task)
+        return Result.Success(Unit)
     }
 
-    override suspend fun delete(task: ReviewTask) {
+    override suspend fun delete(task: ReviewTask): Result<Unit, DomainError> {
         tasks.value = tasks.value - task.id
+        return Result.Success(Unit)
     }
 
-    override suspend fun getById(id: Long): ReviewTask? = tasks.value[id]
+    override suspend fun getById(id: Long): Result<ReviewTask?, DomainError> =
+        Result.Success(tasks.value[id])
 
     override fun getTasksForSession(studySessionId: Long): Flow<List<ReviewTask>> =
         tasks.map { map ->
@@ -66,47 +72,54 @@ class FakeReviewTaskRepository : ReviewTaskRepository {
             }
         }
 
-    override suspend fun getPendingTaskCountForDate(date: LocalDate): Int =
-        tasks.value.values.count {
-            it.scheduledDate == date && !it.isCompleted
-        }
+    override suspend fun getPendingTaskCountForDate(date: LocalDate): Result<Int, DomainError> =
+        Result.Success(
+            tasks.value.values.count {
+                it.scheduledDate == date && !it.isCompleted
+            }
+        )
 
-    override suspend fun markAsCompleted(taskId: Long) {
-        val task = tasks.value[taskId] ?: return
+    override suspend fun markAsCompleted(taskId: Long): Result<Unit, DomainError> {
+        val task = tasks.value[taskId] ?: return Result.Success(Unit)
         val completed = task.copy(
             isCompleted = true,
             completedAt = LocalDateTime.now()
         )
         tasks.value = tasks.value + (taskId to completed)
+        return Result.Success(Unit)
     }
 
-    override suspend fun markAsIncomplete(taskId: Long) {
-        val task = tasks.value[taskId] ?: return
+    override suspend fun markAsIncomplete(taskId: Long): Result<Unit, DomainError> {
+        val task = tasks.value[taskId] ?: return Result.Success(Unit)
         val incomplete = task.copy(
             isCompleted = false,
             completedAt = null
         )
         tasks.value = tasks.value + (taskId to incomplete)
+        return Result.Success(Unit)
     }
 
-    override suspend fun reschedule(taskId: Long, newDate: LocalDate) {
-        val task = tasks.value[taskId] ?: return
+    override suspend fun reschedule(taskId: Long, newDate: LocalDate): Result<Unit, DomainError> {
+        val task = tasks.value[taskId] ?: return Result.Success(Unit)
         val rescheduled = task.copy(scheduledDate = newDate)
         tasks.value = tasks.value + (taskId to rescheduled)
+        return Result.Success(Unit)
     }
 
-    override suspend fun deleteTasksForSession(studySessionId: Long) {
+    override suspend fun deleteTasksForSession(studySessionId: Long): Result<Unit, DomainError> {
         tasks.value = tasks.value.filterValues { it.studySessionId != studySessionId }
+        return Result.Success(Unit)
     }
 
-    override suspend fun deleteTasksForTask(taskId: Long) {
+    override suspend fun deleteTasksForTask(taskId: Long): Result<Unit, DomainError> {
         tasks.value = tasks.value.filterValues { it.taskId != taskId }
+        return Result.Success(Unit)
     }
 
     override suspend fun getTaskCountByDateRange(
         startDate: LocalDate,
         endDate: LocalDate
-    ): Map<LocalDate, Int> {
+    ): Result<Map<LocalDate, Int>, DomainError> {
         val result = mutableMapOf<LocalDate, Int>()
         tasks.value.values.forEach { task ->
             val date = task.scheduledDate
@@ -114,19 +127,21 @@ class FakeReviewTaskRepository : ReviewTaskRepository {
                 result[date] = (result[date] ?: 0) + 1
             }
         }
-        return result
+        return Result.Success(result)
     }
 
     override fun getAllWithDetails(): Flow<List<ReviewTask>> =
         tasks.map { map -> map.values.toList() }
 
-    override suspend fun getTotalCount(): Int = tasks.value.size
+    override suspend fun getTotalCount(): Result<Int, DomainError> =
+        Result.Success(tasks.value.size)
 
-    override suspend fun getIncompleteCount(): Int =
-        tasks.value.values.count { !it.isCompleted }
+    override suspend fun getIncompleteCount(): Result<Int, DomainError> =
+        Result.Success(tasks.value.values.count { !it.isCompleted })
 
-    override suspend fun deleteAll() {
+    override suspend fun deleteAll(): Result<Unit, DomainError> {
         tasks.value = emptyMap()
+        return Result.Success(Unit)
     }
 
     // Test helpers

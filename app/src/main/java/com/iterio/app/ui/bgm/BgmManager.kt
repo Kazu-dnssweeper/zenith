@@ -77,9 +77,9 @@ class BgmManager @Inject constructor(
 
     private fun loadSettings() {
         scope.launch {
-            val trackId = settingsRepository.getBgmTrackId()
-            val volume = settingsRepository.getBgmVolume()
-            val autoPlay = settingsRepository.getBgmAutoPlay()
+            val trackId = settingsRepository.getBgmTrackId().getOrNull()
+            val volume = settingsRepository.getBgmVolume().getOrDefault(0.5f)
+            val autoPlay = settingsRepository.getBgmAutoPlay().getOrDefault(true)
 
             trackId?.let { id ->
                 _selectedTrack.value = BgmTracks.getById(id)
@@ -98,7 +98,7 @@ class BgmManager @Inject constructor(
      * BGM機能が利用可能かどうか（Premium機能）
      */
     suspend fun canUseBgm(): Boolean {
-        return premiumRepository.canAccessFeature(PremiumFeature.BGM)
+        return premiumRepository.canAccessFeature(PremiumFeature.BGM).getOrDefault(false)
     }
 
     /**

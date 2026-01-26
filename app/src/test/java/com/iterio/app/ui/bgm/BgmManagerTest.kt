@@ -1,6 +1,7 @@
 package com.iterio.app.ui.bgm
 
 import android.content.Context
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.BgmTrack
 import com.iterio.app.domain.model.BgmTracks
 import com.iterio.app.domain.model.PremiumFeature
@@ -56,9 +57,9 @@ class BgmManagerTest {
         every { BgmService.setVolume(any(), any()) } returns Unit
 
         // Default mock responses
-        coEvery { settingsRepository.getBgmTrackId() } returns null
-        coEvery { settingsRepository.getBgmVolume() } returns 0.5f
-        coEvery { settingsRepository.getBgmAutoPlay() } returns true
+        coEvery { settingsRepository.getBgmTrackId() } returns Result.Success(null)
+        coEvery { settingsRepository.getBgmVolume() } returns Result.Success(0.5f)
+        coEvery { settingsRepository.getBgmAutoPlay() } returns Result.Success(true)
     }
 
     @After
@@ -135,7 +136,7 @@ class BgmManagerTest {
     @Test
     fun `selectTrack with null clears selection and saves null`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getBgmTrackId() } returns "rain"
+        coEvery { settingsRepository.getBgmTrackId() } returns Result.Success("rain")
         val bgmManager = createBgmManager()
         advanceUntilIdle()
 
@@ -166,9 +167,9 @@ class BgmManagerTest {
     @Test
     fun `loadSettings restores track and volume on init`() = runTest {
         // Arrange
-        coEvery { settingsRepository.getBgmTrackId() } returns "forest"
-        coEvery { settingsRepository.getBgmVolume() } returns 0.8f
-        coEvery { settingsRepository.getBgmAutoPlay() } returns false
+        coEvery { settingsRepository.getBgmTrackId() } returns Result.Success("forest")
+        coEvery { settingsRepository.getBgmVolume() } returns Result.Success(0.8f)
+        coEvery { settingsRepository.getBgmAutoPlay() } returns Result.Success(false)
 
         // Act
         val bgmManager = createBgmManager()
@@ -183,7 +184,7 @@ class BgmManagerTest {
     @Test
     fun `canUseBgm returns true when premium user`() = runTest {
         // Arrange
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BGM) } returns true
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BGM) } returns Result.Success(true)
         val bgmManager = createBgmManager()
         advanceUntilIdle()
 
@@ -197,7 +198,7 @@ class BgmManagerTest {
     @Test
     fun `canUseBgm returns false when free user`() = runTest {
         // Arrange
-        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BGM) } returns false
+        coEvery { premiumRepository.canAccessFeature(PremiumFeature.BGM) } returns Result.Success(false)
         val bgmManager = createBgmManager()
         advanceUntilIdle()
 

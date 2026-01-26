@@ -1,5 +1,7 @@
 package com.iterio.app.domain.usecase
 
+import com.iterio.app.domain.common.DomainError
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PomodoroSettings
 import com.iterio.app.domain.repository.SettingsRepository
 import io.mockk.coEvery
@@ -28,10 +30,10 @@ class UpdatePomodoroSettingsUseCaseTest {
     @Test
     fun `updates work duration`() = runTest {
         val current = PomodoroSettings(workDurationMinutes = 25)
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
 
         val settingsSlot = slot<PomodoroSettings>()
-        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Unit
+        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Result.Success(Unit)
 
         useCase.updateWorkDuration(30)
 
@@ -41,10 +43,10 @@ class UpdatePomodoroSettingsUseCaseTest {
     @Test
     fun `updates short break duration`() = runTest {
         val current = PomodoroSettings(shortBreakMinutes = 5)
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
 
         val settingsSlot = slot<PomodoroSettings>()
-        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Unit
+        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Result.Success(Unit)
 
         useCase.updateShortBreak(10)
 
@@ -54,10 +56,10 @@ class UpdatePomodoroSettingsUseCaseTest {
     @Test
     fun `updates long break duration`() = runTest {
         val current = PomodoroSettings(longBreakMinutes = 15)
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
 
         val settingsSlot = slot<PomodoroSettings>()
-        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Unit
+        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Result.Success(Unit)
 
         useCase.updateLongBreak(20)
 
@@ -67,10 +69,10 @@ class UpdatePomodoroSettingsUseCaseTest {
     @Test
     fun `updates cycles before long break`() = runTest {
         val current = PomodoroSettings(cyclesBeforeLongBreak = 4)
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
 
         val settingsSlot = slot<PomodoroSettings>()
-        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Unit
+        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Result.Success(Unit)
 
         useCase.updateCycles(6)
 
@@ -80,10 +82,10 @@ class UpdatePomodoroSettingsUseCaseTest {
     @Test
     fun `toggles focus mode`() = runTest {
         val current = PomodoroSettings(focusModeEnabled = false)
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
 
         val settingsSlot = slot<PomodoroSettings>()
-        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Unit
+        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Result.Success(Unit)
 
         useCase.toggleFocusMode(true)
 
@@ -93,10 +95,10 @@ class UpdatePomodoroSettingsUseCaseTest {
     @Test
     fun `toggles auto loop`() = runTest {
         val current = PomodoroSettings(autoLoopEnabled = false)
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
 
         val settingsSlot = slot<PomodoroSettings>()
-        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Unit
+        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Result.Success(Unit)
 
         useCase.toggleAutoLoop(true)
 
@@ -106,10 +108,10 @@ class UpdatePomodoroSettingsUseCaseTest {
     @Test
     fun `toggles review feature`() = runTest {
         val current = PomodoroSettings(reviewEnabled = true)
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
 
         val settingsSlot = slot<PomodoroSettings>()
-        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Unit
+        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Result.Success(Unit)
 
         useCase.toggleReview(false)
 
@@ -119,10 +121,10 @@ class UpdatePomodoroSettingsUseCaseTest {
     @Test
     fun `toggles notifications`() = runTest {
         val current = PomodoroSettings(notificationsEnabled = true)
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
 
         val settingsSlot = slot<PomodoroSettings>()
-        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Unit
+        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Result.Success(Unit)
 
         useCase.toggleNotifications(false)
 
@@ -137,6 +139,7 @@ class UpdatePomodoroSettingsUseCaseTest {
             longBreakMinutes = 20,
             cyclesBeforeLongBreak = 6
         )
+        coEvery { settingsRepository.updatePomodoroSettings(newSettings) } returns Result.Success(Unit)
 
         useCase.updateSettings(newSettings)
 
@@ -152,10 +155,10 @@ class UpdatePomodoroSettingsUseCaseTest {
             focusModeEnabled = true,
             reviewEnabled = true
         )
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
 
         val settingsSlot = slot<PomodoroSettings>()
-        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Unit
+        coEvery { settingsRepository.updatePomodoroSettings(capture(settingsSlot)) } returns Result.Success(Unit)
 
         useCase.updateWorkDuration(30)
 
@@ -168,7 +171,8 @@ class UpdatePomodoroSettingsUseCaseTest {
     @Test
     fun `returns success on update`() = runTest {
         val current = PomodoroSettings()
-        coEvery { settingsRepository.getPomodoroSettings() } returns current
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Success(current)
+        coEvery { settingsRepository.updatePomodoroSettings(any()) } returns Result.Success(Unit)
 
         val result = useCase.updateWorkDuration(30)
 
@@ -177,7 +181,7 @@ class UpdatePomodoroSettingsUseCaseTest {
 
     @Test
     fun `returns failure on error`() = runTest {
-        coEvery { settingsRepository.getPomodoroSettings() } throws RuntimeException("DB error")
+        coEvery { settingsRepository.getPomodoroSettings() } returns Result.Failure(DomainError.DatabaseError("DB error"))
 
         val result = useCase.updateWorkDuration(30)
 

@@ -1,5 +1,6 @@
 package com.iterio.app.fakes
 
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.StudySession
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -28,8 +29,8 @@ class FakeStudySessionRepositoryTest {
         val session1 = createSession(taskId = 1L)
         val session2 = createSession(taskId = 2L)
 
-        val id1 = repository.insertSession(session1)
-        val id2 = repository.insertSession(session2)
+        val id1 = (repository.insertSession(session1) as Result.Success).value
+        val id2 = (repository.insertSession(session2) as Result.Success).value
 
         assertEquals(1L, id1)
         assertEquals(2L, id2)
@@ -39,8 +40,8 @@ class FakeStudySessionRepositoryTest {
     fun `insertSession adds session to repository`() = runTest {
         val session = createSession(taskId = 1L)
 
-        val id = repository.insertSession(session)
-        val retrieved = repository.getSessionById(id)
+        val id = (repository.insertSession(session) as Result.Success).value
+        val retrieved = (repository.getSessionById(id) as Result.Success).value
 
         assertNotNull(retrieved)
         assertEquals(1L, retrieved?.taskId)
@@ -50,7 +51,7 @@ class FakeStudySessionRepositoryTest {
 
     @Test
     fun `getSessionById returns null for non-existent id`() = runTest {
-        val result = repository.getSessionById(999L)
+        val result = (repository.getSessionById(999L) as Result.Success).value
         assertNull(result)
     }
 
@@ -94,22 +95,22 @@ class FakeStudySessionRepositoryTest {
 
     @Test
     fun `updateSession updates existing session`() = runTest {
-        val id = repository.insertSession(createSession(taskId = 1L, notes = "Original"))
+        val id = (repository.insertSession(createSession(taskId = 1L, notes = "Original")) as Result.Success).value
 
-        val session = repository.getSessionById(id)!!
+        val session = (repository.getSessionById(id) as Result.Success).value!!
         repository.updateSession(session.copy(notes = "Updated"))
 
-        val updated = repository.getSessionById(id)
+        val updated = (repository.getSessionById(id) as Result.Success).value
         assertEquals("Updated", updated?.notes)
     }
 
     @Test
     fun `finishSession updates session properly`() = runTest {
-        val id = repository.insertSession(createSession(taskId = 1L))
+        val id = (repository.insertSession(createSession(taskId = 1L)) as Result.Success).value
 
         repository.finishSession(id, durationMinutes = 25, cycles = 4, interrupted = false)
 
-        val session = repository.getSessionById(id)
+        val session = (repository.getSessionById(id) as Result.Success).value
         assertEquals(25, session?.workDurationMinutes)
         assertEquals(4, session?.cyclesCompleted)
         assertFalse(session?.wasInterrupted ?: true)
@@ -120,12 +121,12 @@ class FakeStudySessionRepositoryTest {
 
     @Test
     fun `deleteSession removes session`() = runTest {
-        val id = repository.insertSession(createSession(taskId = 1L))
+        val id = (repository.insertSession(createSession(taskId = 1L)) as Result.Success).value
 
-        val session = repository.getSessionById(id)!!
+        val session = (repository.getSessionById(id) as Result.Success).value!!
         repository.deleteSession(session)
 
-        assertNull(repository.getSessionById(id))
+        assertNull((repository.getSessionById(id) as Result.Success).value)
     }
 
     // Stats Tests
@@ -140,7 +141,7 @@ class FakeStudySessionRepositoryTest {
         repository.insertSession(createSession(taskId = 2L, startedAt = today.atTime(14, 0)))
         repository.finishSession(2L, durationMinutes = 30, cycles = 1, interrupted = false)
 
-        val totalMinutes = repository.getTotalMinutesForDay(today)
+        val totalMinutes = (repository.getTotalMinutesForDay(today) as Result.Success).value
 
         assertEquals(55, totalMinutes)
     }
@@ -155,7 +156,7 @@ class FakeStudySessionRepositoryTest {
         repository.insertSession(createSession(taskId = 2L, startedAt = today.atTime(14, 0)))
         repository.finishSession(2L, durationMinutes = 30, cycles = 2, interrupted = false)
 
-        val totalCycles = repository.getTotalCyclesForDay(today)
+        val totalCycles = (repository.getTotalCyclesForDay(today) as Result.Success).value
 
         assertEquals(6, totalCycles)
     }
@@ -166,7 +167,7 @@ class FakeStudySessionRepositoryTest {
         repository.insertSession(createSession(taskId = 2L))
         repository.insertSession(createSession(taskId = 3L))
 
-        assertEquals(3, repository.getSessionCount())
+        assertEquals(3, (repository.getSessionCount() as Result.Success).value)
     }
 
     // Helper function
