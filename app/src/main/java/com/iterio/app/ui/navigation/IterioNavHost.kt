@@ -15,6 +15,7 @@ import com.iterio.app.ui.screens.settings.SettingsScreen
 import com.iterio.app.ui.screens.settings.allowedapps.AllowedAppsScreen
 import com.iterio.app.ui.screens.stats.StatsScreen
 import com.iterio.app.ui.screens.tasks.TasksScreen
+import com.iterio.app.ui.screens.review.ReviewScheduleScreen
 import com.iterio.app.ui.screens.timer.TimerScreen
 
 @Composable
@@ -34,6 +35,9 @@ fun IterioNavHost(
                 },
                 onNavigateToTasks = {
                     navController.navigate(Screen.Tasks.route)
+                },
+                onNavigateToReviewSchedule = {
+                    navController.navigate(Screen.ReviewSchedule.route)
                 }
             )
         }
@@ -82,6 +86,14 @@ fun IterioNavHost(
 
         composable(Screen.Premium.route) {
             PremiumScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.ReviewSchedule.route) {
+            ReviewScheduleScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

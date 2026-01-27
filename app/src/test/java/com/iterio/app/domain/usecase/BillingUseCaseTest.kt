@@ -12,11 +12,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 /**
  * BillingUseCase のユニットテスト
@@ -512,5 +516,396 @@ class BillingUseCaseTest {
 
         // Assert
         coVerify { purchaseVerifier.verifyPurchase(purchase) }
+    }
+
+    // 重複トークン処理のテスト
+
+    @Test
+    fun `processPurchase with duplicate token returns Success immediately`() = runBlocking {
+        // Arrange: 最初の購入を処理して processedPurchaseTokens に登録
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_MONTHLY)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "duplicate_token"
+        every { purchase.purchaseTime } returns System.currentTimeMillis()
+        every { purchase.originalJson } returns "{}"
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        // Act: 1回目の処理
+        val firstResult = billingUseCase.processPurchase(purchase)
+        assertTrue("1回目はSuccess結果を返すべき", firstResult is BillingUseCase.ProcessPurchaseResult.Success)
+
+        // Act: 2回目の処理（同じトークン）
+        val secondResult = billingUseCase.processPurchase(purchase)
+
+        // Assert: 2回目はverifyPurchaseを呼ばずにSuccessを返す
+        assertTrue("2回目もSuccess結果を返すべき", secondResult is BillingUseCase.ProcessPurchaseResult.Success)
+        coVerify(exactly = 1) { purchaseVerifier.verifyPurchase(purchase) }
+    }
+
+    @Test
+    fun `processPurchase with duplicate token uses correct subscription type`() = runBlocking {
+        // Arrange
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_YEARLY)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "dup_yearly_token"
+        every { purchase.purchaseTime } returns System.currentTimeMillis()
+        every { purchase.originalJson } returns "{}"
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        // 1回目の処理でトークンを登録
+        billingUseCase.processPurchase(purchase)
+
+        // Act: 2回目の処理
+        val result = billingUseCase.processPurchase(purchase)
+
+        // Assert: 重複処理時もproductsからサブスクリプションタイプを正しく取得
+        assertTrue("Success結果を返すべき", result is BillingUseCase.ProcessPurchaseResult.Success)
+        assertEquals(
+            "YEARLYタイプであるべき",
+            SubscriptionType.YEARLY,
+            (result as BillingUseCase.ProcessPurchaseResult.Success).subscriptionType
+        )
+    }
+
+    @Test
+    fun `processPurchase returns Error when acknowledge fails`() = runBlocking {
+        // Arrange
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_MONTHLY)
+        every { purchase.isAcknowledged } returns false
+        every { purchase.purchaseToken } returns "ack_fail_token"
+        every { purchase.purchaseTime } returns System.currentTimeMillis()
+        every { purchase.originalJson } returns "{}"
+        every { purchase.signature } returns "test_signature"
+
+        val billingResult = mockk<BillingResult>()
+        every { billingResult.responseCode } returns BillingClient.BillingResponseCode.ERROR
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+        coEvery { billingClientWrapper.acknowledgePurchase("ack_fail_token") } returns billingResult
+
+        // Act
+        val result = billingUseCase.processPurchase(purchase)
+
+        // Assert
+        assertTrue("Error結果を返すべき", result is BillingUseCase.ProcessPurchaseResult.Error)
+        assertEquals(
+            "エラーメッセージが正しいべき",
+            "Failed to acknowledge purchase",
+            (result as BillingUseCase.ProcessPurchaseResult.Error).message
+        )
+    }
+
+    // calculateExpiryDate のテスト (processPurchaseを介して間接的にテスト)
+
+    @Test
+    fun `calculateExpiryDate returns null for LIFETIME purchase via processPurchase`() = runBlocking {
+        // Arrange
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.INAPP_LIFETIME)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "lifetime_expiry_token"
+        every { purchase.purchaseTime } returns System.currentTimeMillis()
+        every { purchase.originalJson } returns "{}"
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        // Act
+        billingUseCase.processPurchase(purchase)
+
+        // Assert: LIFETIMEの場合、expiresAtはnullで更新される
+        coVerify { premiumRepository.updateSubscription(SubscriptionType.LIFETIME, null) }
+    }
+
+    @Test
+    fun `calculateExpiryDate returns null for FREE type via processPurchase`() = runBlocking {
+        // Arrange: 不明なproductIdはFREEタイプに変換される
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf("unknown_product_id")
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "free_expiry_token"
+        every { purchase.purchaseTime } returns System.currentTimeMillis()
+        every { purchase.originalJson } returns "{}"
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        // Act
+        billingUseCase.processPurchase(purchase)
+
+        // Assert: FREEの場合、expiresAtはnullで更新される
+        coVerify { premiumRepository.updateSubscription(SubscriptionType.FREE, null) }
+    }
+
+    @Test
+    fun `calculateExpiryDate falls back to purchaseTime when JSON parsing unavailable`() = runBlocking {
+        // Note: org.json.JSONObject is stubbed in Android JVM unit tests,
+        // so calculateExpiryDate always falls back to calculateExpiryFromPurchaseTime
+        val purchaseTimeMillis = 1735689600000L // 2025-01-01T00:00:00 UTC
+        val purchaseTime = Instant.ofEpochMilli(purchaseTimeMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+        val expectedExpiry = purchaseTime.plusMonths(1) // MONTHLY = +1 month
+
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_MONTHLY)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "json_expiry_token"
+        every { purchase.purchaseTime } returns purchaseTimeMillis
+        every { purchase.originalJson } returns """{"expiryTimeMillis":9999999999999}"""
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        val expiresAtSlot = slot<LocalDateTime>()
+        coEvery { premiumRepository.updateSubscription(any(), capture(expiresAtSlot)) } returns mockk()
+
+        // Act
+        billingUseCase.processPurchase(purchase)
+
+        // Assert: JVM test env causes JSON fallback to purchaseTime calculation
+        assertTrue("expiresAtがキャプチャされるべき", expiresAtSlot.isCaptured)
+        assertEquals(
+            "purchaseTimeからMONTHLY (+1 month) で算出されるべき",
+            expectedExpiry,
+            expiresAtSlot.captured
+        )
+    }
+
+    @Test
+    fun `calculateExpiryDate falls back to purchaseTime when expiryTimeMillis is missing`() = runBlocking {
+        // Arrange: originalJsonにexpiryTimeMillisがない場合
+        val purchaseTimeMillis = 1704067200000L // 2024-01-01T00:00:00 UTC
+        val purchaseTime = Instant.ofEpochMilli(purchaseTimeMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+        val expectedExpiry = purchaseTime.plusMonths(1) // MONTHLYなので1ヶ月追加
+
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_MONTHLY)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "no_expiry_json_token"
+        every { purchase.purchaseTime } returns purchaseTimeMillis
+        every { purchase.originalJson } returns """{"productId":"iterio_premium_monthly"}"""
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        val expiresAtSlot = slot<LocalDateTime>()
+        coEvery { premiumRepository.updateSubscription(any(), capture(expiresAtSlot)) } returns mockk()
+
+        // Act
+        billingUseCase.processPurchase(purchase)
+
+        // Assert: purchaseTime + 1ヶ月 がフォールバックとして使われる
+        assertTrue("expiresAtがキャプチャされるべき", expiresAtSlot.isCaptured)
+        assertEquals(
+            "purchaseTime + 1ヶ月であるべき",
+            expectedExpiry,
+            expiresAtSlot.captured
+        )
+    }
+
+    @Test
+    fun `calculateExpiryDate falls back to purchaseTime when originalJson is empty`() = runBlocking {
+        // Arrange: originalJsonが空文字列の場合
+        val purchaseTimeMillis = 1704067200000L // 2024-01-01T00:00:00 UTC
+        val purchaseTime = Instant.ofEpochMilli(purchaseTimeMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+        val expectedExpiry = purchaseTime.plusMonths(3) // QUARTERLYなので3ヶ月追加
+
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_QUARTERLY)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "empty_json_token"
+        every { purchase.purchaseTime } returns purchaseTimeMillis
+        every { purchase.originalJson } returns ""
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        val expiresAtSlot = slot<LocalDateTime>()
+        coEvery { premiumRepository.updateSubscription(any(), capture(expiresAtSlot)) } returns mockk()
+
+        // Act
+        billingUseCase.processPurchase(purchase)
+
+        // Assert: 空JSONの場合はpurchaseTime + 3ヶ月がフォールバック
+        assertTrue("expiresAtがキャプチャされるべき", expiresAtSlot.isCaptured)
+        assertEquals(
+            "purchaseTime + 3ヶ月であるべき",
+            expectedExpiry,
+            expiresAtSlot.captured
+        )
+    }
+
+    // calculateExpiryFromPurchaseTime のテスト (processPurchaseを介して間接的にテスト)
+
+    @Test
+    fun `calculateExpiryFromPurchaseTime adds 1 month for MONTHLY`() = runBlocking {
+        // Arrange
+        val purchaseTimeMillis = 1704067200000L // 2024-01-01T00:00:00 UTC
+        val purchaseTime = Instant.ofEpochMilli(purchaseTimeMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+        val expectedExpiry = purchaseTime.plusMonths(1)
+
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_MONTHLY)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "monthly_calc_token"
+        every { purchase.purchaseTime } returns purchaseTimeMillis
+        every { purchase.originalJson } returns "{}" // expiryTimeMillisなし
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        val expiresAtSlot = slot<LocalDateTime>()
+        coEvery { premiumRepository.updateSubscription(any(), capture(expiresAtSlot)) } returns mockk()
+
+        // Act
+        billingUseCase.processPurchase(purchase)
+
+        // Assert
+        assertTrue("expiresAtがキャプチャされるべき", expiresAtSlot.isCaptured)
+        assertEquals(
+            "MONTHLYは購入日 + 1ヶ月であるべき",
+            expectedExpiry,
+            expiresAtSlot.captured
+        )
+    }
+
+    @Test
+    fun `calculateExpiryFromPurchaseTime adds 3 months for QUARTERLY`() = runBlocking {
+        // Arrange
+        val purchaseTimeMillis = 1704067200000L // 2024-01-01T00:00:00 UTC
+        val purchaseTime = Instant.ofEpochMilli(purchaseTimeMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+        val expectedExpiry = purchaseTime.plusMonths(3)
+
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_QUARTERLY)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "quarterly_calc_token"
+        every { purchase.purchaseTime } returns purchaseTimeMillis
+        every { purchase.originalJson } returns "{}" // expiryTimeMillisなし
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        val expiresAtSlot = slot<LocalDateTime>()
+        coEvery { premiumRepository.updateSubscription(any(), capture(expiresAtSlot)) } returns mockk()
+
+        // Act
+        billingUseCase.processPurchase(purchase)
+
+        // Assert
+        assertTrue("expiresAtがキャプチャされるべき", expiresAtSlot.isCaptured)
+        assertEquals(
+            "QUARTERLYは購入日 + 3ヶ月であるべき",
+            expectedExpiry,
+            expiresAtSlot.captured
+        )
+    }
+
+    @Test
+    fun `calculateExpiryFromPurchaseTime adds 6 months for HALF_YEARLY`() = runBlocking {
+        // Arrange
+        val purchaseTimeMillis = 1704067200000L // 2024-01-01T00:00:00 UTC
+        val purchaseTime = Instant.ofEpochMilli(purchaseTimeMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+        val expectedExpiry = purchaseTime.plusMonths(6)
+
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_HALF_YEARLY)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "half_yearly_calc_token"
+        every { purchase.purchaseTime } returns purchaseTimeMillis
+        every { purchase.originalJson } returns "{}" // expiryTimeMillisなし
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        val expiresAtSlot = slot<LocalDateTime>()
+        coEvery { premiumRepository.updateSubscription(any(), capture(expiresAtSlot)) } returns mockk()
+
+        // Act
+        billingUseCase.processPurchase(purchase)
+
+        // Assert
+        assertTrue("expiresAtがキャプチャされるべき", expiresAtSlot.isCaptured)
+        assertEquals(
+            "HALF_YEARLYは購入日 + 6ヶ月であるべき",
+            expectedExpiry,
+            expiresAtSlot.captured
+        )
+    }
+
+    @Test
+    fun `calculateExpiryFromPurchaseTime adds 1 year for YEARLY`() = runBlocking {
+        // Arrange
+        val purchaseTimeMillis = 1704067200000L // 2024-01-01T00:00:00 UTC
+        val purchaseTime = Instant.ofEpochMilli(purchaseTimeMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime()
+        val expectedExpiry = purchaseTime.plusYears(1)
+
+        val purchase = mockk<Purchase>(relaxed = true)
+        every { purchase.purchaseState } returns Purchase.PurchaseState.PURCHASED
+        every { purchase.products } returns listOf(BillingProducts.SUBSCRIPTION_YEARLY)
+        every { purchase.isAcknowledged } returns true
+        every { purchase.purchaseToken } returns "yearly_calc_token"
+        every { purchase.purchaseTime } returns purchaseTimeMillis
+        every { purchase.originalJson } returns "{}" // expiryTimeMillisなし
+        every { purchase.signature } returns "test_signature"
+
+        coEvery { purchaseVerifier.verifyPurchase(purchase) } returns
+                PurchaseVerifier.VerificationResult.Verified(purchase)
+
+        val expiresAtSlot = slot<LocalDateTime>()
+        coEvery { premiumRepository.updateSubscription(any(), capture(expiresAtSlot)) } returns mockk()
+
+        // Act
+        billingUseCase.processPurchase(purchase)
+
+        // Assert
+        assertTrue("expiresAtがキャプチャされるべき", expiresAtSlot.isCaptured)
+        assertEquals(
+            "YEARLYは購入日 + 1年であるべき",
+            expectedExpiry,
+            expiresAtSlot.captured
+        )
     }
 }

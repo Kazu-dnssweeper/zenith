@@ -266,6 +266,24 @@
     <string name="tasks_review_enabled">復習タスクを生成</string>
     <string name="tasks_review_enabled_desc">タイマー完了時に復習タスクを自動生成</string>
 
+    <!-- Review Schedule Screen -->
+    <string name="review_schedule_title">復習スケジュール</string>
+    <string name="review_schedule_filter_all">すべて</string>
+    <string name="review_schedule_filter_pending">未完了</string>
+    <string name="review_schedule_filter_completed">完了</string>
+    <string name="review_schedule_filter_overdue">期限切れ</string>
+    <string name="review_schedule_empty">復習タスクがありません</string>
+    <string name="review_schedule_today">今日</string>
+    <string name="review_schedule_overdue">期限切れ</string>
+    <string name="review_schedule_upcoming">今後の予定</string>
+    <string name="review_schedule_total">合計: %d件</string>
+    <string name="review_schedule_pending_count">未完了: %d件</string>
+    <string name="review_schedule_completed_count">完了: %d件</string>
+    <string name="review_schedule_overdue_count">期限切れ: %d件</string>
+    <string name="review_schedule_date_format">%1$d月%2$d日（%3$s）</string>
+    <string name="review_schedule_task_group">%s</string>
+    <string name="review_schedule_no_group">グループなし</string>
+
     <!-- BGM Settings -->
     <string name="settings_bgm">BGM</string>
     <string name="settings_bgm_track">BGMトラック</string>

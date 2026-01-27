@@ -28,6 +28,7 @@ import com.iterio.app.ui.screens.home.components.WeeklyMiniChart
 fun HomeScreen(
     onNavigateToTimer: (Long) -> Unit,
     onNavigateToTasks: () -> Unit,
+    onNavigateToReviewSchedule: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -157,7 +158,8 @@ fun HomeScreen(
                 // Today's Review Section
                 TodayReviewSection(
                     reviewTasks = uiState.todayReviewTasks,
-                    onToggleComplete = viewModel::toggleReviewTaskComplete
+                    onToggleComplete = viewModel::toggleReviewTaskComplete,
+                    onViewAll = onNavigateToReviewSchedule
                 )
 
                 // Weekly Mini Chart

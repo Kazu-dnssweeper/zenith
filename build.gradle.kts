@@ -6,3 +6,7 @@ plugins {
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.ksp) apply false
 }
+
+// Detekt: Run via CLI (do NOT add as Gradle plugin — it conflicts with MockK instrumentation).
+// Install: brew install detekt  (macOS) / scoop install detekt (Windows)
+// Run:   detekt --config detekt.yml --baseline detekt-baseline.xml --input app/src/main/java

@@ -80,6 +80,13 @@ sealed class Screen(
         unselectedIcon = Icons.Outlined.Apps
     )
 
+    data object ReviewSchedule : Screen(
+        route = "review_schedule",
+        titleResId = R.string.review_schedule_title,
+        selectedIcon = Icons.Filled.EventRepeat,
+        unselectedIcon = Icons.Outlined.EventRepeat
+    )
+
     companion object {
         val bottomNavItems = listOf(Home, Tasks, Calendar, Stats, Settings)
     }

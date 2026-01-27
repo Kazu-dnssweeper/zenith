@@ -100,6 +100,108 @@ class EncryptionManagerTest {
         assertTrue("典型的な暗号化構造は暗号化と判定すべき", result)
     }
 
+    // --- Edge case tests for isEncryptedData ---
+
+    /**
+     * 単一の '{' バイトのみの配列は暗号化されていないと判定される
+     */
+    @Test
+    fun `isEncryptedData returns false for single brace byte`() {
+        val singleBrace = byteArrayOf(0x7B)
+
+        val result = isEncryptedDataLogic(singleBrace)
+
+        assertFalse("単一の '{' バイトは暗号化されていないと判定すべき", result)
+    }
+
+    /**
+     * 単一の非 '{' バイト (0x00) は暗号化されていると判定される
+     */
+    @Test
+    fun `isEncryptedData returns true for single non-brace byte`() {
+        val singleByte = byteArrayOf(0x00)
+
+        val result = isEncryptedDataLogic(singleByte)
+
+        assertTrue("単一の非ブレースバイトは暗号化されていると判定すべき", result)
+    }
+
+    /**
+     * NULLバイト (0x00) で始まるデータは暗号化されていると判定される
+     */
+    @Test
+    fun `isEncryptedData returns true for data starting with null byte`() {
+        val nullStartData = byteArrayOf(0x00, 0x01, 0x02)
+
+        val result = isEncryptedDataLogic(nullStartData)
+
+        assertTrue("NULLバイトで始まるデータは暗号化されていると判定すべき", result)
+    }
+
+    /**
+     * 高バイト値 (0xFF) で始まるデータは暗号化されていると判定される
+     */
+    @Test
+    fun `isEncryptedData returns true for data starting with high byte`() {
+        val highByteData = byteArrayOf(0xFF.toByte(), 0xFE.toByte())
+
+        val result = isEncryptedDataLogic(highByteData)
+
+        assertTrue("高バイト値で始まるデータは暗号化されていると判定すべき", result)
+    }
+
+    /**
+     * 大きなJSONデータ（'{'で始まる）も暗号化されていないと判定される
+     */
+    @Test
+    fun `isEncryptedData handles large JSON data`() {
+        // 10KB相当の大きなJSONデータ
+        val largeContent = "a".repeat(10_000)
+        val largeJson = """{"data":"$largeContent"}""".toByteArray(Charsets.UTF_8)
+
+        val result = isEncryptedDataLogic(largeJson)
+
+        assertFalse("大きなJSONデータも暗号化されていないと判定すべき", result)
+    }
+
+    // --- EncryptionException tests ---
+
+    /**
+     * EncryptionException はメッセージのみで生成でき、causeはnull
+     */
+    @Test
+    fun `EncryptionException with message only`() {
+        val exception = EncryptionException("テストエラー")
+
+        assertEquals("メッセージが正しく設定されるべき", "テストエラー", exception.message)
+        assertNull("causeが指定されない場合はnullであるべき", exception.cause)
+    }
+
+    /**
+     * EncryptionException はメッセージとcauseの両方で生成できる
+     */
+    @Test
+    fun `EncryptionException with message and cause`() {
+        val cause = RuntimeException("元のエラー")
+        val exception = EncryptionException("暗号化エラー", cause)
+
+        assertEquals("メッセージが正しく設定されるべき", "暗号化エラー", exception.message)
+        assertEquals("causeが正しく設定されるべき", cause, exception.cause)
+    }
+
+    /**
+     * EncryptionException は Exception を継承している
+     */
+    @Test
+    fun `EncryptionException is instance of Exception`() {
+        val exception = EncryptionException("テスト")
+
+        assertTrue(
+            "EncryptionExceptionはExceptionのインスタンスであるべき",
+            exception is Exception
+        )
+    }
+
     /**
      * EncryptionManager.isEncryptedDataと同じロジック
      * テスト用にロジックを複製（実際のテストではリフレクション等で対応可能）

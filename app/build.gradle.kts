@@ -221,13 +221,65 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     })
 }
 
-tasks.register("jacocoTestCoverageVerification") {
+tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     dependsOn("jacocoTestReport")
 
-    doLast {
-        val report = file("${layout.buildDirectory.get()}/reports/jacoco/testDebugUnitTest/html/index.html")
-        if (report.exists()) {
-            println("Coverage report: ${report.absolutePath}")
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R\$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*",
+        "**/*_Hilt*.*",
+        "**/Hilt_*.*",
+        "**/*_Factory.*",
+        "**/*_MembersInjector.*",
+        "**/*Module_*Factory.*",
+        "**/di/*",
+        "**/databinding/*",
+        "**/BR.class",
+        // UI composables (require instrumentation tests)
+        "**/ui/screens/*/components/*",
+        "**/ui/components/*",
+        "**/ui/navigation/*",
+        "**/ui/theme/*",
+        "**/*Screen*.*",
+        "**/*ComposableSingletons*.*",
+        // Android services, widgets, workers
+        "**/service/*",
+        "**/service/**",
+        "**/widget/*",
+        "**/worker/*",
+        "**/util/*",
+        // Cloud/encryption (Android SDK dependent)
+        "**/data/cloud/*",
+        "**/data/encryption/*",
+        "**/data/local/migration/*",
+        "**/data/local/converter/*",
+        "**/data/local/IterioDatabase*",
+        // Application class
+        "**/IterioApp.*",
+        "**/ui/premium/PremiumManager*"
+    )
+
+    val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+        exclude(fileFilter)
+    }
+
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(fileTree(layout.buildDirectory) {
+        include("jacoco/testDebugUnitTest.exec")
+    })
+
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.60".toBigDecimal()
+            }
         }
     }
 }
+

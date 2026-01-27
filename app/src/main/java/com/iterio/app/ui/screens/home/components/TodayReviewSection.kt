@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ import com.iterio.app.ui.theme.AccentTeal
 fun TodayReviewSection(
     reviewTasks: List<ReviewTask>,
     onToggleComplete: (Long, Boolean) -> Unit,
+    onViewAll: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val completedCount = reviewTasks.count { it.isCompleted }
@@ -69,12 +71,24 @@ fun TodayReviewSection(
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-                if (reviewTasks.isNotEmpty()) {
-                    Text(
-                        text = "$completedCount / $totalCount 完了",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (completedCount == totalCount) AccentSuccess else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (reviewTasks.isNotEmpty()) {
+                        Text(
+                            text = "$completedCount / $totalCount 完了",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (completedCount == totalCount) AccentSuccess else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    TextButton(onClick = onViewAll) {
+                        Text(
+                            text = "すべて見る",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = AccentTeal
+                        )
+                    }
                 }
             }
 

@@ -9,6 +9,8 @@
 | ストア掲載テキスト（日本語） | ✅ | `docs/STORE_LISTING.md` |
 | ストア掲載テキスト（英語） | ✅ | `docs/STORE_LISTING.md` |
 | プライバシーポリシー | ✅ | `docs/PRIVACY_POLICY.md` + `docs/privacy-policy.html` |
+| プライバシーポリシーのホスティング | ✅ | https://kazu-apps.github.io/iterio/privacy-policy.html |
+| スクリーンショット撮影 | ✅ | 撮影済み |
 | 言語切り替え機能 | ✅ | 日本語/English 対応済み |
 | 署名キー設定 | ✅ | `secrets.properties` で管理 |
 | リリースビルド | ✅ | ProGuard/R8 有効 |
@@ -37,37 +39,7 @@ BILLING_PUBLIC_KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...（コピー�
 
 ---
 
-### 2. スクリーンショットの撮影（必須）
-
-**必要枚数:** 最低2枚、推奨4〜8枚
-
-**推奨サイズ:**
-- スマートフォン: 1080×1920 または 1080×2400
-- 7インチタブレット（任意）: 1200×1920
-- 10インチタブレット（任意）: 1800×2560
-
-**撮影対象:**
-1. ホーム画面（今日のタスク・復習リスト表示）
-2. タイマー画面（作業中の状態）
-3. 統計画面（学習時間グラフ）
-4. カレンダー画面（ヒートマップ表示）
-5. 設定画面（言語選択を含む）
-6. フォーカスモード設定
-7. Premium機能紹介
-8. ウィジェット表示
-
-**撮影手順:**
-```bash
-# エミュレータで撮影する場合
-adb shell screencap -p /sdcard/screenshot.png
-adb pull /sdcard/screenshot.png ./docs/store-assets/screenshot_01.png
-```
-
-**保存先:** `docs/store-assets/` フォルダ
-
----
-
-### 3. Google Cloud Console 設定（クラウドバックアップ用）
+### 2. Google Cloud Console 設定（クラウドバックアップ用）
 
 Google Drive バックアップ機能を有効にするには、OAuth 2.0 の設定が必要です。
 
@@ -164,8 +136,7 @@ keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -sto
 ### ステップ 3: アプリのコンテンツ設定
 
 1. **プライバシーポリシー**
-   - URL: プライバシーポリシーをホスティングしたURL
-   - 例: GitHub Pages, Firebase Hosting など
+   - URL: https://kazu-apps.github.io/iterio/privacy-policy.html
 
 2. **広告**
    - 「このアプリには広告が含まれていますか？」→ いいえ

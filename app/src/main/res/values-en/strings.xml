@@ -262,6 +262,24 @@
     <string name="tasks_review_enabled">Generate review tasks</string>
     <string name="tasks_review_enabled_desc">Auto-generate review tasks when timer completes</string>
 
+    <!-- Review Schedule Screen -->
+    <string name="review_schedule_title">Review Schedule</string>
+    <string name="review_schedule_filter_all">All</string>
+    <string name="review_schedule_filter_pending">Pending</string>
+    <string name="review_schedule_filter_completed">Completed</string>
+    <string name="review_schedule_filter_overdue">Overdue</string>
+    <string name="review_schedule_empty">No review tasks</string>
+    <string name="review_schedule_today">Today</string>
+    <string name="review_schedule_overdue">Overdue</string>
+    <string name="review_schedule_upcoming">Upcoming</string>
+    <string name="review_schedule_total">Total: %d</string>
+    <string name="review_schedule_pending_count">Pending: %d</string>
+    <string name="review_schedule_completed_count">Completed: %d</string>
+    <string name="review_schedule_overdue_count">Overdue: %d</string>
+    <string name="review_schedule_date_format">%3$s, %1$s/%2$s</string>
+    <string name="review_schedule_task_group">%s</string>
+    <string name="review_schedule_no_group">No group</string>
+
     <!-- BGM Settings -->
     <string name="settings_bgm">BGM</string>
     <string name="settings_bgm_track">BGM Track</string>

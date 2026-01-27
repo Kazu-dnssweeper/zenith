@@ -12,8 +12,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkAll
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -32,6 +34,11 @@ class SettingsRepositoryImplTest {
         settingsDao = mockk()
         database = mockk(relaxed = true)
         repository = SettingsRepositoryImpl(settingsDao, database)
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
     }
 
     // ==================== PomodoroSettings Tests ====================

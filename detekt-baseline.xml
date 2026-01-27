@@ -1,0 +1,244 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ComplexCondition:FinishTimerSessionUseCase.kt$FinishTimerSessionUseCase$params.settings.reviewEnabled &amp;&amp; params.task.reviewEnabled &amp;&amp; !params.isInterrupted &amp;&amp; params.reviewIntervals.isNotEmpty()</ID>
+    <ID>CyclomaticComplexMethod:BackupError.kt$BackupError.Companion$fun fromException(e: Throwable): BackupError</ID>
+    <ID>CyclomaticComplexMethod:BackupScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun BackupScreen( onNavigateBack: () -&gt; Unit, onNavigateToPremium: () -&gt; Unit, viewModel: BackupViewModel = hiltViewModel() )</ID>
+    <ID>CyclomaticComplexMethod:PremiumScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PremiumScreen( onNavigateBack: () -&gt; Unit, viewModel: PremiumViewModel = hiltViewModel() )</ID>
+    <ID>CyclomaticComplexMethod:TaskListSection.kt$@Composable internal fun TaskCard( task: Task, onClick: () -&gt; Unit, onStartTimer: () -&gt; Unit )</ID>
+    <ID>CyclomaticComplexMethod:TasksViewModel.kt$TasksViewModel$fun onEvent(event: TasksEvent)</ID>
+    <ID>CyclomaticComplexMethod:TimerScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TimerScreen( taskId: Long, onNavigateBack: () -&gt; Unit, onNavigateToPremium: () -&gt; Unit, viewModel: TimerViewModel = hiltViewModel() )</ID>
+    <ID>CyclomaticComplexMethod:TodayTasksSection.kt$@Composable private fun TodayTaskItem( task: Task, onStartTimer: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:AllowedAppsScreen.kt$@Composable private fun AppListItem( app: AllowedApp, isSelected: Boolean, onToggle: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:AllowedAppsScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AllowedAppsScreen( onNavigateBack: () -&gt; Unit, viewModel: AllowedAppsViewModel = hiltViewModel() )</ID>
+    <ID>FunctionNaming:AllowedAppsSelectorBottomSheet.kt$@Composable private fun AppSelectorItem( app: AllowedApp, isSelected: Boolean, onToggle: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:AllowedAppsSelectorBottomSheet.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AllowedAppsSelectorBottomSheet( installedApps: List&lt;AllowedApp&gt;, selectedPackages: Set&lt;String&gt;, isLoading: Boolean, onSelectionChanged: (Set&lt;String&gt;) -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:BackupScreen.kt$@Composable private fun BackupSection( title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, buttonText: String, buttonEnabled: Boolean, isLoading: Boolean, onClick: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:BackupScreen.kt$@Composable private fun CloudBackupSection( isPremium: Boolean, googleSignInState: GoogleSignInState, cloudBackupInfo: CloudBackupInfo?, isUploading: Boolean, isDownloading: Boolean, onSignIn: () -&gt; Unit, onSignOut: () -&gt; Unit, onUpload: () -&gt; Unit, onDownload: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:BackupScreen.kt$@Composable private fun ResultDialog( icon: androidx.compose.ui.graphics.vector.ImageVector, iconColor: androidx.compose.ui.graphics.Color, title: String, message: String, onDismiss: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:BackupScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun BackupScreen( onNavigateBack: () -&gt; Unit, onNavigateToPremium: () -&gt; Unit, viewModel: BackupViewModel = hiltViewModel() )</ID>
+    <ID>FunctionNaming:BgmComponents.kt$@Composable internal fun BgmButton( selectedTrack: BgmTrack?, isPlaying: Boolean, isPremium: Boolean, onClick: () -&gt; Unit, onTogglePlay: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:BgmComponents.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun BgmSelectorBottomSheet( tracks: List&lt;BgmTrack&gt;, selectedTrack: BgmTrack?, volume: Float, onSelectTrack: (BgmTrack?) -&gt; Unit, onVolumeChange: (Float) -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:BgmSettingsSection.kt$@Composable internal fun BgmSettingsContent( selectedTrackId: String?, volume: Float, autoPlayEnabled: Boolean, isPremium: Boolean, onTrackSelect: () -&gt; Unit, onVolumeChange: (Float) -&gt; Unit, onAutoPlayToggle: (Boolean) -&gt; Unit, onPremiumClick: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:BlurredPremiumContent.kt$@Composable fun BlurredPremiumContent( isPremium: Boolean, onPremiumClick: () -&gt; Unit, modifier: Modifier = Modifier, content: @Composable () -&gt; Unit )</ID>
+    <ID>FunctionNaming:BottomNavigationBar.kt$@Composable fun BottomNavigationBar( navController: NavController, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CalendarGrid.kt$@Composable fun CalendarGrid( yearMonth: YearMonth, dailyStats: Map&lt;LocalDate, DailyStats&gt;, taskCountByDate: Map&lt;LocalDate, Int&gt;, selectedDate: LocalDate?, onDateClick: (LocalDate) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CalendarGrid.kt$@Composable fun CalendarGridSimple( yearMonth: YearMonth, dailyStats: Map&lt;LocalDate, DailyStats&gt;, taskCountByDate: Map&lt;LocalDate, Int&gt;, selectedDate: LocalDate?, onDateClick: (LocalDate) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:CalendarGrid.kt$@Composable fun WeekdayHeader(modifier: Modifier = Modifier)</ID>
+    <ID>FunctionNaming:CalendarScreen.kt$@Composable fun CalendarScreen( onStartTimer: (Long) -&gt; Unit = {}, viewModel: CalendarViewModel = hiltViewModel() )</ID>
+    <ID>FunctionNaming:DayCell.kt$@Composable fun DayCell( date: LocalDate, heatmapColor: Color, taskCount: Int, isSelected: Boolean, isToday: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:DayCell.kt$@Composable fun DayCellSimple( date: LocalDate, hasStudied: Boolean, taskCount: Int, isSelected: Boolean, isToday: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:EmptySectionMessage.kt$@Composable fun EmptyAppList( modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:EmptySectionMessage.kt$@Composable fun EmptySearchResult( searchQuery: String, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:EmptySectionMessage.kt$@Composable fun EmptySectionMessage( icon: ImageVector, message: String, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:FocusModeDialog.kt$@Composable internal fun CancelConfirmDialog( onDismiss: () -&gt; Unit, onConfirm: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeDialog.kt$@Composable internal fun FinishDialog( totalCycles: Int, totalWorkMinutes: Int, onDismiss: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeDialog.kt$@Composable internal fun FocusModeWarningDialog( context: Context, isPremium: Boolean, sessionLockModeEnabled: Boolean, sessionCycleCount: Int, sessionAutoLoopEnabled: Boolean, sessionAllowedApps: Set&lt;String&gt;, onLockModeToggle: (Boolean) -&gt; Unit, onCycleCountChange: (Int) -&gt; Unit, onAutoLoopToggle: (Boolean) -&gt; Unit, onShowAllowedApps: () -&gt; Unit, onShowPremiumUpsell: () -&gt; Unit, onShowAutoLoopPremiumUpsell: () -&gt; Unit, onDismiss: () -&gt; Unit, onConfirm: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeDialog.kt$@Composable internal fun StrictModeBlockedDialog( onDismiss: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeDialog.kt$@Composable private fun AllowedAppsSelector( selectedCount: Int, onClick: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeDialog.kt$@Composable private fun AutoLoopOption( isPremium: Boolean, isEnabled: Boolean, onToggle: (Boolean) -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeDialog.kt$@Composable private fun CycleCountSelector( cycleCount: Int, onCycleCountChange: (Int) -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeDialog.kt$@Composable private fun LockModeOption( isPremium: Boolean, isEnabled: Boolean, onToggle: (Boolean) -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeDialog.kt$@Composable private fun OverlayPermissionWarning( onRequestPermission: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeSettingsSection.kt$@Composable internal fun FocusModeSettingsContent( focusModeEnabled: Boolean, focusModeStrict: Boolean, allowedAppsCount: Int, isPremium: Boolean, onFocusModeToggle: (Boolean) -&gt; Unit, onStrictModeToggle: (Boolean) -&gt; Unit, onNavigateToAllowedApps: () -&gt; Unit, onPremiumClick: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:FocusModeSettingsSection.kt$@Composable private fun AllowedAppsNavigationItem( allowedAppsCount: Int, onClick: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:GroupDialogs.kt$@Composable internal fun AddGroupDialog( onDismiss: () -&gt; Unit, onConfirm: (String, String) -&gt; Unit )</ID>
+    <ID>FunctionNaming:GroupDialogs.kt$@Composable internal fun EditGroupDialog( group: SubjectGroup, onDismiss: () -&gt; Unit, onConfirm: (SubjectGroup) -&gt; Unit, onDelete: (SubjectGroup) -&gt; Unit )</ID>
+    <ID>FunctionNaming:GroupDialogs.kt$@Composable private fun ColorSelector( colors: List&lt;String&gt;, selectedColor: String, onColorSelected: (String) -&gt; Unit )</ID>
+    <ID>FunctionNaming:GroupSelector.kt$@Composable internal fun AddGroupChip(onClick: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:GroupSelector.kt$@Composable internal fun GroupSelector( groups: List&lt;SubjectGroup&gt;, selectedGroup: SubjectGroup?, onGroupSelected: (SubjectGroup) -&gt; Unit, onAddGroup: () -&gt; Unit, onEditGroup: (SubjectGroup) -&gt; Unit )</ID>
+    <ID>FunctionNaming:GroupSelector.kt$@OptIn(ExperimentalFoundationApi::class) @Composable internal fun GroupChip( group: SubjectGroup, isSelected: Boolean, onClick: () -&gt; Unit, onLongClick: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:HeatmapLegend.kt$@Composable fun HeatmapLegend(modifier: Modifier = Modifier)</ID>
+    <ID>FunctionNaming:HomeScreen.kt$@Composable fun HomeScreen( onNavigateToTimer: (Long) -&gt; Unit, onNavigateToTasks: () -&gt; Unit, viewModel: HomeViewModel = hiltViewModel() )</ID>
+    <ID>FunctionNaming:IterioCard.kt$@Composable fun IterioCard( modifier: Modifier = Modifier, content: @Composable ColumnScope.() -&gt; Unit )</ID>
+    <ID>FunctionNaming:IterioNavHost.kt$@Composable fun IterioNavHost( navController: NavHostController, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:IterioTopBar.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun IterioTopBar( title: String, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:IterioWidget.kt$@Composable private fun IterioWidgetContent(context: Context, state: WidgetState)</ID>
+    <ID>FunctionNaming:IterioWidget.kt$@Composable private fun TimerStatusRow(state: WidgetState)</ID>
+    <ID>FunctionNaming:LoadingIndicator.kt$@Composable fun LoadingIndicator( modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:LockedFeatureCard.kt$@Composable fun LockedFeatureCard( feature: PremiumFeature, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:LockedFeatureCard.kt$@Composable fun PremiumStatusCard( isPremium: Boolean, isInTrialPeriod: Boolean, daysRemainingInTrial: Int, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:LockedFeatureCard.kt$@Composable fun PremiumUpgradeCard( onStartTrial: () -&gt; Unit, onUpgrade: () -&gt; Unit, trialAvailable: Boolean, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:MonthHeader.kt$@Composable fun MonthHeader( yearMonth: YearMonth, onPreviousMonth: () -&gt; Unit, onNextMonth: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:NotificationPermissionDialog.kt$@Composable fun NotificationPermissionDialog( onConfirm: () -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:PhaseIndicator.kt$@Composable internal fun PhaseIndicator( phase: TimerPhase, currentCycle: Int, totalCycles: Int )</ID>
+    <ID>FunctionNaming:PomodoroSettingsSection.kt$@Composable internal fun PomodoroSettingsContent( workDurationMinutes: Int, shortBreakMinutes: Int, longBreakMinutes: Int, cyclesBeforeLongBreak: Int, onWorkDurationChange: (Int) -&gt; Unit, onShortBreakChange: (Int) -&gt; Unit, onLongBreakChange: (Int) -&gt; Unit, onCyclesChange: (Int) -&gt; Unit )</ID>
+    <ID>FunctionNaming:PremiumBadge.kt$@Composable fun PremiumBadge( modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:PremiumBadge.kt$@Composable fun TrialBadge( daysRemaining: Int, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:PremiumScreen.kt$@Composable private fun FeatureRow(text: String)</ID>
+    <ID>FunctionNaming:PremiumScreen.kt$@Composable private fun PlanCard( title: String, price: String, period: String, badge: String? = null, monthlyEquivalent: String? = null, isRecommended: Boolean = false, isSelected: Boolean, onClick: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:PremiumScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PremiumScreen( onNavigateBack: () -&gt; Unit, viewModel: PremiumViewModel = hiltViewModel() )</ID>
+    <ID>FunctionNaming:PremiumUpsellDialog.kt$@Composable fun PremiumUpsellDialog( feature: PremiumFeature, onDismiss: () -&gt; Unit, onStartTrial: () -&gt; Unit, onUpgrade: () -&gt; Unit, trialAvailable: Boolean )</ID>
+    <ID>FunctionNaming:ReviewSettingsSection.kt$@Composable internal fun ReviewCountSlider( title: String, description: String, selectedCount: Int, isPremium: Boolean, onCountChange: (Int) -&gt; Unit, onPremiumClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:ReviewSettingsSection.kt$@Composable internal fun ReviewSettingsContent( reviewIntervalsEnabled: Boolean, defaultReviewCount: Int, isPremium: Boolean, onReviewIntervalsToggle: (Boolean) -&gt; Unit, onReviewCountChange: (Int) -&gt; Unit, onPremiumClick: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:ReviewTaskManagementComponents.kt$@Composable internal fun ReviewTaskItem( task: ReviewTask, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:ReviewTaskManagementComponents.kt$@Composable internal fun ReviewTaskManagementSection( totalCount: Int, incompleteCount: Int, onShowList: () -&gt; Unit, onDeleteAll: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:ReviewTaskManagementComponents.kt$@Composable internal fun ReviewTasksListDialog( reviewTasks: List&lt;ReviewTask&gt;, onDismiss: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:ScheduleSection.kt$@OptIn(ExperimentalLayoutApi::class) @Composable private fun RepeatDaysSelector( selectedDays: Set&lt;Int&gt;, onDaysChange: (Set&lt;Int&gt;) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:ScheduleSection.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable private fun DateSelector( label: String, selectedDate: LocalDate?, onDateChange: (LocalDate?) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:ScheduleSection.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class) @Composable fun ScheduleSection( scheduleType: ScheduleType, repeatDays: Set&lt;Int&gt;, deadlineDate: LocalDate?, specificDate: LocalDate?, onScheduleTypeChange: (ScheduleType) -&gt; Unit, onRepeatDaysChange: (Set&lt;Int&gt;) -&gt; Unit, onDeadlineDateChange: (LocalDate?) -&gt; Unit, onSpecificDateChange: (LocalDate?) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:SelectedDateInfo.kt$@Composable fun SelectedDateInfo( date: LocalDate, stats: DailyStats?, tasks: List&lt;Task&gt;, reviewTasks: List&lt;ReviewTask&gt;, onStartTimer: (Long) -&gt; Unit, onToggleReviewTaskComplete: (Long, Boolean) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:SelectedDateInfo.kt$@Composable private fun SelectedDateReviewTaskItem( reviewTask: ReviewTask, onToggleComplete: () -&gt; Unit, onStartTimer: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:SelectedDateInfo.kt$@Composable private fun SelectedDateTaskItem( task: Task, onStartTimer: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:SettingsComponents.kt$@Composable internal fun LanguageOption( label: String, selected: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:SettingsComponents.kt$@Composable internal fun SettingsInfoItem( label: String, value: String, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:SettingsComponents.kt$@Composable internal fun SettingsPremiumSwitchItem( title: String, description: String, checked: Boolean, isPremium: Boolean, onCheckedChange: (Boolean) -&gt; Unit, onPremiumClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:SettingsComponents.kt$@Composable internal fun SettingsSection( title: String, modifier: Modifier = Modifier, content: @Composable () -&gt; Unit )</ID>
+    <ID>FunctionNaming:SettingsComponents.kt$@Composable internal fun SettingsSwitchItem( title: String, description: String, checked: Boolean, onCheckedChange: (Boolean) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:SettingsScreen.kt$@Composable fun SettingsScreen( onNavigateToPremium: () -&gt; Unit = {}, onNavigateToBackup: () -&gt; Unit = {}, onNavigateToAllowedApps: () -&gt; Unit = {}, viewModel: SettingsViewModel = hiltViewModel() )</ID>
+    <ID>FunctionNaming:SettingsScreen.kt$@Composable private fun BackupNavigationItem(onClick: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:StatsScreen.kt$@Composable fun StatsScreen( viewModel: StatsViewModel = hiltViewModel() )</ID>
+    <ID>FunctionNaming:StatsScreen.kt$@Composable private fun StatCard( title: String, icon: ImageVector, iconTint: Color, modifier: Modifier = Modifier, content: @Composable () -&gt; Unit )</ID>
+    <ID>FunctionNaming:StatsScreen.kt$@Composable private fun StatValue( value: String, label: String, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:StatsScreen.kt$@Composable private fun TodayStudyCard( minutes: Int, sessions: Int, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:StatsScreen.kt$@Composable private fun WeeklyChart( weeklyData: List&lt;DayStats&gt;, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:TaskDialogs.kt$@Composable internal fun AddTaskDialog( defaultWorkDurationMinutes: Int, scheduleType: ScheduleType, repeatDays: Set&lt;Int&gt;, deadlineDate: LocalDate?, specificDate: LocalDate?, isPremium: Boolean, reviewCountOptions: List&lt;Int&gt;, reviewCount: Int?, reviewEnabled: Boolean, onScheduleTypeChange: (ScheduleType) -&gt; Unit, onRepeatDaysChange: (Set&lt;Int&gt;) -&gt; Unit, onDeadlineDateChange: (LocalDate?) -&gt; Unit, onSpecificDateChange: (LocalDate?) -&gt; Unit, onReviewCountChange: (Int?) -&gt; Unit, onReviewEnabledChange: (Boolean) -&gt; Unit, onDismiss: () -&gt; Unit, onConfirm: (String, Int?, ScheduleType, Set&lt;Int&gt;, LocalDate?, LocalDate?, Int?, Boolean) -&gt; Unit )</ID>
+    <ID>FunctionNaming:TaskDialogs.kt$@Composable internal fun EditTaskDialog( task: Task, scheduleType: ScheduleType, repeatDays: Set&lt;Int&gt;, deadlineDate: LocalDate?, specificDate: LocalDate?, isPremium: Boolean, reviewCountOptions: List&lt;Int&gt;, reviewCount: Int?, reviewEnabled: Boolean, onScheduleTypeChange: (ScheduleType) -&gt; Unit, onRepeatDaysChange: (Set&lt;Int&gt;) -&gt; Unit, onDeadlineDateChange: (LocalDate?) -&gt; Unit, onSpecificDateChange: (LocalDate?) -&gt; Unit, onReviewCountChange: (Int?) -&gt; Unit, onReviewEnabledChange: (Boolean) -&gt; Unit, onDismiss: () -&gt; Unit, onConfirm: (Task) -&gt; Unit, onDelete: (Task) -&gt; Unit, onStartTimer: (Task) -&gt; Unit )</ID>
+    <ID>FunctionNaming:TaskDialogs.kt$@Composable internal fun ReviewCountSection( isPremium: Boolean, reviewCountOptions: List&lt;Int&gt;, reviewCount: Int?, onReviewCountChange: (Int?) -&gt; Unit )</ID>
+    <ID>FunctionNaming:TaskDialogs.kt$@Composable private fun DurationSection( useCustomDuration: Boolean, workDuration: Float, defaultWorkDurationMinutes: Int, onUseCustomDurationChange: (Boolean) -&gt; Unit, onWorkDurationChange: (Float) -&gt; Unit, showDefaultMessage: Boolean = true )</ID>
+    <ID>FunctionNaming:TaskDialogs.kt$@Composable private fun ReviewSection( reviewEnabled: Boolean, onReviewEnabledChange: (Boolean) -&gt; Unit, isPremium: Boolean, reviewCountOptions: List&lt;Int&gt;, reviewCount: Int?, onReviewCountChange: (Int?) -&gt; Unit )</ID>
+    <ID>FunctionNaming:TaskListSection.kt$@Composable internal fun EmptyGroupsMessage(onAddGroup: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:TaskListSection.kt$@Composable internal fun TaskCard( task: Task, onClick: () -&gt; Unit, onStartTimer: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:TaskListSection.kt$@Composable internal fun TaskList( tasks: List&lt;Task&gt;, onTaskClick: (Task) -&gt; Unit, onStartTimer: (Task) -&gt; Unit )</ID>
+    <ID>FunctionNaming:TasksScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TasksScreen( onStartTimer: (Task) -&gt; Unit, viewModel: TasksViewModel = hiltViewModel() )</ID>
+    <ID>FunctionNaming:Theme.kt$@Composable fun IterioTheme( content: @Composable () -&gt; Unit )</ID>
+    <ID>FunctionNaming:TimerControls.kt$@Composable internal fun TimerControls( phase: TimerPhase, isRunning: Boolean, isPaused: Boolean, focusModeEnabled: Boolean, isLockModeActive: Boolean, onStart: () -&gt; Unit, onPause: () -&gt; Unit, onResume: () -&gt; Unit, onSkip: () -&gt; Unit, onStop: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:TimerDisplay.kt$@Composable internal fun CircularTimer( timeRemainingSeconds: Int, totalTimeSeconds: Int, phase: TimerPhase )</ID>
+    <ID>FunctionNaming:TimerScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TimerScreen( taskId: Long, onNavigateBack: () -&gt; Unit, onNavigateToPremium: () -&gt; Unit, viewModel: TimerViewModel = hiltViewModel() )</ID>
+    <ID>FunctionNaming:TodayReviewSection.kt$@Composable fun TodayReviewSection( reviewTasks: List&lt;ReviewTask&gt;, onToggleComplete: (Long, Boolean) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:TodayReviewSection.kt$@Composable private fun ReviewTaskItem( reviewTask: ReviewTask, onToggleComplete: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:TodayTasksSection.kt$@Composable fun TodayTasksSection( tasks: List&lt;Task&gt;, onStartTimer: (Long) -&gt; Unit, onNavigateToTasks: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:TodayTasksSection.kt$@Composable private fun EmptyTodayTasksMessage(onNavigateToTasks: () -&gt; Unit)</ID>
+    <ID>FunctionNaming:TodayTasksSection.kt$@Composable private fun TodayTaskItem( task: Task, onStartTimer: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:TrialOfferDialog.kt$@Composable fun TrialOfferDialog( onStartTrial: () -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:TrialOfferDialog.kt$@Composable private fun PremiumFeatureItem(text: String)</ID>
+    <ID>FunctionNaming:UpcomingDeadlinesSection.kt$@Composable fun UpcomingDeadlinesSection( tasks: List&lt;Task&gt;, onStartTimer: (Long) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:UpcomingDeadlinesSection.kt$@Composable private fun UpcomingDeadlineItem( task: Task, onStartTimer: () -&gt; Unit )</ID>
+    <ID>FunctionNaming:WeeklyMiniChart.kt$@Composable fun WeeklyMiniChart( weeklyData: List&lt;DayStats&gt;, modifier: Modifier = Modifier )</ID>
+    <ID>FunctionNaming:WeeklyMiniChart.kt$@Composable private fun DayBar( dayStats: DayStats, maxMinutes: Int, isToday: Boolean, modifier: Modifier = Modifier )</ID>
+    <ID>ImplicitDefaultLocale:IterioWidget.kt$String.format("%02d:%02d", mins, secs)</ID>
+    <ID>ImplicitDefaultLocale:TimerDisplay.kt$String.format("%02d:%02d", minutes, seconds)</ID>
+    <ID>ImplicitDefaultLocale:TimerService.kt$TimerService$String.format("%02d:%02d", minutes, seconds)</ID>
+    <ID>LongMethod:AllowedAppsScreen.kt$@Composable private fun AppListItem( app: AllowedApp, isSelected: Boolean, onToggle: () -&gt; Unit )</ID>
+    <ID>LongMethod:AllowedAppsScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AllowedAppsScreen( onNavigateBack: () -&gt; Unit, viewModel: AllowedAppsViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:AllowedAppsSelectorBottomSheet.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AllowedAppsSelectorBottomSheet( installedApps: List&lt;AllowedApp&gt;, selectedPackages: Set&lt;String&gt;, isLoading: Boolean, onSelectionChanged: (Set&lt;String&gt;) -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>LongMethod:BackupScreen.kt$@Composable private fun BackupSection( title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, description: String, buttonText: String, buttonEnabled: Boolean, isLoading: Boolean, onClick: () -&gt; Unit )</ID>
+    <ID>LongMethod:BackupScreen.kt$@Composable private fun CloudBackupSection( isPremium: Boolean, googleSignInState: GoogleSignInState, cloudBackupInfo: CloudBackupInfo?, isUploading: Boolean, isDownloading: Boolean, onSignIn: () -&gt; Unit, onSignOut: () -&gt; Unit, onUpload: () -&gt; Unit, onDownload: () -&gt; Unit )</ID>
+    <ID>LongMethod:BackupScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun BackupScreen( onNavigateBack: () -&gt; Unit, onNavigateToPremium: () -&gt; Unit, viewModel: BackupViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:BgmComponents.kt$@Composable internal fun BgmButton( selectedTrack: BgmTrack?, isPlaying: Boolean, isPremium: Boolean, onClick: () -&gt; Unit, onTogglePlay: () -&gt; Unit )</ID>
+    <ID>LongMethod:BgmComponents.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun BgmSelectorBottomSheet( tracks: List&lt;BgmTrack&gt;, selectedTrack: BgmTrack?, volume: Float, onSelectTrack: (BgmTrack?) -&gt; Unit, onVolumeChange: (Float) -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>LongMethod:BgmSettingsSection.kt$@Composable internal fun BgmSettingsContent( selectedTrackId: String?, volume: Float, autoPlayEnabled: Boolean, isPremium: Boolean, onTrackSelect: () -&gt; Unit, onVolumeChange: (Float) -&gt; Unit, onAutoPlayToggle: (Boolean) -&gt; Unit, onPremiumClick: () -&gt; Unit )</ID>
+    <ID>LongMethod:CalendarScreen.kt$@Composable fun CalendarScreen( onStartTimer: (Long) -&gt; Unit = {}, viewModel: CalendarViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:DayCell.kt$@Composable fun DayCellSimple( date: LocalDate, hasStudied: Boolean, taskCount: Int, isSelected: Boolean, isToday: Boolean, onClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:FocusModeDialog.kt$@Composable internal fun FocusModeWarningDialog( context: Context, isPremium: Boolean, sessionLockModeEnabled: Boolean, sessionCycleCount: Int, sessionAutoLoopEnabled: Boolean, sessionAllowedApps: Set&lt;String&gt;, onLockModeToggle: (Boolean) -&gt; Unit, onCycleCountChange: (Int) -&gt; Unit, onAutoLoopToggle: (Boolean) -&gt; Unit, onShowAllowedApps: () -&gt; Unit, onShowPremiumUpsell: () -&gt; Unit, onShowAutoLoopPremiumUpsell: () -&gt; Unit, onDismiss: () -&gt; Unit, onConfirm: () -&gt; Unit )</ID>
+    <ID>LongMethod:GroupDialogs.kt$@Composable internal fun EditGroupDialog( group: SubjectGroup, onDismiss: () -&gt; Unit, onConfirm: (SubjectGroup) -&gt; Unit, onDelete: (SubjectGroup) -&gt; Unit )</ID>
+    <ID>LongMethod:HomeScreen.kt$@Composable fun HomeScreen( onNavigateToTimer: (Long) -&gt; Unit, onNavigateToTasks: () -&gt; Unit, viewModel: HomeViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:IterioNavHost.kt$@Composable fun IterioNavHost( navController: NavHostController, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:IterioWidget.kt$@Composable private fun IterioWidgetContent(context: Context, state: WidgetState)</ID>
+    <ID>LongMethod:MainActivity.kt$MainActivity$override fun onCreate(savedInstanceState: Bundle?)</ID>
+    <ID>LongMethod:PhaseIndicator.kt$@Composable internal fun PhaseIndicator( phase: TimerPhase, currentCycle: Int, totalCycles: Int )</ID>
+    <ID>LongMethod:PomodoroSettingsSection.kt$@Composable internal fun PomodoroSettingsContent( workDurationMinutes: Int, shortBreakMinutes: Int, longBreakMinutes: Int, cyclesBeforeLongBreak: Int, onWorkDurationChange: (Int) -&gt; Unit, onShortBreakChange: (Int) -&gt; Unit, onLongBreakChange: (Int) -&gt; Unit, onCyclesChange: (Int) -&gt; Unit )</ID>
+    <ID>LongMethod:PremiumScreen.kt$@Composable private fun PlanCard( title: String, price: String, period: String, badge: String? = null, monthlyEquivalent: String? = null, isRecommended: Boolean = false, isSelected: Boolean, onClick: () -&gt; Unit )</ID>
+    <ID>LongMethod:PremiumScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun PremiumScreen( onNavigateBack: () -&gt; Unit, viewModel: PremiumViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:PremiumUpsellDialog.kt$@Composable fun PremiumUpsellDialog( feature: PremiumFeature, onDismiss: () -&gt; Unit, onStartTrial: () -&gt; Unit, onUpgrade: () -&gt; Unit, trialAvailable: Boolean )</ID>
+    <ID>LongMethod:ReviewSettingsSection.kt$@Composable internal fun ReviewCountSlider( title: String, description: String, selectedCount: Int, isPremium: Boolean, onCountChange: (Int) -&gt; Unit, onPremiumClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ReviewTaskManagementComponents.kt$@Composable internal fun ReviewTaskItem( task: ReviewTask, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ReviewTaskManagementComponents.kt$@Composable internal fun ReviewTaskManagementSection( totalCount: Int, incompleteCount: Int, onShowList: () -&gt; Unit, onDeleteAll: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ScheduleSection.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable private fun DateSelector( label: String, selectedDate: LocalDate?, onDateChange: (LocalDate?) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:ScheduleSection.kt$@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class) @Composable fun ScheduleSection( scheduleType: ScheduleType, repeatDays: Set&lt;Int&gt;, deadlineDate: LocalDate?, specificDate: LocalDate?, onScheduleTypeChange: (ScheduleType) -&gt; Unit, onRepeatDaysChange: (Set&lt;Int&gt;) -&gt; Unit, onDeadlineDateChange: (LocalDate?) -&gt; Unit, onSpecificDateChange: (LocalDate?) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SelectedDateInfo.kt$@Composable fun SelectedDateInfo( date: LocalDate, stats: DailyStats?, tasks: List&lt;Task&gt;, reviewTasks: List&lt;ReviewTask&gt;, onStartTimer: (Long) -&gt; Unit, onToggleReviewTaskComplete: (Long, Boolean) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SelectedDateInfo.kt$@Composable private fun SelectedDateReviewTaskItem( reviewTask: ReviewTask, onToggleComplete: () -&gt; Unit, onStartTimer: () -&gt; Unit )</ID>
+    <ID>LongMethod:SettingsComponents.kt$@Composable internal fun SettingsPremiumSwitchItem( title: String, description: String, checked: Boolean, isPremium: Boolean, onCheckedChange: (Boolean) -&gt; Unit, onPremiumClick: () -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:SettingsRepositoryImpl.kt$SettingsRepositoryImpl$override suspend fun getPomodoroSettings(): Result&lt;PomodoroSettings, DomainError&gt;</ID>
+    <ID>LongMethod:SettingsScreen.kt$@Composable fun SettingsScreen( onNavigateToPremium: () -&gt; Unit = {}, onNavigateToBackup: () -&gt; Unit = {}, onNavigateToAllowedApps: () -&gt; Unit = {}, viewModel: SettingsViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:StatsScreen.kt$@Composable fun StatsScreen( viewModel: StatsViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:StatsScreen.kt$@Composable private fun WeeklyChart( weeklyData: List&lt;DayStats&gt;, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:TaskDialogs.kt$@Composable internal fun AddTaskDialog( defaultWorkDurationMinutes: Int, scheduleType: ScheduleType, repeatDays: Set&lt;Int&gt;, deadlineDate: LocalDate?, specificDate: LocalDate?, isPremium: Boolean, reviewCountOptions: List&lt;Int&gt;, reviewCount: Int?, reviewEnabled: Boolean, onScheduleTypeChange: (ScheduleType) -&gt; Unit, onRepeatDaysChange: (Set&lt;Int&gt;) -&gt; Unit, onDeadlineDateChange: (LocalDate?) -&gt; Unit, onSpecificDateChange: (LocalDate?) -&gt; Unit, onReviewCountChange: (Int?) -&gt; Unit, onReviewEnabledChange: (Boolean) -&gt; Unit, onDismiss: () -&gt; Unit, onConfirm: (String, Int?, ScheduleType, Set&lt;Int&gt;, LocalDate?, LocalDate?, Int?, Boolean) -&gt; Unit )</ID>
+    <ID>LongMethod:TaskDialogs.kt$@Composable internal fun EditTaskDialog( task: Task, scheduleType: ScheduleType, repeatDays: Set&lt;Int&gt;, deadlineDate: LocalDate?, specificDate: LocalDate?, isPremium: Boolean, reviewCountOptions: List&lt;Int&gt;, reviewCount: Int?, reviewEnabled: Boolean, onScheduleTypeChange: (ScheduleType) -&gt; Unit, onRepeatDaysChange: (Set&lt;Int&gt;) -&gt; Unit, onDeadlineDateChange: (LocalDate?) -&gt; Unit, onSpecificDateChange: (LocalDate?) -&gt; Unit, onReviewCountChange: (Int?) -&gt; Unit, onReviewEnabledChange: (Boolean) -&gt; Unit, onDismiss: () -&gt; Unit, onConfirm: (Task) -&gt; Unit, onDelete: (Task) -&gt; Unit, onStartTimer: (Task) -&gt; Unit )</ID>
+    <ID>LongMethod:TaskDialogs.kt$@Composable internal fun ReviewCountSection( isPremium: Boolean, reviewCountOptions: List&lt;Int&gt;, reviewCount: Int?, onReviewCountChange: (Int?) -&gt; Unit )</ID>
+    <ID>LongMethod:TaskDialogs.kt$@Composable private fun DurationSection( useCustomDuration: Boolean, workDuration: Float, defaultWorkDurationMinutes: Int, onUseCustomDurationChange: (Boolean) -&gt; Unit, onWorkDurationChange: (Float) -&gt; Unit, showDefaultMessage: Boolean = true )</ID>
+    <ID>LongMethod:TaskListSection.kt$@Composable internal fun TaskCard( task: Task, onClick: () -&gt; Unit, onStartTimer: () -&gt; Unit )</ID>
+    <ID>LongMethod:TasksScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TasksScreen( onStartTimer: (Task) -&gt; Unit, viewModel: TasksViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:TimerControls.kt$@Composable internal fun TimerControls( phase: TimerPhase, isRunning: Boolean, isPaused: Boolean, focusModeEnabled: Boolean, isLockModeActive: Boolean, onStart: () -&gt; Unit, onPause: () -&gt; Unit, onResume: () -&gt; Unit, onSkip: () -&gt; Unit, onStop: () -&gt; Unit )</ID>
+    <ID>LongMethod:TimerDisplay.kt$@Composable internal fun CircularTimer( timeRemainingSeconds: Int, totalTimeSeconds: Int, phase: TimerPhase )</ID>
+    <ID>LongMethod:TimerScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun TimerScreen( taskId: Long, onNavigateBack: () -&gt; Unit, onNavigateToPremium: () -&gt; Unit, viewModel: TimerViewModel = hiltViewModel() )</ID>
+    <ID>LongMethod:TimerService.kt$TimerService$private fun createNotification(): Notification</ID>
+    <ID>LongMethod:TimerService.kt$TimerService$private fun onPhaseComplete()</ID>
+    <ID>LongMethod:TodayReviewSection.kt$@Composable fun TodayReviewSection( reviewTasks: List&lt;ReviewTask&gt;, onToggleComplete: (Long, Boolean) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongMethod:TodayReviewSection.kt$@Composable private fun ReviewTaskItem( reviewTask: ReviewTask, onToggleComplete: () -&gt; Unit )</ID>
+    <ID>LongMethod:TodayTasksSection.kt$@Composable private fun TodayTaskItem( task: Task, onStartTimer: () -&gt; Unit )</ID>
+    <ID>LongMethod:TrialOfferDialog.kt$@Composable fun TrialOfferDialog( onStartTrial: () -&gt; Unit, onDismiss: () -&gt; Unit )</ID>
+    <ID>LongMethod:UpcomingDeadlinesSection.kt$@Composable private fun UpcomingDeadlineItem( task: Task, onStartTimer: () -&gt; Unit )</ID>
+    <ID>LongParameterList:AppModule.kt$AppModule$( @ApplicationContext context: Context, database: IterioDatabase, subjectGroupDao: SubjectGroupDao, taskDao: TaskDao, studySessionDao: StudySessionDao, reviewTaskDao: ReviewTaskDao, settingsDao: SettingsDao, dailyStatsDao: DailyStatsDao, gson: Gson, encryptionManager: EncryptionManager )</ID>
+    <ID>LongParameterList:BackupRepositoryImpl.kt$BackupRepositoryImpl$( @ApplicationContext private val context: Context, private val database: IterioDatabase, private val subjectGroupDao: SubjectGroupDao, private val taskDao: TaskDao, private val studySessionDao: StudySessionDao, private val reviewTaskDao: ReviewTaskDao, private val settingsDao: SettingsDao, private val dailyStatsDao: DailyStatsDao, private val gson: Gson, private val encryptionManager: EncryptionManager )</ID>
+    <ID>LongParameterList:BackupScreen.kt$( isPremium: Boolean, googleSignInState: GoogleSignInState, cloudBackupInfo: CloudBackupInfo?, isUploading: Boolean, isDownloading: Boolean, onSignIn: () -&gt; Unit, onSignOut: () -&gt; Unit, onUpload: () -&gt; Unit, onDownload: () -&gt; Unit )</ID>
+    <ID>LongParameterList:BgmSettingsSection.kt$( selectedTrackId: String?, volume: Float, autoPlayEnabled: Boolean, isPremium: Boolean, onTrackSelect: () -&gt; Unit, onVolumeChange: (Float) -&gt; Unit, onAutoPlayToggle: (Boolean) -&gt; Unit, onPremiumClick: () -&gt; Unit )</ID>
+    <ID>LongParameterList:FocusModeDialog.kt$( context: Context, isPremium: Boolean, sessionLockModeEnabled: Boolean, sessionCycleCount: Int, sessionAutoLoopEnabled: Boolean, sessionAllowedApps: Set&lt;String&gt;, onLockModeToggle: (Boolean) -&gt; Unit, onCycleCountChange: (Int) -&gt; Unit, onAutoLoopToggle: (Boolean) -&gt; Unit, onShowAllowedApps: () -&gt; Unit, onShowPremiumUpsell: () -&gt; Unit, onShowAutoLoopPremiumUpsell: () -&gt; Unit, onDismiss: () -&gt; Unit, onConfirm: () -&gt; Unit )</ID>
+    <ID>LongParameterList:FocusModeSettingsSection.kt$( focusModeEnabled: Boolean, focusModeStrict: Boolean, allowedAppsCount: Int, isPremium: Boolean, onFocusModeToggle: (Boolean) -&gt; Unit, onStrictModeToggle: (Boolean) -&gt; Unit, onNavigateToAllowedApps: () -&gt; Unit, onPremiumClick: () -&gt; Unit )</ID>
+    <ID>LongParameterList:PomodoroSettingsSection.kt$( workDurationMinutes: Int, shortBreakMinutes: Int, longBreakMinutes: Int, cyclesBeforeLongBreak: Int, onWorkDurationChange: (Int) -&gt; Unit, onShortBreakChange: (Int) -&gt; Unit, onLongBreakChange: (Int) -&gt; Unit, onCyclesChange: (Int) -&gt; Unit )</ID>
+    <ID>LongParameterList:ScheduleSection.kt$( scheduleType: ScheduleType, repeatDays: Set&lt;Int&gt;, deadlineDate: LocalDate?, specificDate: LocalDate?, onScheduleTypeChange: (ScheduleType) -&gt; Unit, onRepeatDaysChange: (Set&lt;Int&gt;) -&gt; Unit, onDeadlineDateChange: (LocalDate?) -&gt; Unit, onSpecificDateChange: (LocalDate?) -&gt; Unit, modifier: Modifier = Modifier )</ID>
+    <ID>LongParameterList:TaskDialogs.kt$( defaultWorkDurationMinutes: Int, scheduleType: ScheduleType, repeatDays: Set&lt;Int&gt;, deadlineDate: LocalDate?, specificDate: LocalDate?, isPremium: Boolean, reviewCountOptions: List&lt;Int&gt;, reviewCount: Int?, reviewEnabled: Boolean, onScheduleTypeChange: (ScheduleType) -&gt; Unit, onRepeatDaysChange: (Set&lt;Int&gt;) -&gt; Unit, onDeadlineDateChange: (LocalDate?) -&gt; Unit, onSpecificDateChange: (LocalDate?) -&gt; Unit, onReviewCountChange: (Int?) -&gt; Unit, onReviewEnabledChange: (Boolean) -&gt; Unit, onDismiss: () -&gt; Unit, onConfirm: (String, Int?, ScheduleType, Set&lt;Int&gt;, LocalDate?, LocalDate?, Int?, Boolean) -&gt; Unit )</ID>
+    <ID>LongParameterList:TaskDialogs.kt$( task: Task, scheduleType: ScheduleType, repeatDays: Set&lt;Int&gt;, deadlineDate: LocalDate?, specificDate: LocalDate?, isPremium: Boolean, reviewCountOptions: List&lt;Int&gt;, reviewCount: Int?, reviewEnabled: Boolean, onScheduleTypeChange: (ScheduleType) -&gt; Unit, onRepeatDaysChange: (Set&lt;Int&gt;) -&gt; Unit, onDeadlineDateChange: (LocalDate?) -&gt; Unit, onSpecificDateChange: (LocalDate?) -&gt; Unit, onReviewCountChange: (Int?) -&gt; Unit, onReviewEnabledChange: (Boolean) -&gt; Unit, onDismiss: () -&gt; Unit, onConfirm: (Task) -&gt; Unit, onDelete: (Task) -&gt; Unit, onStartTimer: (Task) -&gt; Unit )</ID>
+    <ID>LongParameterList:TimerControls.kt$( phase: TimerPhase, isRunning: Boolean, isPaused: Boolean, focusModeEnabled: Boolean, isLockModeActive: Boolean, onStart: () -&gt; Unit, onPause: () -&gt; Unit, onResume: () -&gt; Unit, onSkip: () -&gt; Unit, onStop: () -&gt; Unit )</ID>
+    <ID>LongParameterList:TimerService.kt$TimerService$( taskId: Long, taskName: String, workDuration: Int, shortBreak: Int, longBreak: Int, cycles: Int, focusMode: Boolean, focusStrict: Boolean, autoLoop: Boolean = false, allowedApps: Set&lt;String&gt; = emptySet() )</ID>
+    <ID>MaxLineLength:DailyStatsRepositoryImpl.kt$DailyStatsRepositoryImpl$override suspend</ID>
+    <ID>MaxLineLength:PomodoroSettingsSection.kt$Text(stringResource(R.string.minutes_unit, 1), style = MaterialTheme.typography.labelSmall, color = TextSecondary)</ID>
+    <ID>MaxLineLength:PomodoroSettingsSection.kt$Text(stringResource(R.string.minutes_unit, 180), style = MaterialTheme.typography.labelSmall, color = TextSecondary)</ID>
+    <ID>MaxLineLength:PremiumRepositoryImpl.kt$PremiumRepositoryImpl$override suspend</ID>
+    <ID>MaxLineLength:Result.kt$Result.Companion$crossinline errorTransform: (Throwable) -&gt; DomainError = { DomainError.UnknownError(it.message ?: "Unknown error", it) }</ID>
+    <ID>MaxLineLength:Result.kt$Result.Companion$errorTransform: (Throwable) -&gt; DomainError = { DomainError.UnknownError(it.message ?: "Unknown error", it) }</ID>
+    <ID>MaxLineLength:ReviewTaskDao.kt$ReviewTaskDao$@Query("SELECT * FROM review_tasks WHERE scheduledDate &lt;= :date AND isCompleted = 0 ORDER BY scheduledDate ASC, reviewNumber ASC")</ID>
+    <ID>MaxLineLength:ReviewTaskRepository.kt$ReviewTaskRepository$suspend</ID>
+    <ID>MaxLineLength:ReviewTaskRepositoryImpl.kt$ReviewTaskRepositoryImpl$override suspend</ID>
+    <ID>MaxLineLength:SelectedDateInfo.kt$textDecoration = if (reviewTask.isCompleted) TextDecoration.LineThrough else TextDecoration.None</ID>
+    <ID>MaxLineLength:SettingsRepositoryImpl.kt$SettingsRepositoryImpl$setSettingInternal(SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK, settings.cyclesBeforeLongBreak.toString())</ID>
+    <ID>MaxLineLength:StatsViewModel.kt$StatsViewModel$val last30DaysMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(thirtyDaysAgo, today).getOrDefault(0)</ID>
+    <ID>MaxLineLength:StudySessionRepository.kt$StudySessionRepository$suspend fun finishSession(id: Long, durationMinutes: Int, cycles: Int, interrupted: Boolean): Result&lt;Unit, DomainError&gt;</ID>
+    <ID>MaxLineLength:StudySessionRepositoryImpl.kt$StudySessionRepositoryImpl$override suspend</ID>
+    <ID>MaxLineLength:TaskDao.kt$TaskDao$@Query("UPDATE tasks SET progressNote = :note, progressPercent = :percent, nextGoal = :goal, updatedAt = :updatedAt WHERE id = :id")</ID>
+    <ID>MaxLineLength:TaskDialogs.kt$Text(stringResource(R.string.minutes_unit, 1), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)</ID>
+    <ID>MaxLineLength:TaskDialogs.kt$Text(stringResource(R.string.minutes_unit, 180), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)</ID>
+    <ID>MaxLineLength:TaskDialogs.kt$onConfirm(name, duration, scheduleType, repeatDays, deadlineDate, specificDate, reviewCount, reviewEnabled)</ID>
+    <ID>MaxLineLength:TaskListSection.kt$color = if (task.isOverdue) AccentWarning.copy(alpha = 0.2f) else AccentTeal.copy(alpha = 0.2f)</ID>
+    <ID>MaxLineLength:TaskRepository.kt$TaskRepository$suspend</ID>
+    <ID>MaxLineLength:TaskRepositoryImpl.kt$TaskRepositoryImpl$override suspend</ID>
+    <ID>MaxLineLength:TasksScreen.kt$onConfirm</ID>
+    <ID>MaxLineLength:TasksScreen.kt$viewModel.addTask(name, duration, scheduleType, repeatDays, deadlineDate, specificDate, reviewCount, reviewEnabled)</ID>
+    <ID>MaxLineLength:TimerControls.kt$tint = if (canStop) LocalContentColor.current else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)</ID>
+    <ID>MaxLineLength:TimerService.kt$TimerService$startTimerInternal(taskId, taskName, workDuration, shortBreak, longBreak, cycles, focusModeEnabled, focusModeStrict, autoLoopEnabled, allowedApps)</ID>
+    <ID>MaxLineLength:TodayReviewSection.kt$color = if (completedCount == totalCount) AccentSuccess else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>MaxLineLength:TodayReviewSection.kt$textDecoration = if (reviewTask.isCompleted) TextDecoration.LineThrough else TextDecoration.None</ID>
+    <ID>MaxLineLength:TodayTasksSection.kt$color = if (task.isOverdue) AccentWarning else MaterialTheme.colorScheme.onSurfaceVariant</ID>
+    <ID>NestedBlockDepth:IterioWidgetStateHelper.kt$IterioWidgetStateHelper$private suspend fun checkPremiumStatus(context: Context): Boolean</ID>
+    <ID>ReturnCount:BackupRepositoryImpl.kt$BackupRepositoryImpl$override suspend fun readFromFile(uri: Uri): Result&lt;BackupData&gt;</ID>
+    <ID>SwallowedException:BackupRepositoryImpl.kt$BackupRepositoryImpl$e: JsonSyntaxException</ID>
+    <ID>SwallowedException:BgmManager.kt$BgmManager$e: Exception</ID>
+    <ID>SwallowedException:BillingUseCase.kt$BillingUseCase$e: Exception</ID>
+    <ID>SwallowedException:GroupSelector.kt$e: Exception</ID>
+    <ID>SwallowedException:InstalledAppsHelper.kt$InstalledAppsHelper$e: PackageManager.NameNotFoundException</ID>
+    <ID>SwallowedException:IterioWidgetStateHelper.kt$IterioWidgetStateHelper$e: Exception</ID>
+    <ID>SwallowedException:PremiumRepositoryImpl.kt$PremiumRepositoryImpl$e: IllegalArgumentException</ID>
+    <ID>SwallowedException:SignatureVerifier.kt$SignatureVerifier$e: Exception</ID>
+    <ID>SwallowedException:SoundEffectManager.kt$SoundEffectManager$e: Exception</ID>
+    <ID>SwallowedException:TaskRepositoryImpl.kt$TaskRepositoryImpl$e: Exception</ID>
+    <ID>SwallowedException:TimerService.kt$TimerService$e: Exception</ID>
+    <ID>SwallowedException:TimerViewModel.kt$TimerViewModel$e: IllegalArgumentException</ID>
+    <ID>ThrowsCount:EncryptionManager.kt$EncryptionManager$fun decryptBackup(encryptedBytes: ByteArray): String</ID>
+    <ID>TooManyFunctions:ReviewTaskDao.kt$ReviewTaskDao</ID>
+    <ID>TooManyFunctions:ReviewTaskRepository.kt$ReviewTaskRepository</ID>
+    <ID>TooManyFunctions:SettingsRepository.kt$SettingsRepository</ID>
+    <ID>TooManyFunctions:SettingsViewModel.kt$SettingsViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:TaskDao.kt$TaskDao</ID>
+    <ID>TooManyFunctions:TasksViewModel.kt$TasksViewModel : ViewModel</ID>
+    <ID>UnusedParameter:CalendarGrid.kt$dailyStats: Map&lt;LocalDate, DailyStats&gt;</ID>
+    <ID>UnusedParameter:LockedFeatureCard.kt$isPremium: Boolean</ID>
+    <ID>UnusedParameter:TaskDialogs.kt$reviewCountOptions: List&lt;Int&gt;</ID>
+    <ID>UnusedParameter:TimerScreen.kt$taskId: Long</ID>
+    <ID>UnusedPrivateProperty:EncryptionManager.kt$EncryptionManager$@ApplicationContext private val context: Context</ID>
+    <ID>UnusedPrivateProperty:GoogleDriveManager.kt$GoogleDriveManager.Companion$private const val MIME_TYPE_JSON = "application/json"</ID>
+    <ID>UnusedPrivateProperty:TimerViewModel.kt$TimerViewModel$val previousPhase = _uiState.value.phase</ID>
+    <ID>VariableNaming:AllowedAppsViewModel.kt$AllowedAppsViewModel$private val SEARCH_DEBOUNCE_MS = 300L</ID>
+    <ID>VariableNaming:InstalledAppsHelper.kt$InstalledAppsHelper$private val CACHE_DURATION_MS = 5 * 60 * 1000L // 5分</ID>
+  </CurrentIssues>
+</SmellBaseline>
