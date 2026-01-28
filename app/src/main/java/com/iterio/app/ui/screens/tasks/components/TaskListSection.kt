@@ -84,7 +84,7 @@ internal fun TaskList(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(tasks) { task ->
+            items(tasks, key = { it.id }) { task ->
                 TaskCard(
                     task = task,
                     onClick = { onTaskClick(task) },

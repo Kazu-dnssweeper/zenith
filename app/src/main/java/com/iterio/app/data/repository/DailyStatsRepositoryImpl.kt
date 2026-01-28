@@ -82,15 +82,17 @@ class DailyStatsRepositoryImpl @Inject constructor(
 
     override suspend fun getWeeklyData(weekStart: LocalDate): Result<List<DayStats>, DomainError> =
         Result.catchingSuspend {
+            val weekEnd = weekStart.plusDays(6)
+            val statsEntities = dailyStatsDao.getStatsByDateRange(weekStart, weekEnd)
+            val statsMap = statsEntities.associateBy { it.date }
+
             (0..6).map { dayOffset ->
                 val date = weekStart.plusDays(dayOffset.toLong())
-                val stats = dailyStatsDao.getByDate(date)
-                val minutes = stats?.totalStudyMinutes ?: 0
-
+                val stats = statsMap[date]
                 DayStats(
                     dayOfWeek = DateUtils.WEEKDAY_LABELS[dayOffset],
                     date = date,
-                    minutes = minutes
+                    minutes = stats?.totalStudyMinutes ?: 0
                 )
             }
         }

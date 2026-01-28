@@ -227,12 +227,11 @@ class DailyStatsRepositoryImplTest {
     @Test
     fun `getWeeklyData returns 7 days`() = runTest {
         val weekStart = LocalDate.now().minusDays(6)
-        // Mock getByDate for each day
-        (0..6).forEach { dayOffset ->
-            val date = weekStart.plusDays(dayOffset.toLong())
-            val entity = createEntity(date = date, totalStudyMinutes = 30 + dayOffset * 10)
-            coEvery { dailyStatsDao.getByDate(date) } returns entity
+        val weekEnd = weekStart.plusDays(6)
+        val entities = (0..6).map { dayOffset ->
+            createEntity(date = weekStart.plusDays(dayOffset.toLong()), totalStudyMinutes = 30 + dayOffset * 10)
         }
+        coEvery { dailyStatsDao.getStatsByDateRange(weekStart, weekEnd) } returns entities
 
         val result = repository.getWeeklyData(weekStart)
 
@@ -246,15 +245,12 @@ class DailyStatsRepositoryImplTest {
     @Test
     fun `getWeeklyData handles missing days`() = runTest {
         val weekStart = LocalDate.now().minusDays(6)
-        // Some days have no data
-        (0..6).forEach { dayOffset ->
-            val date = weekStart.plusDays(dayOffset.toLong())
-            if (dayOffset % 2 == 0) {
-                coEvery { dailyStatsDao.getByDate(date) } returns createEntity(date = date, totalStudyMinutes = 60)
-            } else {
-                coEvery { dailyStatsDao.getByDate(date) } returns null
-            }
+        val weekEnd = weekStart.plusDays(6)
+        // Only even days have data
+        val entities = (0..6).filter { it % 2 == 0 }.map { dayOffset ->
+            createEntity(date = weekStart.plusDays(dayOffset.toLong()), totalStudyMinutes = 60)
         }
+        coEvery { dailyStatsDao.getStatsByDateRange(weekStart, weekEnd) } returns entities
 
         val result = repository.getWeeklyData(weekStart)
 
@@ -264,6 +260,34 @@ class DailyStatsRepositoryImplTest {
         assertEquals(60, data[0].minutes)
         assertEquals(0, data[1].minutes)
         assertEquals(60, data[2].minutes)
+    }
+
+    @Test
+    fun `getWeeklyData uses range query instead of individual queries`() = runTest {
+        val weekStart = LocalDate.now().minusDays(6)
+        val weekEnd = weekStart.plusDays(6)
+        coEvery { dailyStatsDao.getStatsByDateRange(weekStart, weekEnd) } returns emptyList()
+
+        repository.getWeeklyData(weekStart)
+
+        coVerify(exactly = 1) { dailyStatsDao.getStatsByDateRange(weekStart, weekEnd) }
+        coVerify(exactly = 0) { dailyStatsDao.getByDate(any()) }
+    }
+
+    @Test
+    fun `getWeeklyData returns zero minutes for empty stats`() = runTest {
+        val weekStart = LocalDate.now().minusDays(6)
+        val weekEnd = weekStart.plusDays(6)
+        coEvery { dailyStatsDao.getStatsByDateRange(weekStart, weekEnd) } returns emptyList()
+
+        val result = repository.getWeeklyData(weekStart)
+
+        assertTrue(result.isSuccess)
+        val data = (result as Result.Success).value
+        assertEquals(7, data.size)
+        data.forEach { dayStats ->
+            assertEquals(0, dayStats.minutes)
+        }
     }
 
     // ==================== Helpers ====================

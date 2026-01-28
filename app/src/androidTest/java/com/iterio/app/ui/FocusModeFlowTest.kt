@@ -3,7 +3,6 @@ package com.iterio.app.ui
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -56,7 +55,7 @@ class FocusModeFlowTest {
      */
     @Test
     fun canNavigateToSettings() {
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
@@ -70,7 +69,7 @@ class FocusModeFlowTest {
      */
     @Test
     fun settingsScreen_showsFocusModeSection() {
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
@@ -78,7 +77,8 @@ class FocusModeFlowTest {
                 .isNotEmpty()
         }
 
-        composeTestRule.onNodeWithText("フォーカスモード", substring = true)
+        composeTestRule.onAllNodes(hasText("フォーカスモード", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -88,7 +88,7 @@ class FocusModeFlowTest {
      */
     @Test
     fun focusModeToggle_isDisplayed() {
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
@@ -106,7 +106,7 @@ class FocusModeFlowTest {
      */
     @Test
     fun completeLockModeSetting_isDisplayed() {
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
@@ -129,7 +129,7 @@ class FocusModeFlowTest {
      */
     @Test
     fun allowedAppsSetting_isDisplayed() {
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
@@ -147,7 +147,7 @@ class FocusModeFlowTest {
      */
     @Test
     fun canNavigateBackFromSettings() {
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
@@ -155,10 +155,11 @@ class FocusModeFlowTest {
                 .isNotEmpty()
         }
 
-        composeTestRule.onNodeWithContentDescription("戻る").performClick()
+        // 設定はトップレベルタブなので、ボトムナビでホームに戻る
+        composeTestRule.onNodeWithText("ホーム").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
-            composeTestRule.onAllNodes(hasText("ホーム"))
+            composeTestRule.onAllNodes(hasText("Iterio"))
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
@@ -185,7 +186,7 @@ class FocusModeFlowTest {
         // タスク画面に移動
         composeTestRule.onNodeWithText("タスク").performClick()
         composeTestRule.waitUntil(timeoutMillis = 5000) {
-            composeTestRule.onAllNodes(hasText("グループを追加", substring = true))
+            composeTestRule.onAllNodes(hasText("科目グループ", substring = true))
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
@@ -204,7 +205,7 @@ class FocusModeFlowTest {
      */
     @Test
     fun autoLoopSetting_isDisplayed() {
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))

@@ -3,7 +3,6 @@ package com.iterio.app.ui
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -120,7 +119,7 @@ class TasksScreenTest {
      */
     @Test
     fun canNavigateToSettings() {
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
@@ -190,7 +189,7 @@ class TasksScreenTest {
      */
     @Test
     fun canNavigateBackFromSettings() {
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
@@ -198,10 +197,11 @@ class TasksScreenTest {
                 .isNotEmpty()
         }
 
-        composeTestRule.onNodeWithContentDescription("戻る").performClick()
+        // 設定はトップレベルタブなので、ボトムナビでタスク画面に戻る
+        composeTestRule.onNodeWithText("タスク").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
-            composeTestRule.onAllNodes(hasText("タスク"))
+            composeTestRule.onAllNodes(hasText("科目グループ", substring = true))
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }

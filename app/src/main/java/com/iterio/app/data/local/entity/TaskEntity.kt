@@ -17,7 +17,12 @@ import java.time.LocalDateTime
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["groupId"])]
+    indices = [
+        Index(value = ["groupId"]),
+        Index(value = ["isActive", "scheduleType"]),
+        Index(value = ["deadlineDate"]),
+        Index(value = ["specificDate"])
+    ]
 )
 data class TaskEntity(
     @PrimaryKey(autoGenerate = true)

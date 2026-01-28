@@ -157,6 +157,7 @@ class TimerService : Service() {
 
     private var countDownTimer: CountDownTimer? = null
     private var notificationManager: NotificationManager? = null
+    private var lastNotificationText: String? = null
 
     // Sound effects for countdown
     private var soundPool: SoundPool? = null
@@ -346,7 +347,15 @@ class TimerService : Service() {
             override fun onTick(millisUntilFinished: Long) {
                 val seconds = (millisUntilFinished / TimeConstants.MILLIS_PER_SECOND).toInt()
                 _timerState.value = _timerState.value.copy(timeRemainingSeconds = seconds)
-                updateNotification()
+
+                // Only rebuild notification when display text changes or in final countdown
+                val minutes = seconds / TimeConstants.SECONDS_PER_MINUTE
+                val displayText = String.format("%02d:%02d", minutes, seconds % TimeConstants.SECONDS_PER_MINUTE)
+                if (displayText != lastNotificationText || seconds <= 10) {
+                    lastNotificationText = displayText
+                    updateNotification()
+                }
+
                 updateOverlayTime()
 
                 // Play countdown tick sound at 10 and 5 seconds

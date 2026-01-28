@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -44,6 +45,8 @@ class CalendarViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CalendarUiState())
     val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
 
+    private var monthLoadJob: Job? = null
+
     val subscriptionStatus: StateFlow<SubscriptionStatus> = premiumManager.subscriptionStatus
         .stateIn(
             scope = viewModelScope,
@@ -64,7 +67,8 @@ class CalendarViewModel @Inject constructor(
     }
 
     fun loadMonthData(yearMonth: YearMonth) {
-        viewModelScope.launch {
+        monthLoadJob?.cancel()
+        monthLoadJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, currentMonth = yearMonth) }
 
             val startDate = yearMonth.atDay(1)

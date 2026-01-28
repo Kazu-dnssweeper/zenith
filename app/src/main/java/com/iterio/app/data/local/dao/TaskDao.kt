@@ -120,9 +120,36 @@ interface TaskDao {
      */
     @Query("SELECT * FROM tasks WHERE isActive = 1 AND scheduleType = 'repeat'")
     suspend fun getRepeatTasks(): List<TaskEntity>
+
+    /**
+     * 今日のタスクをグループ名付きで取得（JOIN版・Widget用）
+     */
+    @Query("""
+        SELECT t.id, t.name, COALESCE(g.name, '') as groupName
+        FROM tasks t
+        LEFT JOIN subject_groups g ON t.groupId = g.id
+        WHERE t.isActive = 1 AND (
+            (t.scheduleType = 'specific' AND t.specificDate = :todayStr)
+            OR (t.scheduleType = 'deadline' AND t.deadlineDate = :todayStr)
+            OR (t.scheduleType = 'repeat' AND (
+                t.repeatDays = :dayOfWeek
+                OR t.repeatDays LIKE :dayOfWeek || ',%'
+                OR t.repeatDays LIKE '%,' || :dayOfWeek || ',%'
+                OR t.repeatDays LIKE '%,' || :dayOfWeek
+            ))
+        )
+        LIMIT 5
+    """)
+    suspend fun getTasksForDateWithGroup(todayStr: String, dayOfWeek: String): List<TaskWithGroupName>
 }
 
 data class DateTaskCount(
     val date: String?,
     val count: Int
+)
+
+data class TaskWithGroupName(
+    val id: Long,
+    val name: String,
+    val groupName: String
 )

@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iterio.app.domain.model.SubscriptionStatus
 import com.iterio.app.domain.repository.DailyStatsRepository
-import com.iterio.app.util.DateUtils
 import com.iterio.app.domain.repository.StudySessionRepository
 import com.iterio.app.ui.premium.PremiumManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -74,49 +75,35 @@ class StatsViewModel @Inject constructor(
             val today = LocalDate.now()
             val weekStart = today.with(DayOfWeek.MONDAY)
             val monthStart = today.withDayOfMonth(1)
-
-            // Today's stats (for free users)
-            val todayMinutes = studySessionRepository.getTotalMinutesForDay(today).getOrDefault(0)
-            val todaySessions = studySessionRepository.getTotalCyclesForDay(today).getOrDefault(0)
-
-            val currentStreak = dailyStatsRepository.getCurrentStreak().getOrDefault(0)
-            val maxStreak = dailyStatsRepository.getMaxStreak().getOrDefault(0)
-            val thisWeekMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(weekStart, today).getOrDefault(0)
-            val thisMonthMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(monthStart, today).getOrDefault(0)
-            val totalSessions = studySessionRepository.getSessionCount().getOrDefault(0)
-
-            // Calculate average (last 30 days)
             val thirtyDaysAgo = today.minusDays(30)
-            val last30DaysMinutes = dailyStatsRepository.getTotalMinutesBetweenDates(thirtyDaysAgo, today).getOrDefault(0)
-            val averageDaily = last30DaysMinutes / 30
 
-            // Get weekly data for chart
-            val weeklyData = (0 until 7).map { dayOffset ->
-                val date = weekStart.plusDays(dayOffset.toLong())
-                val minutes = if (date <= today) {
-                    dailyStatsRepository.getTotalMinutesBetweenDates(date, date).getOrDefault(0)
-                } else {
-                    0
+            coroutineScope {
+                val todayMinutesDeferred = async { studySessionRepository.getTotalMinutesForDay(today).getOrDefault(0) }
+                val todaySessionsDeferred = async { studySessionRepository.getTotalCyclesForDay(today).getOrDefault(0) }
+                val currentStreakDeferred = async { dailyStatsRepository.getCurrentStreak().getOrDefault(0) }
+                val maxStreakDeferred = async { dailyStatsRepository.getMaxStreak().getOrDefault(0) }
+                val thisWeekMinutesDeferred = async { dailyStatsRepository.getTotalMinutesBetweenDates(weekStart, today).getOrDefault(0) }
+                val thisMonthMinutesDeferred = async { dailyStatsRepository.getTotalMinutesBetweenDates(monthStart, today).getOrDefault(0) }
+                val totalSessionsDeferred = async { studySessionRepository.getSessionCount().getOrDefault(0) }
+                val last30DaysMinutesDeferred = async { dailyStatsRepository.getTotalMinutesBetweenDates(thirtyDaysAgo, today).getOrDefault(0) }
+                val weeklyDataDeferred = async { dailyStatsRepository.getWeeklyData(weekStart).getOrDefault(emptyList()) }
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        todayMinutes = todayMinutesDeferred.await(),
+                        todaySessions = todaySessionsDeferred.await(),
+                        totalSessions = totalSessionsDeferred.await(),
+                        currentStreak = currentStreakDeferred.await(),
+                        maxStreak = maxStreakDeferred.await(),
+                        thisWeekMinutes = thisWeekMinutesDeferred.await(),
+                        thisMonthMinutes = thisMonthMinutesDeferred.await(),
+                        averageDailyMinutes = last30DaysMinutesDeferred.await() / 30,
+                        weeklyData = weeklyDataDeferred.await().map { ds ->
+                            DayStats(dayOfWeek = ds.dayOfWeek, minutes = ds.minutes)
+                        }
+                    )
                 }
-                DayStats(
-                    dayOfWeek = DateUtils.WEEKDAY_LABELS[dayOffset],
-                    minutes = minutes
-                )
-            }
-
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    todayMinutes = todayMinutes,
-                    todaySessions = todaySessions,
-                    totalSessions = totalSessions,
-                    currentStreak = currentStreak,
-                    maxStreak = maxStreak,
-                    thisWeekMinutes = thisWeekMinutes,
-                    thisMonthMinutes = thisMonthMinutes,
-                    averageDailyMinutes = averageDaily,
-                    weeklyData = weeklyData
-                )
             }
         }
     }

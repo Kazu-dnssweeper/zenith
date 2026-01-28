@@ -38,7 +38,7 @@ class BackupScreenTest {
     fun setup() {
         hiltRule.inject()
         // 設定画面に遷移
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
                 .fetchSemanticsNodes()
@@ -60,7 +60,7 @@ class BackupScreenTest {
      */
     @Test
     fun backupScreen_displaysCorrectly() {
-        composeTestRule.onNodeWithText("バックアップ").assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("バックアップ")).get(0).assertIsDisplayed()
     }
 
     /**
@@ -76,7 +76,7 @@ class BackupScreenTest {
      */
     @Test
     fun localBackupSection_isDisplayed() {
-        composeTestRule.onNodeWithText("ローカルバックアップ", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("ローカルバックアップ", substring = true)).get(0).assertIsDisplayed()
     }
 
     /**
@@ -84,7 +84,7 @@ class BackupScreenTest {
      */
     @Test
     fun exportSection_isDisplayed() {
-        composeTestRule.onNodeWithText("エクスポート", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("エクスポート", substring = true)).get(0).assertIsDisplayed()
     }
 
     /**
@@ -92,7 +92,7 @@ class BackupScreenTest {
      */
     @Test
     fun importSection_isDisplayed() {
-        composeTestRule.onNodeWithText("インポート", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("インポート", substring = true)).get(0).assertIsDisplayed()
     }
 
     /**
@@ -100,7 +100,8 @@ class BackupScreenTest {
      */
     @Test
     fun cloudBackupSection_isDisplayed() {
-        composeTestRule.onNodeWithText("クラウドバックアップ", substring = true)
+        composeTestRule.onAllNodes(hasText("クラウドバックアップ", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -110,7 +111,8 @@ class BackupScreenTest {
      */
     @Test
     fun googleDriveSection_isDisplayed() {
-        composeTestRule.onNodeWithText("Google Drive", substring = true)
+        composeTestRule.onAllNodes(hasText("Google Drive", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }

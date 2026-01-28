@@ -149,6 +149,31 @@ object TestConstants {
     const val DIALOG_YES = "はい"
     const val DIALOG_NO = "いいえ"
 
+    // カレンダー画面
+    const val CALENDAR_TITLE = "カレンダー"
+
+    // 統計画面
+    const val STATS_TITLE = "統計"
+    const val STATS_TODAY_STUDY_TIME = "今日の学習時間"
+    const val STATS_STREAK = "連続学習"
+    const val STATS_CURRENT_STREAK = "現在の連続"
+    const val STATS_MAX_STREAK = "最高記録"
+
+    // 復習スケジュール画面
+    const val REVIEW_SCHEDULE_TITLE = "復習スケジュール"
+    const val REVIEW_FILTER_ALL = "すべて"
+    const val REVIEW_FILTER_PENDING = "未完了"
+    const val REVIEW_FILTER_COMPLETED = "完了"
+    const val REVIEW_FILTER_OVERDUE = "期限切れ"
+    const val REVIEW_SCHEDULE_EMPTY = "復習タスクがありません"
+
+    // ボトムナビゲーション
+    const val NAV_HOME = "ホーム"
+    const val NAV_TASKS = "タスク"
+    const val NAV_CALENDAR = "カレンダー"
+    const val NAV_STATS = "統計"
+    const val NAV_SETTINGS = "設定"
+
     // タイムアウト
     const val DEFAULT_TIMEOUT = 5000L
     const val LONG_TIMEOUT = 10000L

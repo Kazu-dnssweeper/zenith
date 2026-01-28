@@ -16,7 +16,7 @@ import com.iterio.app.data.local.entity.*
         SettingsEntity::class,
         DailyStatsEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(DateTimeConverters::class)

@@ -1,5 +1,6 @@
 package com.iterio.app.di
 
+import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.PomodoroSettings
 import com.iterio.app.domain.model.SubscriptionStatus
 import com.iterio.app.domain.model.Task
@@ -37,9 +38,12 @@ object TestAppModule {
             name = "テストタスク",
             workDurationMinutes = 25
         )
-        coEvery { getTaskById(any()) } returns testTask
+        coEvery { getTaskById(any()) } returns Result.Success(testTask)
         every { getTasksByGroup(any()) } returns flowOf(listOf(testTask))
-        coEvery { getTasksForDate(any()) } returns listOf(testTask)
+        coEvery { getTasksForDate(any()) } returns Result.Success(listOf(testTask))
+        coEvery { getTaskCountByDateRange(any(), any()) } returns Result.Success(emptyMap())
+        every { getTodayScheduledTasks(any()) } returns flowOf(emptyList())
+        every { getUpcomingDeadlineTasks(any(), any()) } returns flowOf(emptyList())
     }
 
     @Provides
@@ -51,10 +55,11 @@ object TestAppModule {
     @Provides
     @Singleton
     fun provideStudySessionRepository(): StudySessionRepository = mockk(relaxed = true) {
-        coEvery { insertSession(any()) } returns 1L
+        coEvery { insertSession(any()) } returns Result.Success(1L)
         every { getSessionsForDay(any()) } returns flowOf(emptyList())
-        coEvery { getTotalMinutesForDay(any()) } returns 0
-        coEvery { getTotalCyclesForDay(any()) } returns 0
+        coEvery { getTotalMinutesForDay(any()) } returns Result.Success(0)
+        coEvery { getTotalCyclesForDay(any()) } returns Result.Success(0)
+        coEvery { getSessionCount() } returns Result.Success(0)
     }
 
     @Provides
@@ -62,35 +67,64 @@ object TestAppModule {
     fun provideReviewTaskRepository(): ReviewTaskRepository = mockk(relaxed = true) {
         every { getPendingTasksForDate(any()) } returns flowOf(emptyList())
         every { getOverdueAndTodayTasks(any()) } returns flowOf(emptyList())
-        coEvery { getPendingTaskCountForDate(any()) } returns 0
+        every { getAllWithDetails() } returns flowOf(emptyList())
+        coEvery { getPendingTaskCountForDate(any()) } returns Result.Success(0)
+        coEvery { getTaskCountByDateRange(any(), any()) } returns Result.Success(emptyMap())
+        coEvery { getTotalCount() } returns Result.Success(0)
+        coEvery { getIncompleteCount() } returns Result.Success(0)
     }
 
     @Provides
     @Singleton
     fun provideSettingsRepository(): SettingsRepository = mockk(relaxed = true) {
-        coEvery { getPomodoroSettings() } returns PomodoroSettings()
+        coEvery { getPomodoroSettings() } returns Result.Success(PomodoroSettings())
         every { getPomodoroSettingsFlow() } returns flowOf(PomodoroSettings())
-        coEvery { getAllowedApps() } returns emptyList()
+        coEvery { getAllowedApps() } returns Result.Success(emptyList())
         every { getAllowedAppsFlow() } returns flowOf(emptyList())
+        coEvery { getLanguage() } returns Result.Success("ja")
+        every { getLanguageFlow() } returns flowOf("ja")
+        coEvery { getBgmTrackId() } returns Result.Success(null)
+        every { getBgmTrackIdFlow() } returns flowOf(null)
+        coEvery { getBgmVolume() } returns Result.Success(0.5f)
+        every { getBgmVolumeFlow() } returns flowOf(0.5f)
+        coEvery { getBgmAutoPlay() } returns Result.Success(true)
+        every { getBgmAutoPlayFlow() } returns flowOf(true)
     }
 
     @Provides
     @Singleton
     fun provideDailyStatsRepository(): DailyStatsRepository = mockk(relaxed = true) {
-        coEvery { getByDate(any()) } returns null
+        coEvery { getByDate(any()) } returns Result.Success(null)
         every { getByDateFlow(any()) } returns flowOf(null)
-        coEvery { getCurrentStreak() } returns 0
-        coEvery { getMaxStreak() } returns 0
+        coEvery { getCurrentStreak() } returns Result.Success(0)
+        coEvery { getMaxStreak() } returns Result.Success(0)
+        coEvery { getTotalMinutesBetweenDates(any(), any()) } returns Result.Success(0)
+        val today = LocalDate.now()
+        val weeklyData = listOf(
+            DayStats("月", today.minusDays(6), 30),
+            DayStats("火", today.minusDays(5), 0),
+            DayStats("水", today.minusDays(4), 45),
+            DayStats("木", today.minusDays(3), 0),
+            DayStats("金", today.minusDays(2), 20),
+            DayStats("土", today.minusDays(1), 60),
+            DayStats("日", today, 0)
+        )
+        coEvery { getWeeklyData(any()) } returns Result.Success(weeklyData)
     }
 
     @Provides
     @Singleton
     fun providePremiumRepository(): PremiumRepository = mockk(relaxed = true) {
-        val subscriptionFlow = MutableStateFlow(SubscriptionStatus())
+        val status = SubscriptionStatus(hasSeenTrialOffer = true, isTrialUsed = true)
+        val subscriptionFlow = MutableStateFlow(status)
         every { subscriptionStatus } returns subscriptionFlow
-        coEvery { getSubscriptionStatus() } returns SubscriptionStatus()
-        coEvery { canAccessFeature(any()) } returns false
+        coEvery { getSubscriptionStatus() } returns Result.Success(status)
+        coEvery { canAccessFeature(any()) } returns Result.Success(false)
     }
+
+    @Provides
+    @Singleton
+    fun provideBackupRepository(): BackupRepository = mockk(relaxed = true)
 
     @Provides
     @Singleton

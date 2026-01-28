@@ -16,7 +16,10 @@ import java.time.LocalDateTime
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index(value = ["taskId"])]
+    indices = [
+        Index(value = ["taskId"]),
+        Index(value = ["startedAt"])
+    ]
 )
 data class StudySessionEntity(
     @PrimaryKey(autoGenerate = true)

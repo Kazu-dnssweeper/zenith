@@ -38,14 +38,14 @@ class PremiumScreenTest {
     fun setup() {
         hiltRule.inject()
         // 設定画面に遷移
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
-        // Premium画面に遷移
-        composeTestRule.onNodeWithText("Premium", substring = true)
+        // Premium画面に遷移（スクロールして「Premiumにアップグレード」をクリック）
+        composeTestRule.onNodeWithText("Premiumにアップグレード")
             .performScrollTo()
             .performClick()
         composeTestRule.waitUntil(timeoutMillis = 5000) {
@@ -60,7 +60,7 @@ class PremiumScreenTest {
      */
     @Test
     fun premiumScreen_displaysCorrectly() {
-        composeTestRule.onNodeWithText("Premium", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("Premium", substring = true)).get(0).assertIsDisplayed()
     }
 
     /**
@@ -100,7 +100,7 @@ class PremiumScreenTest {
      */
     @Test
     fun yearlyPlanCard_isDisplayed() {
-        composeTestRule.onNodeWithText("年額", substring = true)
+        composeTestRule.onAllNodes(hasText("年額", substring = true)).get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -110,7 +110,7 @@ class PremiumScreenTest {
      */
     @Test
     fun lifetimePlanCard_isDisplayed() {
-        composeTestRule.onNodeWithText("買い切り", substring = true)
+        composeTestRule.onAllNodes(hasText("買い切り", substring = true)).get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -120,7 +120,7 @@ class PremiumScreenTest {
      */
     @Test
     fun restoreButton_isDisplayed() {
-        composeTestRule.onNodeWithText("購入を復元", substring = true)
+        composeTestRule.onAllNodes(hasText("購入を復元", substring = true)).get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }

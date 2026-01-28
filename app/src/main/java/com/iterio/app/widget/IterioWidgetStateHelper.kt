@@ -1,6 +1,7 @@
 package com.iterio.app.widget
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -24,6 +25,11 @@ object IterioWidgetStateHelper {
     @Volatile
     private var database: IterioDatabase? = null
 
+    @VisibleForTesting
+    internal fun setDatabaseForTesting(db: IterioDatabase?) {
+        database = db
+    }
+
     private fun getDatabase(context: Context): IterioDatabase {
         return database ?: synchronized(this) {
             database ?: Room.databaseBuilder(
@@ -46,7 +52,6 @@ object IterioWidgetStateHelper {
             val dailyStatsDao = db.dailyStatsDao()
             val reviewTaskDao = db.reviewTaskDao()
             val taskDao = db.taskDao()
-            val subjectGroupDao = db.subjectGroupDao()
 
             val today = LocalDate.now()
             val todayStats = dailyStatsDao.getByDate(today)
@@ -57,21 +62,16 @@ object IterioWidgetStateHelper {
                 0
             }
 
-            // 今日のタスクリスト取得（最大5件）
+            // 今日のタスクリスト取得（最大5件、JOINでグループ名も一括取得）
             val todayTasks = try {
                 val dayOfWeek = today.dayOfWeek.value.toString()
                 val todayStr = today.toString()
-                val taskEntities = taskDao.getTasksForDate(todayStr, dayOfWeek)
+                val tasksWithGroup = taskDao.getTasksForDateWithGroup(todayStr, dayOfWeek)
 
-                // グループ名をキャッシュして取得
-                val groupCache = mutableMapOf<Long, String>()
-                taskEntities.take(MAX_WIDGET_TASKS).map { entity ->
-                    val groupName = groupCache.getOrPut(entity.groupId) {
-                        subjectGroupDao.getGroupById(entity.groupId)?.name ?: ""
-                    }
+                tasksWithGroup.map { task ->
                     WidgetTaskItem(
-                        name = entity.name,
-                        groupName = groupName
+                        name = task.name,
+                        groupName = task.groupName
                     )
                 }
             } catch (e: Exception) {
@@ -96,7 +96,8 @@ object IterioWidgetStateHelper {
         }
     }
 
-    private suspend fun checkPremiumStatus(context: Context): Boolean {
+    @VisibleForTesting
+    internal suspend fun checkPremiumStatus(context: Context): Boolean {
         return try {
             val prefs = context.premiumDataStore.data.first()
             val subscriptionType = prefs[stringPreferencesKey("subscription_type")]

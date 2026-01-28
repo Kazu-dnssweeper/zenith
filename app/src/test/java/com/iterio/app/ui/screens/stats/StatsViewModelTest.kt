@@ -5,6 +5,7 @@ import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.SubscriptionStatus
 import com.iterio.app.domain.model.SubscriptionType
 import com.iterio.app.domain.repository.DailyStatsRepository
+import com.iterio.app.domain.repository.DayStats
 import com.iterio.app.domain.repository.StudySessionRepository
 import com.iterio.app.testutil.CoroutineTestRule
 import com.iterio.app.ui.premium.PremiumManager
@@ -20,6 +21,8 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.time.DayOfWeek
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
@@ -50,6 +53,7 @@ class StatsViewModelTest {
         coEvery { dailyStatsRepository.getMaxStreak() } returns Result.Success(0)
         coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returns Result.Success(0)
         coEvery { studySessionRepository.getSessionCount() } returns Result.Success(0)
+        coEvery { dailyStatsRepository.getWeeklyData(any()) } returns Result.Success(emptyList())
     }
 
     private fun createViewModel() = StatsViewModel(
@@ -177,7 +181,15 @@ class StatsViewModelTest {
 
     @Test
     fun `loads weekly data with 7 days`() = runTest {
-        coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returns Result.Success(60)
+        val weekStart = LocalDate.now().with(DayOfWeek.MONDAY)
+        val weeklyData = (0..6).map { dayOffset ->
+            DayStats(
+                dayOfWeek = listOf("月", "火", "水", "木", "金", "土", "日")[dayOffset],
+                date = weekStart.plusDays(dayOffset.toLong()),
+                minutes = 60
+            )
+        }
+        coEvery { dailyStatsRepository.getWeeklyData(any()) } returns Result.Success(weeklyData)
 
         val vm = createViewModel()
         advanceUntilIdle()
@@ -248,6 +260,47 @@ class StatsViewModelTest {
         advanceUntilIdle()
 
         coVerify { premiumManager.startTrial() }
+    }
+
+    @Test
+    fun `loadStats sets all fields correctly with parallel execution`() = runTest {
+        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns Result.Success(45)
+        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns Result.Success(3)
+        coEvery { dailyStatsRepository.getCurrentStreak() } returns Result.Success(7)
+        coEvery { dailyStatsRepository.getMaxStreak() } returns Result.Success(14)
+        coEvery { studySessionRepository.getSessionCount() } returns Result.Success(100)
+        coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returnsMany listOf(
+            Result.Success(200),  // week
+            Result.Success(800),  // month
+            Result.Success(600)   // last 30 days
+        )
+        val weekStart = LocalDate.now().with(DayOfWeek.MONDAY)
+        val weeklyData = (0..6).map { dayOffset ->
+            DayStats(
+                dayOfWeek = listOf("月", "火", "水", "木", "金", "土", "日")[dayOffset],
+                date = weekStart.plusDays(dayOffset.toLong()),
+                minutes = 30
+            )
+        }
+        coEvery { dailyStatsRepository.getWeeklyData(any()) } returns Result.Success(weeklyData)
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertFalse(state.isLoading)
+            assertEquals(45, state.todayMinutes)
+            assertEquals(3, state.todaySessions)
+            assertEquals(7, state.currentStreak)
+            assertEquals(14, state.maxStreak)
+            assertEquals(100, state.totalSessions)
+            assertEquals(200, state.thisWeekMinutes)
+            assertEquals(800, state.thisMonthMinutes)
+            assertEquals(20, state.averageDailyMinutes) // 600 / 30
+            assertEquals(7, state.weeklyData.size)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 
     // ========== エラーパス テスト ===========

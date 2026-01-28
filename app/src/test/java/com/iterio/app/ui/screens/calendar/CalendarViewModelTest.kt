@@ -130,6 +130,29 @@ class CalendarViewModelTest {
     }
 
     @Test
+    fun `loadMonthData cancels previous job on rapid calls`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        // Rapidly call loadMonthData multiple times
+        val month1 = YearMonth.of(2025, 1)
+        val month2 = YearMonth.of(2025, 2)
+        val month3 = YearMonth.of(2025, 3)
+
+        vm.loadMonthData(month1)
+        vm.loadMonthData(month2)
+        vm.loadMonthData(month3)
+        advanceUntilIdle()
+
+        // Final state should reflect the last call
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(month3, state.currentMonth)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun `previousMonth decrements month`() = runTest {
         val vm = createViewModel()
         advanceUntilIdle()

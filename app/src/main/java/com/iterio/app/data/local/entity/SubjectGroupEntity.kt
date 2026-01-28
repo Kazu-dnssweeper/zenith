@@ -1,10 +1,14 @@
 package com.iterio.app.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDateTime
 
-@Entity(tableName = "subject_groups")
+@Entity(
+    tableName = "subject_groups",
+    indices = [Index(value = ["displayOrder"])]
+)
 data class SubjectGroupEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

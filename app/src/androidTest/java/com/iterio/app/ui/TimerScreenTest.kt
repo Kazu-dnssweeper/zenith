@@ -1,16 +1,12 @@
 package com.iterio.app.ui
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.iterio.app.ui.MainActivity
-import com.iterio.app.util.TestConstants
 import com.iterio.app.util.TestUtils.waitForText
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -73,9 +69,9 @@ class TimerScreenTest {
         // タスクタブをクリック
         composeTestRule.onNodeWithText("タスク").performClick()
 
-        // タスク画面が表示されることを確認
+        // タスク画面が表示されることを確認（空グループ時は「科目グループを追加」ボタン）
         composeTestRule.waitUntil(timeoutMillis = 5000) {
-            composeTestRule.onAllNodes(hasText("グループを追加"))
+            composeTestRule.onAllNodes(hasText("科目グループを追加"))
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
@@ -118,8 +114,8 @@ class TimerScreenTest {
      */
     @Test
     fun settingsButton_isDisplayed() {
-        // 設定ボタン（歯車アイコン）が表示されていることを確認
-        composeTestRule.onNodeWithContentDescription("設定").assertIsDisplayed()
+        // 設定タブ（ボトムナビゲーション）が表示されていることを確認
+        composeTestRule.onNodeWithText("設定").assertIsDisplayed()
     }
 
     /**
@@ -127,8 +123,8 @@ class TimerScreenTest {
      */
     @Test
     fun canNavigateToSettingsScreen() {
-        // 設定ボタンをクリック
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        // 設定タブをクリック
+        composeTestRule.onNodeWithText("設定").performClick()
 
         // 設定画面が表示されることを確認
         composeTestRule.waitUntil(timeoutMillis = 5000) {
@@ -148,7 +144,7 @@ class TimerScreenTest {
             composeTestRule.onAllNodes(hasText("今日の復習", substring = true))
                 .fetchSemanticsNodes()
                 .isNotEmpty() ||
-            composeTestRule.onAllNodes(hasText("復習タスクはありません", substring = true))
+            composeTestRule.onAllNodes(hasText("今日の復習はありません", substring = true))
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
@@ -177,7 +173,7 @@ class TimerScreenTest {
     fun weeklyChart_isDisplayedOnHomeScreen() {
         // ホーム画面で週間グラフが表示される
         composeTestRule.waitUntil(timeoutMillis = 5000) {
-            composeTestRule.onAllNodes(hasText("週", substring = true))
+            composeTestRule.onAllNodes(hasText("今週の学習", substring = true))
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }

@@ -26,6 +26,9 @@ interface DailyStatsDao {
     @Query("SELECT * FROM daily_stats WHERE date BETWEEN :startDate AND :endDate ORDER BY date ASC")
     fun getStatsBetweenDates(startDate: LocalDate, endDate: LocalDate): Flow<List<DailyStatsEntity>>
 
+    @Query("SELECT * FROM daily_stats WHERE date >= :startDate AND date <= :endDate ORDER BY date")
+    suspend fun getStatsByDateRange(startDate: LocalDate, endDate: LocalDate): List<DailyStatsEntity>
+
     @Query("SELECT SUM(totalStudyMinutes) FROM daily_stats WHERE date BETWEEN :startDate AND :endDate")
     suspend fun getTotalMinutesBetweenDates(startDate: LocalDate, endDate: LocalDate): Int?
 

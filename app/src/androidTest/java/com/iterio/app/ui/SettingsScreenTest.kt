@@ -3,12 +3,10 @@ package com.iterio.app.ui
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.iterio.app.util.TestConstants
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
@@ -40,7 +38,7 @@ class SettingsScreenTest {
     fun setup() {
         hiltRule.inject()
         // 設定画面に遷移
-        composeTestRule.onNodeWithContentDescription("設定").performClick()
+        composeTestRule.onNodeWithText("設定").performClick()
         composeTestRule.waitUntil(timeoutMillis = 5000) {
             composeTestRule.onAllNodes(hasText("ポモドーロタイマー", substring = true))
                 .fetchSemanticsNodes()
@@ -53,7 +51,7 @@ class SettingsScreenTest {
      */
     @Test
     fun settingsScreen_displaysCorrectly() {
-        composeTestRule.onNodeWithText("設定").assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("設定")).get(0).assertIsDisplayed()
     }
 
     /**
@@ -61,7 +59,7 @@ class SettingsScreenTest {
      */
     @Test
     fun notificationSection_isDisplayed() {
-        composeTestRule.onNodeWithText("通知", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("通知", substring = true)).get(0).assertIsDisplayed()
     }
 
     /**
@@ -69,7 +67,7 @@ class SettingsScreenTest {
      */
     @Test
     fun pomodoroSection_isDisplayed() {
-        composeTestRule.onNodeWithText("ポモドーロタイマー").assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("ポモドーロタイマー")).get(0).performScrollTo().assertIsDisplayed()
     }
 
     /**
@@ -77,7 +75,7 @@ class SettingsScreenTest {
      */
     @Test
     fun workDurationSetting_isDisplayed() {
-        composeTestRule.onNodeWithText("作業時間", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("作業時間", substring = true)).get(0).performScrollTo().assertIsDisplayed()
     }
 
     /**
@@ -85,7 +83,7 @@ class SettingsScreenTest {
      */
     @Test
     fun shortBreakSetting_isDisplayed() {
-        composeTestRule.onNodeWithText("短休憩", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("短休憩", substring = true)).get(0).performScrollTo().assertIsDisplayed()
     }
 
     /**
@@ -93,7 +91,7 @@ class SettingsScreenTest {
      */
     @Test
     fun longBreakSetting_isDisplayed() {
-        composeTestRule.onNodeWithText("長休憩", substring = true).assertIsDisplayed()
+        composeTestRule.onAllNodes(hasText("長休憩", substring = true)).get(0).performScrollTo().assertIsDisplayed()
     }
 
     /**
@@ -101,7 +99,8 @@ class SettingsScreenTest {
      */
     @Test
     fun focusModeSection_isDisplayed() {
-        composeTestRule.onNodeWithText("フォーカスモード", substring = true)
+        composeTestRule.onAllNodes(hasText("フォーカスモード", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -111,7 +110,8 @@ class SettingsScreenTest {
      */
     @Test
     fun reviewSection_isDisplayed() {
-        composeTestRule.onNodeWithText("復習", substring = true)
+        composeTestRule.onAllNodes(hasText("復習", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -121,7 +121,8 @@ class SettingsScreenTest {
      */
     @Test
     fun dataSection_isDisplayed() {
-        composeTestRule.onNodeWithText("データ管理", substring = true)
+        composeTestRule.onAllNodes(hasText("データ管理", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -131,7 +132,8 @@ class SettingsScreenTest {
      */
     @Test
     fun backupOption_isDisplayed() {
-        composeTestRule.onNodeWithText("バックアップ", substring = true)
+        composeTestRule.onAllNodes(hasText("バックアップ", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -141,7 +143,8 @@ class SettingsScreenTest {
      */
     @Test
     fun aboutSection_isDisplayed() {
-        composeTestRule.onNodeWithText("アプリについて", substring = true)
+        composeTestRule.onAllNodes(hasText("アプリについて", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -151,7 +154,8 @@ class SettingsScreenTest {
      */
     @Test
     fun versionInfo_isDisplayed() {
-        composeTestRule.onNodeWithText("バージョン", substring = true)
+        composeTestRule.onAllNodes(hasText("バージョン", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -161,7 +165,8 @@ class SettingsScreenTest {
      */
     @Test
     fun premiumSection_isDisplayed() {
-        composeTestRule.onNodeWithText("Premium", substring = true)
+        composeTestRule.onAllNodes(hasText("Premium", substring = true))
+            .get(0)
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -171,10 +176,11 @@ class SettingsScreenTest {
      */
     @Test
     fun backButton_navigatesToHome() {
-        composeTestRule.onNodeWithContentDescription("戻る").performClick()
+        // 設定はトップレベルタブなので、ボトムナビでホームに戻る
+        composeTestRule.onNodeWithText("ホーム").performClick()
 
         composeTestRule.waitUntil(timeoutMillis = 5000) {
-            composeTestRule.onAllNodes(hasText("ホーム"))
+            composeTestRule.onAllNodes(hasText("Iterio"))
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
