@@ -7,7 +7,7 @@ data class PomodoroSettings(
     val shortBreakMinutes: Int = AppConfig.Timer.DEFAULT_SHORT_BREAK_MINUTES,
     val longBreakMinutes: Int = AppConfig.Timer.DEFAULT_LONG_BREAK_MINUTES,
     val cyclesBeforeLongBreak: Int = AppConfig.Timer.DEFAULT_CYCLES,
-    val focusModeEnabled: Boolean = true,
+    val focusModeEnabled: Boolean = false,
     val focusModeStrict: Boolean = false, // true = complete lock, false = emergency unlock allowed
     val autoLoopEnabled: Boolean = false, // Premium限定: ポモドーロサイクル完了後も自動で次のサイクルを開始
     val reviewEnabled: Boolean = true,

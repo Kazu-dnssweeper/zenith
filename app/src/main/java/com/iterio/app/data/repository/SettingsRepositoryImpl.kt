@@ -53,7 +53,7 @@ class SettingsRepositoryImpl @Inject constructor(
                 ).toIntOrNull() ?: 4,
                 focusModeEnabled = getSettingInternal(
                     SettingsEntity.KEY_FOCUS_MODE_ENABLED,
-                    "true"
+                    "false"
                 ).toBoolean(),
                 focusModeStrict = getSettingInternal(
                     SettingsEntity.KEY_FOCUS_MODE_STRICT,
@@ -128,7 +128,7 @@ class SettingsRepositoryImpl @Inject constructor(
             shortBreakMinutes = settingsMap[SettingsEntity.KEY_SHORT_BREAK_MINUTES]?.value?.toIntOrNull() ?: 5,
             longBreakMinutes = settingsMap[SettingsEntity.KEY_LONG_BREAK_MINUTES]?.value?.toIntOrNull() ?: 15,
             cyclesBeforeLongBreak = settingsMap[SettingsEntity.KEY_CYCLES_BEFORE_LONG_BREAK]?.value?.toIntOrNull() ?: 4,
-            focusModeEnabled = settingsMap[SettingsEntity.KEY_FOCUS_MODE_ENABLED]?.value?.toBoolean() ?: true,
+            focusModeEnabled = settingsMap[SettingsEntity.KEY_FOCUS_MODE_ENABLED]?.value?.toBoolean() ?: false,
             focusModeStrict = settingsMap[SettingsEntity.KEY_FOCUS_MODE_STRICT]?.value?.toBoolean() ?: false,
             autoLoopEnabled = settingsMap[SettingsEntity.KEY_AUTO_LOOP_ENABLED]?.value?.toBoolean() ?: false,
             reviewEnabled = settingsMap[SettingsEntity.KEY_REVIEW_ENABLED]?.value?.toBoolean() ?: true,

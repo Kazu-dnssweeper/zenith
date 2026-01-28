@@ -20,6 +20,7 @@ import com.iterio.app.util.TimeConstants
 import com.iterio.app.util.TimerPhaseUtils
 import com.iterio.app.widget.IterioWidgetStateHelper
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -286,9 +287,11 @@ class TimerService : Service() {
             autoLoopEnabled = autoLoop
         )
 
-        // Start focus mode if enabled
+        // Start focus mode if enabled and service is available
         if (focusModeEnabled && FocusModeService.isServiceRunning.value) {
             FocusModeService.startFocusMode(focusModeStrict, currentAllowedApps)
+        } else if (focusModeEnabled && !FocusModeService.isServiceRunning.value) {
+            Timber.w("Focus mode enabled but Accessibility Service is not running. Focus mode will be skipped.")
         }
 
         // Show lock overlay for complete lock mode
