@@ -389,4 +389,153 @@ class BackupViewModelTest {
 
         coVerify { backupUseCase.importBackup(uri) }
     }
+
+    // ========== onEvent 全ブランチテスト ==========
+
+    @Test
+    fun `onEvent ResetState resets backup state to Idle`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onEvent(BackupEvent.ResetState)
+
+        vm.backupState.test {
+            assertEquals(BackupState.Idle, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onEvent HandleGoogleSignInResult delegates to googleAuthManager`() = runTest {
+        val mockIntent: Intent = mockk()
+        every { googleAuthManager.handleSignInResult(any()) } returns Unit
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onEvent(BackupEvent.HandleGoogleSignInResult(mockIntent))
+
+        io.mockk.verify { googleAuthManager.handleSignInResult(mockIntent) }
+    }
+
+    @Test
+    fun `onEvent SignOutGoogle calls signOutGoogle`() = runTest {
+        coEvery { googleAuthManager.signOut() } returns Unit
+        coEvery { cloudBackupUseCase.cleanup() } returns Unit
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onEvent(BackupEvent.SignOutGoogle)
+        advanceUntilIdle()
+
+        coVerify { googleAuthManager.signOut() }
+        coVerify { cloudBackupUseCase.cleanup() }
+    }
+
+    @Test
+    fun `onEvent UploadToCloud calls uploadToCloud`() = runTest {
+        val info = CloudBackupInfo("id", "name", 0L, 0L)
+        coEvery { cloudBackupUseCase.uploadToCloud() } returns Result.success(info)
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onEvent(BackupEvent.UploadToCloud)
+        advanceUntilIdle()
+
+        coVerify { cloudBackupUseCase.uploadToCloud() }
+    }
+
+    @Test
+    fun `onEvent DownloadFromCloud calls downloadFromCloud`() = runTest {
+        val result = ImportResult(0, 0, 0, 0, 0, 0)
+        coEvery { cloudBackupUseCase.downloadFromCloud() } returns Result.success(result)
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onEvent(BackupEvent.DownloadFromCloud)
+        advanceUntilIdle()
+
+        coVerify { cloudBackupUseCase.downloadFromCloud() }
+    }
+
+    @Test
+    fun `onEvent ResetCloudState resets cloud state to Idle`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onEvent(BackupEvent.ResetCloudState)
+
+        vm.cloudBackupState.test {
+            assertEquals(CloudBackupState.Idle, awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onEvent StartTrial calls premiumManager startTrial`() = runTest {
+        coEvery { premiumManager.startTrial() } returns Unit
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.onEvent(BackupEvent.StartTrial)
+        advanceUntilIdle()
+
+        coVerify { premiumManager.startTrial() }
+    }
+
+    // ========== プロパティ・メソッドアクセステスト ==========
+
+    @Test
+    fun `getGoogleSignInIntent delegates to googleAuthManager`() = runTest {
+        val mockIntent: Intent = mockk()
+        every { googleAuthManager.getSignInIntent() } returns mockIntent
+
+        val vm = createViewModel()
+
+        val intent = vm.getGoogleSignInIntent()
+
+        assertEquals(mockIntent, intent)
+    }
+
+    @Test
+    fun `handleGoogleSignInResult delegates to googleAuthManager`() = runTest {
+        val mockIntent: Intent = mockk()
+        every { googleAuthManager.handleSignInResult(any()) } returns Unit
+
+        val vm = createViewModel()
+
+        vm.handleGoogleSignInResult(mockIntent)
+
+        io.mockk.verify { googleAuthManager.handleSignInResult(mockIntent) }
+    }
+
+    @Test
+    fun `googleSignInState property exposes GoogleAuthManager state`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        assertNotNull(vm.googleSignInState)
+        assertEquals(GoogleSignInState.SignedOut, vm.googleSignInState.value)
+    }
+
+    @Test
+    fun `subscriptionStatus property exposes PremiumManager state`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        assertNotNull(vm.subscriptionStatus)
+    }
+
+    @Test
+    fun `isPremium property starts false by default`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        assertNotNull(vm.isPremium)
+        assertFalse(vm.isPremium.value)
+    }
 }

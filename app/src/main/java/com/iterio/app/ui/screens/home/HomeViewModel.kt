@@ -10,13 +10,16 @@ import com.iterio.app.domain.repository.ReviewTaskRepository
 import com.iterio.app.domain.repository.StudySessionRepository
 import com.iterio.app.domain.repository.TaskRepository
 import com.iterio.app.domain.usecase.GetTodayTasksUseCase
+import com.iterio.app.widget.IterioWidgetReceiver
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
+import android.content.Context
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
@@ -34,6 +37,7 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val taskRepository: TaskRepository,
     private val studySessionRepository: StudySessionRepository,
     private val dailyStatsRepository: DailyStatsRepository,
@@ -113,6 +117,7 @@ class HomeViewModel @Inject constructor(
             } else {
                 reviewTaskRepository.markAsIncomplete(taskId)
             }
+            IterioWidgetReceiver.sendDataChangedBroadcast(context)
         }
     }
 }

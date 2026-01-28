@@ -2,9 +2,12 @@ package com.iterio.app.ui.screens.review
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
 import com.iterio.app.domain.model.ReviewTask
 import com.iterio.app.domain.repository.ReviewTaskRepository
+import com.iterio.app.widget.IterioWidgetReceiver
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,6 +35,7 @@ enum class ReviewFilter {
 
 @HiltViewModel
 class ReviewScheduleViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val reviewTaskRepository: ReviewTaskRepository
 ) : ViewModel() {
 
@@ -90,6 +94,7 @@ class ReviewScheduleViewModel @Inject constructor(
             } else {
                 reviewTaskRepository.markAsCompleted(taskId)
             }
+            IterioWidgetReceiver.sendDataChangedBroadcast(context)
         }
     }
 

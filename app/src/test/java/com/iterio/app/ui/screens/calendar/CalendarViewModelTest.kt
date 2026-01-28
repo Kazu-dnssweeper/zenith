@@ -267,4 +267,116 @@ class CalendarViewModelTest {
 
         coVerify { premiumManager.startTrial() }
     }
+
+    // ========== タスクカウント結合テスト ===========
+
+    @Test
+    fun `taskCountByDate combines regular and review task counts on same date`() = runTest {
+        val today = LocalDate.now()
+        val regularCounts = mapOf(today to 5)
+        val reviewCounts = mapOf(today to 3)
+        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(regularCounts)
+        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(reviewCounts)
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(8, state.taskCountByDate[today])
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `taskCountByDate handles only regular tasks on date`() = runTest {
+        val today = LocalDate.now()
+        val regularCounts = mapOf(today to 3)
+        val reviewCounts = emptyMap<LocalDate, Int>()
+        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(regularCounts)
+        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(reviewCounts)
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(3, state.taskCountByDate[today])
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `taskCountByDate handles only review tasks on date`() = runTest {
+        val today = LocalDate.now()
+        val regularCounts = emptyMap<LocalDate, Int>()
+        val reviewCounts = mapOf(today to 2)
+        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(regularCounts)
+        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(reviewCounts)
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(2, state.taskCountByDate[today])
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `taskCountByDate defaults to empty on regular task failure`() = runTest {
+        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns
+            Result.Success(emptyMap())
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertTrue(state.taskCountByDate.isEmpty())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `taskCountByDate defaults to empty on review task failure`() = runTest {
+        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns
+            Result.Success(emptyMap())
+        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertTrue(state.taskCountByDate.isEmpty())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `taskCountByDate combines counts across multiple dates`() = runTest {
+        val date1 = LocalDate.now()
+        val date2 = LocalDate.now().plusDays(1)
+        val date3 = LocalDate.now().plusDays(2)
+        val regularCounts = mapOf(date1 to 2, date2 to 1)
+        val reviewCounts = mapOf(date1 to 1, date3 to 3)
+        coEvery { taskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(regularCounts)
+        coEvery { reviewTaskRepository.getTaskCountByDateRange(any(), any()) } returns Result.Success(reviewCounts)
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(3, state.taskCountByDate[date1]) // 2 + 1
+            assertEquals(1, state.taskCountByDate[date2]) // 1 + 0
+            assertEquals(3, state.taskCountByDate[date3]) // 0 + 3
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 }

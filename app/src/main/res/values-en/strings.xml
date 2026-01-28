@@ -221,6 +221,12 @@
     <string name="widget_description">Display today\'s study time and streak</string>
     <string name="widget_name">Iterio Study Widget</string>
     <string name="widget_loading">Loading…</string>
+    <string name="widget_review_count">Reviews: %d</string>
+    <string name="widget_today_tasks">Today\'s Tasks</string>
+    <string name="widget_more_tasks">+%d more</string>
+    <string name="widget_timer_pause">Pause</string>
+    <string name="widget_timer_resume">Resume</string>
+    <string name="widget_timer_stop">Stop</string>
 
     <!-- Lock Overlay -->
     <string name="lock_overlay_message">Complete Lock Mode Active\nStay focused on your work</string>

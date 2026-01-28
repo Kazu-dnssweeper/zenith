@@ -1,7 +1,9 @@
 package com.iterio.app.ui.screens.review
 
+import android.content.Context
 import app.cash.turbine.test
 import com.iterio.app.domain.common.DomainError
+import com.iterio.app.widget.IterioWidgetReceiver
 import com.iterio.app.domain.common.Result
 import com.iterio.app.domain.model.ReviewTask
 import com.iterio.app.domain.repository.ReviewTaskRepository
@@ -10,6 +12,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -44,6 +47,7 @@ class ReviewScheduleViewModelTest {
     val coroutineTestRule = CoroutineTestRule()
 
     private lateinit var reviewTaskRepository: ReviewTaskRepository
+    private lateinit var context: Context
     private val tasksFlow = MutableStateFlow<List<ReviewTask>>(emptyList())
 
     private val today: LocalDate = LocalDate.now()
@@ -51,10 +55,18 @@ class ReviewScheduleViewModelTest {
     @Before
     fun setup() {
         reviewTaskRepository = mockk()
+        context = mockk(relaxed = true)
+
+        // Mock widget broadcast to avoid Android Intent in unit tests
+        mockkObject(IterioWidgetReceiver.Companion)
+        every { IterioWidgetReceiver.sendDataChangedBroadcast(any()) } returns Unit
+        every { IterioWidgetReceiver.sendUpdateBroadcast(any()) } returns Unit
+
         every { reviewTaskRepository.getAllWithDetails() } returns tasksFlow
     }
 
     private fun createViewModel() = ReviewScheduleViewModel(
+        context = context,
         reviewTaskRepository = reviewTaskRepository
     )
 

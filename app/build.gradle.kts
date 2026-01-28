@@ -260,7 +260,21 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
         "**/data/local/IterioDatabase*",
         // Application class
         "**/IterioApp.*",
-        "**/ui/premium/PremiumManager*"
+        "**/ui/premium/PremiumManager*",
+        // Billing (Android SDK dependent, untestable in unit tests)
+        "**/data/billing/BillingClientWrapper*",
+        "**/data/billing/SignatureVerifier*",
+        // Room DAO interfaces (require instrumented tests)
+        "**/data/local/dao/*",
+        // Android-dependent managers (require Context)
+        "**/util/LocaleManager*",
+        "**/util/InstalledAppsHelper*",
+        // Composable-heavy screen components (nested)
+        "**/ui/screens/**/components/**",
+        // Settings allowed apps (Android component)
+        "**/ui/screens/settings/allowedapps/*",
+        // Android Activity (require instrumented tests)
+        "**/ui/MainActivity*"
     )
 
     val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
@@ -277,7 +291,7 @@ tasks.register<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
             limit {
                 counter = "LINE"
                 value = "COVEREDRATIO"
-                minimum = "0.60".toBigDecimal()
+                minimum = "0.80".toBigDecimal()
             }
         }
     }

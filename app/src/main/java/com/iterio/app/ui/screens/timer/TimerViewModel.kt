@@ -24,6 +24,7 @@ import com.iterio.app.service.TimerService
 import com.iterio.app.service.TimerState
 import com.iterio.app.ui.bgm.BgmManager
 import com.iterio.app.ui.premium.PremiumManager
+import com.iterio.app.widget.IterioWidgetReceiver
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
@@ -338,6 +339,9 @@ class TimerViewModel @Inject constructor(
             )
 
             finishTimerSessionUseCase(params)
+                .onSuccess {
+                    IterioWidgetReceiver.sendDataChangedBroadcast(context)
+                }
                 .onFailure { error ->
                     Timber.e("Failed to finish session: $error")
                 }

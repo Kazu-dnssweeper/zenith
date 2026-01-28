@@ -225,6 +225,12 @@
     <string name="widget_description">本日の学習時間とストリークを表示</string>
     <string name="widget_name">Iterio学習ウィジェット</string>
     <string name="widget_loading">読み込み中…</string>
+    <string name="widget_review_count">復習 %d件</string>
+    <string name="widget_today_tasks">今日のタスク</string>
+    <string name="widget_more_tasks">他 %d件</string>
+    <string name="widget_timer_pause">一時停止</string>
+    <string name="widget_timer_resume">再開</string>
+    <string name="widget_timer_stop">停止</string>
 
     <!-- Lock Overlay -->
     <string name="lock_overlay_message">完全ロックモード有効中\n集中して作業を続けましょう</string>

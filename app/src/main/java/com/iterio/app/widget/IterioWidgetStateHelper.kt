@@ -44,10 +44,39 @@ object IterioWidgetStateHelper {
 
             val db = getDatabase(context)
             val dailyStatsDao = db.dailyStatsDao()
+            val reviewTaskDao = db.reviewTaskDao()
+            val taskDao = db.taskDao()
+            val subjectGroupDao = db.subjectGroupDao()
 
             val today = LocalDate.now()
             val todayStats = dailyStatsDao.getByDate(today)
             val streak = dailyStatsDao.getCurrentStreak(today)
+            val pendingReviewCount = try {
+                reviewTaskDao.getPendingTaskCountForDate(today)
+            } catch (e: Exception) {
+                0
+            }
+
+            // 今日のタスクリスト取得（最大5件）
+            val todayTasks = try {
+                val dayOfWeek = today.dayOfWeek.value.toString()
+                val todayStr = today.toString()
+                val taskEntities = taskDao.getTasksForDate(todayStr, dayOfWeek)
+
+                // グループ名をキャッシュして取得
+                val groupCache = mutableMapOf<Long, String>()
+                taskEntities.take(MAX_WIDGET_TASKS).map { entity ->
+                    val groupName = groupCache.getOrPut(entity.groupId) {
+                        subjectGroupDao.getGroupById(entity.groupId)?.name ?: ""
+                    }
+                    WidgetTaskItem(
+                        name = entity.name,
+                        groupName = groupName
+                    )
+                }
+            } catch (e: Exception) {
+                emptyList()
+            }
 
             // TimerServiceから状態を取得（SharedPreferences経由）
             val timerState = getTimerStateFromPrefs(context)
@@ -58,7 +87,9 @@ object IterioWidgetStateHelper {
                 timerPhase = timerState.phase,
                 timeRemainingSeconds = timerState.timeRemainingSeconds,
                 isTimerRunning = timerState.isRunning,
-                isPremium = isPremium
+                isPremium = isPremium,
+                pendingReviewCount = pendingReviewCount,
+                todayTasks = todayTasks
             )
         } catch (e: Exception) {
             WidgetState()
@@ -98,6 +129,21 @@ object IterioWidgetStateHelper {
         val phaseOrdinal = prefs.getInt(KEY_TIMER_PHASE, TimerPhase.IDLE.ordinal)
         val timeRemaining = prefs.getInt(KEY_TIME_REMAINING, 0)
         val isRunning = prefs.getBoolean(KEY_IS_RUNNING, false)
+        val lastUpdatedAt = prefs.getLong(KEY_LAST_UPDATED_AT, 0L)
+
+        // Staleness check: if no update for 60+ seconds and timer should be running,
+        // the process was likely killed — fall back to IDLE
+        val isStale = isRunning &&
+            lastUpdatedAt > 0 &&
+            (System.currentTimeMillis() - lastUpdatedAt) > STALENESS_THRESHOLD_MS
+
+        if (isStale) {
+            return TimerStateData(
+                phase = TimerPhase.IDLE,
+                timeRemainingSeconds = 0,
+                isRunning = false
+            )
+        }
 
         return TimerStateData(
             phase = TimerPhase.entries.getOrElse(phaseOrdinal) { TimerPhase.IDLE },
@@ -112,11 +158,26 @@ object IterioWidgetStateHelper {
             .putInt(KEY_TIMER_PHASE, phase.ordinal)
             .putInt(KEY_TIME_REMAINING, timeRemaining)
             .putBoolean(KEY_IS_RUNNING, isRunning)
+            .putLong(KEY_LAST_UPDATED_AT, System.currentTimeMillis())
             .apply()
     }
 
     fun updateWidget(context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
+            try {
+                IterioWidget().updateAll(context)
+            } catch (e: Exception) {
+                // Widget update failed, ignore
+            }
+        }
+    }
+
+    private var debounceJob: kotlinx.coroutines.Job? = null
+
+    fun updateWidgetDebounced(context: Context, delayMs: Long = DEBOUNCE_DELAY_MS) {
+        debounceJob?.cancel()
+        debounceJob = CoroutineScope(Dispatchers.IO).launch {
+            kotlinx.coroutines.delay(delayMs)
             try {
                 IterioWidget().updateAll(context)
             } catch (e: Exception) {
@@ -135,6 +196,10 @@ object IterioWidgetStateHelper {
     private const val KEY_TIMER_PHASE = "timer_phase"
     private const val KEY_TIME_REMAINING = "time_remaining"
     private const val KEY_IS_RUNNING = "is_running"
+    private const val KEY_LAST_UPDATED_AT = "last_updated_at"
+    private const val STALENESS_THRESHOLD_MS = 60_000L
+    private const val DEBOUNCE_DELAY_MS = 500L
+    private const val MAX_WIDGET_TASKS = 5
 
     /**
      * Close the database when no longer needed (e.g., during app shutdown)

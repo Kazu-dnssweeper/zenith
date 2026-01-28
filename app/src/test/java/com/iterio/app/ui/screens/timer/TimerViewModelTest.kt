@@ -19,11 +19,12 @@ import com.iterio.app.service.TimerService
 import com.iterio.app.ui.bgm.BgmManager
 import com.iterio.app.ui.premium.PremiumManager
 import com.iterio.app.util.InstalledAppsHelper
+import com.iterio.app.widget.IterioWidgetReceiver
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mockk.unmockkAll
+import io.mockk.unmockkObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -88,7 +89,16 @@ class TimerViewModelTest {
 
         // Mock static methods in TimerService companion object
         mockkObject(TimerService.Companion)
+        every { TimerService.startTimer(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } returns Unit
+        every { TimerService.pauseTimer(any()) } returns Unit
+        every { TimerService.resumeTimer(any()) } returns Unit
         every { TimerService.stopTimer(any()) } returns Unit
+        every { TimerService.skipPhase(any()) } returns Unit
+
+        // Mock widget broadcast to avoid Android Intent in unit tests
+        mockkObject(IterioWidgetReceiver.Companion)
+        every { IterioWidgetReceiver.sendDataChangedBroadcast(any()) } returns Unit
+        every { IterioWidgetReceiver.sendUpdateBroadcast(any()) } returns Unit
 
         context = mockk(relaxed = true)
         savedStateHandle = SavedStateHandle(mapOf("taskId" to 1L))
@@ -125,7 +135,8 @@ class TimerViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
-        unmockkAll()
+        unmockkObject(TimerService.Companion)
+        unmockkObject(IterioWidgetReceiver.Companion)
     }
 
     private fun createViewModel(): TimerViewModel {
@@ -494,5 +505,399 @@ class TimerViewModelTest {
             "許可アプリリストが空であるべき",
             viewModel.uiState.value.defaultAllowedApps.isEmpty()
         )
+    }
+
+    // ========== BGM追加テスト ==========
+
+    @Test
+    fun `selectBgmTrack with track delegates play to BgmManager`() = runTest {
+        val track = mockk<com.iterio.app.domain.model.BgmTrack>()
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.selectBgmTrack(track)
+
+        io.mockk.verify { bgmManager.play(track) }
+    }
+
+    @Test
+    fun `selectBgmTrack with null delegates stop to BgmManager`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.selectBgmTrack(null)
+
+        io.mockk.verify { bgmManager.stop() }
+    }
+
+    @Test
+    fun `toggleBgm pauses when playing`() = runTest {
+        every { bgmManager.isPlaying() } returns true
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.toggleBgm()
+
+        io.mockk.verify { bgmManager.pause() }
+    }
+
+    @Test
+    fun `toggleBgm resumes when not playing`() = runTest {
+        every { bgmManager.isPlaying() } returns false
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.toggleBgm()
+
+        io.mockk.verify { bgmManager.resume() }
+    }
+
+    // ========== 初期状態追加テスト ==========
+
+    @Test
+    fun `initial state showCancelDialog is false`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.showCancelDialog)
+    }
+
+    @Test
+    fun `initial state showFinishDialog is false`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.showFinishDialog)
+    }
+
+    @Test
+    fun `showCancelDialog followed by hideCancelDialog toggles correctly`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.showCancelDialog()
+        assertTrue(viewModel.uiState.value.showCancelDialog)
+
+        viewModel.hideCancelDialog()
+        assertFalse(viewModel.uiState.value.showCancelDialog)
+    }
+
+    // ========== フォーカスモード設定テスト ==========
+
+    @Test
+    fun `focus mode disabled setting is respected`() = runTest {
+        val settingsNoFocus = defaultSettings.copy(focusModeEnabled = false)
+        val initialState = TimerInitialState(
+            task = mockTask,
+            settings = settingsNoFocus,
+            effectiveWorkDurationMinutes = settingsNoFocus.workDurationMinutes,
+            totalTimeSeconds = settingsNoFocus.workDurationMinutes * 60,
+            defaultAllowedApps = emptySet()
+        )
+        coEvery { getTimerInitialStateUseCase(1L) } returns Result.Success(initialState)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.settings.focusModeEnabled)
+    }
+
+    @Test
+    fun `review disabled setting is respected`() = runTest {
+        val settingsNoReview = defaultSettings.copy(reviewEnabled = false)
+        val initialState = TimerInitialState(
+            task = mockTask,
+            settings = settingsNoReview,
+            effectiveWorkDurationMinutes = settingsNoReview.workDurationMinutes,
+            totalTimeSeconds = settingsNoReview.workDurationMinutes * 60,
+            defaultAllowedApps = emptySet()
+        )
+        coEvery { getTimerInitialStateUseCase(1L) } returns Result.Success(initialState)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.settings.reviewEnabled)
+    }
+
+    // ========== タイマー操作テスト ==========
+
+    @Test
+    fun `startTimer from IDLE creates session and starts service`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.startTimer()
+        advanceUntilIdle()
+
+        io.mockk.verify { TimerService.startTimer(
+            context = any(),
+            taskId = eq(1L),
+            taskName = eq("Test Task"),
+            workDuration = eq(25),
+            shortBreak = eq(5),
+            longBreak = eq(15),
+            cycles = eq(4),
+            focusModeEnabled = eq(true),
+            focusModeStrict = eq(false),
+            autoLoopEnabled = eq(false),
+            allowedApps = eq(emptySet())
+        ) }
+        io.mockk.verify { bgmManager.onTimerStart() }
+        io.mockk.coVerify { startTimerSessionUseCase(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `startTimer with custom cycle count uses provided cycles`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.startTimer(cycleCount = 8)
+        advanceUntilIdle()
+
+        io.mockk.verify { TimerService.startTimer(
+            context = any(),
+            taskId = any(),
+            taskName = any(),
+            workDuration = any(),
+            shortBreak = any(),
+            longBreak = any(),
+            cycles = eq(8),
+            focusModeEnabled = any(),
+            focusModeStrict = any(),
+            autoLoopEnabled = any(),
+            allowedApps = any()
+        ) }
+        assertEquals(8, viewModel.uiState.value.totalCycles)
+    }
+
+    @Test
+    fun `startTimer with lockMode enabled updates state`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.startTimer(lockModeEnabled = true)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isSessionLockModeEnabled)
+        io.mockk.verify { TimerService.startTimer(
+            context = any(),
+            taskId = any(),
+            taskName = any(),
+            workDuration = any(),
+            shortBreak = any(),
+            longBreak = any(),
+            cycles = any(),
+            focusModeEnabled = any(),
+            focusModeStrict = eq(true),
+            autoLoopEnabled = any(),
+            allowedApps = any()
+        ) }
+    }
+
+    @Test
+    fun `startTimer with autoLoop enabled passes to service`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.startTimer(autoLoopEnabled = true)
+        advanceUntilIdle()
+
+        io.mockk.verify { TimerService.startTimer(
+            context = any(),
+            taskId = any(),
+            taskName = any(),
+            workDuration = any(),
+            shortBreak = any(),
+            longBreak = any(),
+            cycles = any(),
+            focusModeEnabled = any(),
+            focusModeStrict = any(),
+            autoLoopEnabled = eq(true),
+            allowedApps = any()
+        ) }
+    }
+
+    @Test
+    fun `startTimer with allowedApps passes to service`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val apps = setOf("com.example.app1", "com.example.app2")
+        viewModel.startTimer(allowedApps = apps)
+        advanceUntilIdle()
+
+        io.mockk.verify { TimerService.startTimer(
+            context = any(),
+            taskId = any(),
+            taskName = any(),
+            workDuration = any(),
+            shortBreak = any(),
+            longBreak = any(),
+            cycles = any(),
+            focusModeEnabled = any(),
+            focusModeStrict = any(),
+            autoLoopEnabled = any(),
+            allowedApps = eq(apps)
+        ) }
+    }
+
+    @Test
+    fun `startTimer does nothing when task is null`() = runTest {
+        coEvery { getTimerInitialStateUseCase(1L) } returns Result.Failure(
+            DomainError.NotFoundError("Task not found")
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.startTimer()
+        advanceUntilIdle()
+
+        io.mockk.verify(exactly = 0) { TimerService.startTimer(
+            any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()
+        ) }
+    }
+
+    @Test
+    fun `pauseTimer delegates to TimerService and BgmManager`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.pauseTimer()
+
+        io.mockk.verify { TimerService.pauseTimer(context) }
+        io.mockk.verify { bgmManager.onTimerPause() }
+    }
+
+    @Test
+    fun `resumeTimer delegates to TimerService and BgmManager`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.resumeTimer()
+
+        io.mockk.verify { TimerService.resumeTimer(context) }
+        io.mockk.verify { bgmManager.onTimerResume() }
+    }
+
+    @Test
+    fun `cancelTimer resets state and stops service`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Start timer first to establish session
+        viewModel.startTimer()
+        advanceUntilIdle()
+
+        viewModel.cancelTimer()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(TimerPhase.IDLE, state.phase)
+        assertFalse(state.isRunning)
+        assertFalse(state.isPaused)
+        assertFalse(state.showCancelDialog)
+        io.mockk.verify { TimerService.stopTimer(context) }
+        io.mockk.verify { bgmManager.onTimerStop() }
+    }
+
+    @Test
+    fun `cancelTimer with interrupted false`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.startTimer()
+        advanceUntilIdle()
+
+        viewModel.cancelTimer(interrupted = false)
+        advanceUntilIdle()
+
+        io.mockk.coVerify { finishTimerSessionUseCase(any()) }
+    }
+
+    @Test
+    fun `skipPhase delegates to TimerService`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.skipPhase()
+
+        io.mockk.verify { TimerService.skipPhase(context) }
+    }
+
+    @Test
+    fun `hideFinishDialog stops timer and bgm`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.hideFinishDialog()
+
+        io.mockk.verify { TimerService.stopTimer(context) }
+        io.mockk.verify { bgmManager.onTimerStop() }
+    }
+
+    // ========== プロパティアクセステスト ==========
+
+    @Test
+    fun `subscriptionStatus property exposes PremiumManager state`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertNotNull(viewModel.subscriptionStatus)
+    }
+
+    @Test
+    fun `bgmState property exposes BgmManager state`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertNotNull(viewModel.bgmState)
+    }
+
+    @Test
+    fun `selectedBgmTrack property exposes BgmManager state`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertNotNull(viewModel.selectedBgmTrack)
+    }
+
+    @Test
+    fun `bgmVolume property exposes BgmManager state`() = runTest {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertNotNull(viewModel.bgmVolume)
+    }
+
+    @Test
+    fun `createSession sets sessionId on success`() = runTest {
+        coEvery { startTimerSessionUseCase(any(), any(), any(), any()) } returns Result.Success(42L)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.startTimer()
+        advanceUntilIdle()
+
+        assertEquals(42L, viewModel.uiState.value.sessionId)
+    }
+
+    @Test
+    fun `createSession handles failure gracefully`() = runTest {
+        coEvery { startTimerSessionUseCase(any(), any(), any(), any()) } returns Result.Failure(
+            DomainError.DatabaseError("DB error")
+        )
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.startTimer()
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.sessionId)
     }
 }

@@ -492,4 +492,149 @@ class SettingsViewModelTest {
         assertTrue(result)
         assertTrue(viewModel.uiState.value.autoLoopEnabled)
     }
+
+    // ========== BGM Selector Dialog ==========
+
+    @Test
+    fun `showBgmSelector sets showBgmSelectorDialog to true`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.showBgmSelectorDialog)
+
+        viewModel.showBgmSelector()
+
+        assertTrue(viewModel.uiState.value.showBgmSelectorDialog)
+    }
+
+    @Test
+    fun `hideBgmSelector sets showBgmSelectorDialog to false`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.showBgmSelector()
+        assertTrue(viewModel.uiState.value.showBgmSelectorDialog)
+
+        viewModel.hideBgmSelector()
+
+        assertFalse(viewModel.uiState.value.showBgmSelectorDialog)
+    }
+
+    @Test
+    fun `selectBgmTrack updates trackId and hides dialog`() = runTest {
+        val track = mockk<BgmTrack>()
+        every { track.id } returns "ocean"
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.showBgmSelector()
+        viewModel.selectBgmTrack(track)
+
+        val state = viewModel.uiState.value
+        assertEquals("ocean", state.bgmTrackId)
+        assertFalse(state.showBgmSelectorDialog)
+    }
+
+    @Test
+    fun `selectBgmTrack with null clears trackId`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.selectBgmTrack(null)
+
+        assertNull(viewModel.uiState.value.bgmTrackId)
+    }
+
+    @Test
+    fun `updateBgmVolume updates state and calls bgmManager`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.updateBgmVolume(0.7f)
+
+        assertEquals(0.7f, viewModel.uiState.value.bgmVolume)
+        io.mockk.verify { bgmManager.setVolume(0.7f) }
+    }
+
+    @Test
+    fun `toggleBgmAutoPlay updates state and calls bgmManager`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.toggleBgmAutoPlay(false)
+
+        assertFalse(viewModel.uiState.value.bgmAutoPlayEnabled)
+        io.mockk.verify { bgmManager.setAutoPlay(false) }
+    }
+
+    // ========== onEvent dispatch ==========
+
+    @Test
+    fun `onEvent ToggleNotifications delegates to toggleNotifications`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(SettingsEvent.ToggleNotifications(false))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.notificationsEnabled)
+    }
+
+    @Test
+    fun `onEvent UpdateWorkDuration delegates to updateWorkDuration`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(SettingsEvent.UpdateWorkDuration(50))
+        advanceUntilIdle()
+
+        assertEquals(50, viewModel.uiState.value.workDurationMinutes)
+    }
+
+    @Test
+    fun `onEvent ToggleFocusMode delegates to toggleFocusMode`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(SettingsEvent.ToggleFocusMode(false))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.focusModeEnabled)
+    }
+
+    @Test
+    fun `onEvent UpdateLanguage delegates to updateLanguage`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(SettingsEvent.UpdateLanguage("en"))
+        advanceUntilIdle()
+
+        assertEquals("en", viewModel.uiState.value.language)
+    }
+
+    @Test
+    fun `onEvent ToggleReviewIntervals delegates to toggleReviewIntervals`() = runTest {
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(SettingsEvent.ToggleReviewIntervals(false))
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.reviewIntervalsEnabled)
+    }
+
+    @Test
+    fun `onEvent StartTrial delegates to startTrial`() = runTest {
+        coEvery { premiumManager.startTrial() } returns Unit
+
+        viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onEvent(SettingsEvent.StartTrial)
+        advanceUntilIdle()
+
+        coVerify { premiumManager.startTrial() }
+    }
 }

@@ -249,4 +249,83 @@ class StatsViewModelTest {
 
         coVerify { premiumManager.startTrial() }
     }
+
+    // ========== エラーパス テスト ===========
+
+    @Test
+    fun `todayMinutes defaults to 0 on failure`() = runTest {
+        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(0, state.todayMinutes)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `currentStreak defaults to 0 on failure`() = runTest {
+        coEvery { dailyStatsRepository.getCurrentStreak() } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(0, state.currentStreak)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `maxStreak defaults to 0 on failure`() = runTest {
+        coEvery { dailyStatsRepository.getMaxStreak() } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(0, state.maxStreak)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `totalSessions defaults to 0 on failure`() = runTest {
+        coEvery { studySessionRepository.getSessionCount() } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(0, state.totalSessions)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `thisWeekMinutes defaults to 0 on failure`() = runTest {
+        coEvery { dailyStatsRepository.getTotalMinutesBetweenDates(any(), any()) } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(0, state.thisWeekMinutes)
+            assertEquals(0, state.thisMonthMinutes)
+            assertEquals(0, state.averageDailyMinutes)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.iterio.app.domain.common
 
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -299,5 +300,120 @@ class ResultTest {
 
         assertTrue(recovered.isSuccess)
         assertEquals(42, recovered.getOrNull())
+    }
+
+    // ==================== catching テスト ====================
+
+    @Test
+    fun `catching returns Success when block succeeds`() {
+        val result = Result.catching { 42 }
+
+        assertTrue(result.isSuccess)
+        assertEquals(42, result.getOrNull())
+    }
+
+    @Test
+    fun `catching returns Failure when block throws`() {
+        val result = Result.catching { throw RuntimeException("test error") }
+
+        assertTrue(result.isFailure)
+        val error = result.errorOrNull()
+        assertTrue(error is DomainError.UnknownError)
+        assertEquals("test error", error?.message)
+    }
+
+    @Test
+    fun `catching uses custom error transform`() {
+        val result = Result.catching(
+            errorTransform = { DomainError.DatabaseError("DB: ${it.message}") }
+        ) {
+            throw RuntimeException("connection lost")
+        }
+
+        assertTrue(result.isFailure)
+        val error = result.errorOrNull()
+        assertTrue(error is DomainError.DatabaseError)
+        assertEquals("DB: connection lost", error?.message)
+    }
+
+    // ==================== catchingSuspend テスト ====================
+
+    @Test
+    fun `catchingSuspend returns Success when block succeeds`() = runTest {
+        val result = Result.catchingSuspend { 100 }
+
+        assertTrue(result.isSuccess)
+        assertEquals(100, result.getOrNull())
+    }
+
+    @Test
+    fun `catchingSuspend returns Failure when block throws`() = runTest {
+        val result = Result.catchingSuspend {
+            throw IllegalStateException("async error")
+        }
+
+        assertTrue(result.isFailure)
+        val error = result.errorOrNull()
+        assertTrue(error is DomainError.UnknownError)
+        assertEquals("async error", error?.message)
+    }
+
+    @Test
+    fun `catchingSuspend uses custom error transform`() = runTest {
+        val result = Result.catchingSuspend(
+            errorTransform = { DomainError.NetworkError("Network: ${it.message}") }
+        ) {
+            throw RuntimeException("timeout")
+        }
+
+        assertTrue(result.isFailure)
+        val error = result.errorOrNull()
+        assertTrue(error is DomainError.NetworkError)
+        assertEquals("Network: timeout", error?.message)
+    }
+
+    // ==================== getOrThrow テスト ====================
+
+    @Test
+    fun `getOrThrow returns value for Success`() {
+        val result: Result<Int, DomainError> = Result.Success(42)
+
+        assertEquals(42, result.getOrThrow())
+    }
+
+    @Test(expected = DomainException::class)
+    fun `getOrThrow throws DomainException for Failure`() {
+        val result: Result<Int, DomainError> = Result.Failure(
+            DomainError.NotFoundError("Not found")
+        )
+
+        result.getOrThrow()
+    }
+
+    @Test
+    fun `getOrThrow DomainException contains correct error`() {
+        val error = DomainError.DatabaseError("DB failed")
+        val result: Result<Int, DomainError> = Result.Failure(error)
+
+        try {
+            result.getOrThrow()
+            fail("Expected DomainException")
+        } catch (e: DomainException) {
+            assertEquals(error, e.domainError)
+            assertEquals("DB failed", e.message)
+        }
+    }
+
+    // ==================== DomainException テスト ====================
+
+    @Test
+    fun `DomainException preserves cause from DomainError`() {
+        val cause = RuntimeException("original cause")
+        val error = DomainError.UnknownError("wrapper", cause)
+        val exception = DomainException(error)
+
+        assertEquals(error, exception.domainError)
+        assertEquals("wrapper", exception.message)
+        assertSame(cause, exception.cause)
     }
 }

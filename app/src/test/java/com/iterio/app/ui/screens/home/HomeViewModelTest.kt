@@ -1,7 +1,9 @@
 package com.iterio.app.ui.screens.home
 
+import android.content.Context
 import app.cash.turbine.test
 import com.iterio.app.domain.common.Result
+import com.iterio.app.widget.IterioWidgetReceiver
 import com.iterio.app.domain.model.ReviewTask
 import com.iterio.app.domain.model.ScheduleType
 import com.iterio.app.domain.model.Task
@@ -17,6 +19,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -41,6 +44,7 @@ class HomeViewModelTest {
     private lateinit var dailyStatsRepository: DailyStatsRepository
     private lateinit var reviewTaskRepository: ReviewTaskRepository
     private lateinit var getTodayTasksUseCase: GetTodayTasksUseCase
+    private lateinit var context: Context
     private lateinit var viewModel: HomeViewModel
 
     @Before
@@ -50,6 +54,12 @@ class HomeViewModelTest {
         dailyStatsRepository = mockk()
         reviewTaskRepository = mockk()
         getTodayTasksUseCase = mockk()
+        context = mockk(relaxed = true)
+
+        // Mock widget broadcast to avoid Android Intent in unit tests
+        mockkObject(IterioWidgetReceiver.Companion)
+        every { IterioWidgetReceiver.sendDataChangedBroadcast(any()) } returns Unit
+        every { IterioWidgetReceiver.sendUpdateBroadcast(any()) } returns Unit
 
         // Default mocks
         val today = LocalDate.now()
@@ -64,6 +74,7 @@ class HomeViewModelTest {
     }
 
     private fun createViewModel() = HomeViewModel(
+        context = context,
         taskRepository = taskRepository,
         studySessionRepository = studySessionRepository,
         dailyStatsRepository = dailyStatsRepository,
@@ -240,5 +251,79 @@ class HomeViewModelTest {
         advanceUntilIdle()
 
         coVerify { reviewTaskRepository.markAsIncomplete(1L) }
+    }
+
+    // ========== エラーパス テスト ===========
+
+    @Test
+    fun `todayMinutes defaults to 0 on failure`() = runTest {
+        coEvery { studySessionRepository.getTotalMinutesForDay(any()) } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(0, state.todayMinutes)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `todayCycles defaults to 0 on failure`() = runTest {
+        coEvery { studySessionRepository.getTotalCyclesForDay(any()) } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(0, state.todayCycles)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `currentStreak remains 0 on failure`() = runTest {
+        coEvery { dailyStatsRepository.getCurrentStreak() } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertEquals(0, state.currentStreak)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `weeklyData remains empty on failure`() = runTest {
+        coEvery { dailyStatsRepository.getWeeklyData(any()) } returns
+            Result.Failure(com.iterio.app.domain.common.DomainError.DatabaseError("DB error"))
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertTrue(state.weeklyData.isEmpty())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `isLoading becomes false after data load completes`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.uiState.test {
+            val state = awaitItem()
+            assertFalse(state.isLoading)
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }
